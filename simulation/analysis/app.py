@@ -151,6 +151,55 @@ def _env_flag(name, default=False):
     return value.lower() in {"1", "true", "yes", "on"}
 
 
+def _serialize_dataframe(df):
+    if df is None:
+        return []
+    cleaned = df.reset_index()
+    # Replace NaN / inf with None so JSON is valid
+    cleaned = cleaned.replace([np.nan, np.inf, -np.inf], None)
+    return cleaned.to_dict(orient="records")
+
+
+@server.route("/api/results", methods=["GET"])
+def api_list_results():
+    subsets = get_available_subsets()
+    return {"subsets": subsets}
+
+
+@server.route("/api/results/<subset_name>", methods=["GET"])
+def api_result_subset(subset_name):
+    """
+    Lightweight JSON API exposing the same preprocessed data used by the Dash app.
+    This is designed to be consumed by a separate React frontend.
+    """
+    if subset_name not in get_available_subsets():
+        return {"error": f"Unknown subset: {subset_name}"}, 404
+
+    data = global_store(subset_name)
+
+    summary_group_df = data.get("summary_group_df")
+    summary_df = data.get("summary_df")
+    run_data = data.get("run_data", {})
+    resource_in_pool = data.get("resource_in_pool", {})
+
+    return {
+        "summary_groups": _serialize_dataframe(summary_group_df),
+        "summary_runs": _serialize_dataframe(summary_df),
+        "run_data": {
+            run_name: df.replace([np.nan, np.inf, -np.inf], None).to_dict(
+                orient="records"
+            )
+            for run_name, df in run_data.items()
+        },
+        "resource_in_pool": {
+            group_name: df.replace([np.nan, np.inf, -np.inf], None).to_dict(
+                orient="records"
+            )
+            for group_name, df in resource_in_pool.items()
+        },
+    }
+
+
 if __name__ == "__main__":
     app.run(
         debug=_env_flag("SIM_ANALYSIS_DEBUG", False),
