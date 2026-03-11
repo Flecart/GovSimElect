@@ -1,66 +1,69 @@
+import asyncio
 import re
+
 from simulation.persona.common import PersonaIdentity
 from simulation.utils import ModelWandbWrapper
-from pathfinder import assistant, system, user
 
-from .utils import (
-    conversation_to_string_with_dash,
-    get_sytem_prompt,
-    list_to_comma_string,
-    list_to_string_with_dash,
-    numbered_list_of_strings,
-    numbered_memory_prompt,
-    reasoning_steps_prompt,
-)
+from .utils import conversation_to_string_with_dash
+from .utils import extract_all_matches
+from .utils import extract_first_match
+from .utils import get_sytem_prompt
+from .utils import numbered_memory_prompt
+from .utils import reasoning_steps_prompt
+
+
+async def aprompt_insight_and_evidence(
+    model: ModelWandbWrapper, persona: PersonaIdentity, statements: list[str]
+):
+    session = model.start_prompt(
+        persona.name, "cognition_retrieve", "prompt_insight_and_evidence"
+    )
+    session.add_user(
+        f"{get_sytem_prompt(persona)}\n"
+        f"{numbered_memory_prompt(persona, statements)}\n"
+        "What high-level insights can you infer from the statements above?\n"
+        "Return one insight per line, prefixed with '- '. Keep only the insight text."
+    )
+    response = await model.acomplete_prompt(
+        session,
+        max_tokens=600,
+        default_value="",
+    )
+    model.end_prompt(session)
+    insights = [line[2:].strip() for line in response.splitlines() if line.strip().startswith("- ")]
+    if insights:
+        return insights
+    fallback = [line.strip(" -*0123456789.)") for line in response.splitlines() if line.strip()]
+    return [line for line in fallback if line]
 
 
 def prompt_insight_and_evidence(
     model: ModelWandbWrapper, persona: PersonaIdentity, statements: list[str]
 ):
-    lm = model.start_chain(
-        persona.name, "cognition_retrieve", "prompt_insight_and_evidence"
-    )
+    return asyncio.run(aprompt_insight_and_evidence(model, persona, statements))
 
-    with user():
-        lm += f"{get_sytem_prompt(persona)}\n"
-        lm += f"{numbered_memory_prompt(persona, statements)}\n"
-        lm += (
-            f"What high-level insights can you infere from the above"
-            " statements? (example format: insight (because of 1,5,3)"
-        )
-    with assistant():
-        acc = []
-        lm += f"1."
-        for i in range(len(statements)):
-            lm = model.gen(
-                lm,
-                name=f"evidence_{i}",
-                stop_regex=rf"{i+2}\.|\(",
-                save_stop_text=True,
-            )
-            if lm[f"evidence_{i}"].endswith(f"{i+2}."):
-                evidence = lm[f"evidence_{i}"][: -len(f"{i+2}.")]
-                acc.append(evidence.strip())
-                continue
-            else:
-                evidence = lm[f"evidence_{i}"]
-                if evidence.endswith("("):
-                    evidence = lm[f"evidence_{i}"][: -len("(")]
-                lm = model.gen(
-                    lm,
-                    name=f"evidence_{i}_justification",
-                    stop_regex=rf"{i+2}\.",
-                    save_stop_text=True,
-                )
-                if lm[f"evidence_{i}_justification"].endswith(f"{i+2}."):
-                    acc.append(evidence.strip())
-                    continue
-                else:
-                    # no more evidence
-                    acc.append(evidence.strip())
-                    break
-        model.end_chain(persona.name, lm)
-    return acc
+
+async def aprompt_planning_thought_on_conversation(
+    model: ModelWandbWrapper,
+    persona: PersonaIdentity,
+    conversation: list[tuple[str, str]],
+) -> str:
+    session = model.start_prompt(
+        persona.name, "cognition_retrieve", "prompt_planning_thought_on_conversation"
+    )
+    session.add_user(
+        f"{get_sytem_prompt(persona)}\n"
+        "Conversation:\n"
+        f"{conversation_to_string_with_dash(conversation)}\n"
+        "Write one full sentence describing anything from the conversation that you need to remember for planning."
+    )
+    response = await model.acomplete_prompt(
+        session,
+        max_tokens=200,
+        default_value="There is nothing specific I need to remember for planning.",
+    )
+    model.end_prompt(session)
+    return response.strip().splitlines()[0].strip()
 
 
 def prompt_planning_thought_on_conversation(
@@ -68,25 +71,32 @@ def prompt_planning_thought_on_conversation(
     persona: PersonaIdentity,
     conversation: list[tuple[str, str]],
 ) -> str:
-    lm = model.start_chain(
-        persona.name, "cognition_retrieve", "prompt_planning_thought_on_conversation"
+    return asyncio.run(
+        aprompt_planning_thought_on_conversation(model, persona, conversation)
     )
 
-    with user():
-        lm += f"{get_sytem_prompt(persona)}\n"
-        lm += f"Conversation:\n"
-        lm += f"{conversation_to_string_with_dash(conversation)}\n"
-        lm += (
-            "Write down if there is anything from the conversation that"
-            f" you need to remember for your planning, from your own"
-            " perspective, in a full sentence."
-        )
-    with assistant():
-        lm = model.gen(lm, name="planning_thought", stop_regex=r"\.")
-        res = lm["planning_thought"]
 
-    model.end_chain(persona.name, lm)
-    return res
+async def aprompt_memorize_from_conversation(
+    model: ModelWandbWrapper,
+    persona: PersonaIdentity,
+    conversation: list[tuple[str, str]],
+) -> str:
+    session = model.start_prompt(
+        persona.name, "cognition_retrieve", "prompt_memorize_from_conversation"
+    )
+    session.add_user(
+        f"{get_sytem_prompt(persona)}\n"
+        "Conversation:\n"
+        f"{conversation_to_string_with_dash(conversation)}\n"
+        "Write one full sentence describing anything interesting from the conversation from your own perspective."
+    )
+    response = await model.acomplete_prompt(
+        session,
+        max_tokens=200,
+        default_value="There was nothing especially memorable in the conversation.",
+    )
+    model.end_prompt(session)
+    return response.strip().splitlines()[0].strip()
 
 
 def prompt_memorize_from_conversation(
@@ -94,69 +104,39 @@ def prompt_memorize_from_conversation(
     persona: PersonaIdentity,
     conversation: list[tuple[str, str]],
 ) -> str:
-    lm = model.start_chain(
-        persona.name, "cognition_retrieve", "prompt_memorize_from_conversation"
+    return asyncio.run(aprompt_memorize_from_conversation(model, persona, conversation))
+
+
+async def aprompt_find_harvesting_limit_from_conversation(
+    model: ModelWandbWrapper,
+    conversation: list[tuple[str, str]],
+) -> tuple[int, str]:
+    session = model.start_prompt(
+        "framework",
+        "cognition_reflect",
+        "prompt_find_harvesting_limit_from_conversation",
     )
-
-    with user():
-        lm += f"{get_sytem_prompt(persona)}\n"
-        lm += f"Conversation:\n"
-        lm += f"{conversation_to_string_with_dash(conversation)}\n"
-        lm += (
-            " Write down if there is anything from the conversation that"
-            f" you might have found interesting from your own"
-            " perspective, in a full sentence."
-        )
-    with assistant():
-        lm = model.gen(lm, name="memorize", stop_regex=r"\.")
-        res = lm["memorize"]
-
-    model.end_chain(persona.name, lm)
-    return res
+    session.add_user(
+        "In the following conversation, determine whether there was an explicit agreement on a concrete fishing limit.\n"
+        "If there was a limit, return exactly `Answer: N` where N is the numeric limit per person.\n"
+        "If there was no explicit limit, return exactly `Answer: N/A`.\n"
+        f"Conversation:\n{conversation_to_string_with_dash(conversation)}\n"
+        f"{reasoning_steps_prompt()}"
+    )
+    response = await model.acomplete_prompt(
+        session,
+        max_tokens=300,
+        default_value="Answer: N/A",
+    )
+    model.end_prompt(session)
+    parsed = extract_first_match(r"Answer:\s*(N/A|\d+)", response, "N/A", re.IGNORECASE)
+    if parsed is None or parsed.upper() == "N/A":
+        return None, session.html()
+    return int(parsed), session.html()
 
 
 def prompt_find_harvesting_limit_from_conversation(
     model: ModelWandbWrapper,
     conversation: list[tuple[str, str]],
 ) -> tuple[int, str]:
-    lm = model.start_chain(
-        "framework",
-        "cognition_refelct",
-        "prompt_find_harvesting_limit_from_conversation",
-    )
-
-    with user():
-        lm += (
-            "In the following conversation, the participants discuss their fishing"
-            " activities and activities and the weight of fish they caught. Determine"
-            " whether there was an explicit agreement on a concrete fishing limit. Look"
-            " for direct mention or agreement on a numerical catch limit that the group"
-            " agreed to keep during this conversation."
-        )
-        lm += f"\n\nConversation:\n"
-        lm += f"{conversation_to_string_with_dash(conversation)}\n"
-        lm += "Please provide the specific fishing limit per person as agreed upon in the conversation, if no limit was agreed upon, please answer N/A. "
-        lm += reasoning_steps_prompt()
-        lm += ' Put the final answer after "Answer:".'
-    with assistant():
-        lm = model.gen(
-            lm,
-            "reasoning",
-            stop_regex=f"Answer:",
-        )
-        lm += f"Answer: "
-        lm = model.find(
-            lm,
-            regex=r"N/A|\d+",
-            default_value="N/A",
-            name="num_resource",
-        )
-        parsed = lm["num_resource"].strip()
-
-        if parsed.upper() == "N/A":
-            model.end_chain("framework", lm)
-            return None, lm.html()
-
-        res = int(parsed)
-        model.end_chain("framework", lm)
-        return res, lm.html()
+    return asyncio.run(aprompt_find_harvesting_limit_from_conversation(model, conversation))

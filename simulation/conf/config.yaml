@@ -3,8 +3,8 @@ group_name: ''
 seed: 0
 
 llm:
-  path: openai/gpt-4o-mini
-  backend: OpenRouter
+  path: openai/gpt-4o
+  backend: OpenAI
   render: false
   temperature: 0.0
   top_p: 1.0

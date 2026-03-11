@@ -1,3 +1,5 @@
+import asyncio
+
 from simulation.utils import ModelWandbWrapper
 
 from ..common import ChatObservation, PersonaIdentity
@@ -29,6 +31,22 @@ class ReflectComponent(Component):
                 self.persona.store.store_thought(insight, self.persona.current_time)
                 acc.append(insight)
 
+    async def arun(self, focal_points: list[str]):
+        acc = []
+        for focal_point in focal_points:
+            retireved_memory = self.persona.retrieve.retrieve([focal_point], 10)
+            insights = await self.aprompt_insight_and_evidence(
+                self.model, self.persona.identity, retireved_memory
+            )
+            tasks = [
+                self.persona.store.astore_thought(insight, self.persona.current_time)
+                for insight in insights
+            ]
+            if tasks:
+                await asyncio.gather(*tasks)
+            acc.extend(insights)
+        return acc
+
     def reflect_on_convesation(self, conversation: list[tuple[str, str]]):
         planning = self.prompt_planning_thought_on_conversation(
             self.model, self.persona.identity, conversation
@@ -38,3 +56,17 @@ class ReflectComponent(Component):
             self.model, self.persona.identity, conversation
         )
         self.persona.store.store_thought(memo, self.persona.current_time)
+
+    async def areflect_on_convesation(self, conversation: list[tuple[str, str]]):
+        planning, memo = await asyncio.gather(
+            self.aprompt_planning_thought_on_conversation(
+                self.model, self.persona.identity, conversation
+            ),
+            self.aprompt_memorize_from_conversation(
+                self.model, self.persona.identity, conversation
+            ),
+        )
+        await asyncio.gather(
+            self.persona.store.astore_thought(planning, self.persona.current_time),
+            self.persona.store.astore_thought(memo, self.persona.current_time),
+        )

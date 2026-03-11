@@ -1,15 +1,16 @@
 """Acting prompts and responses for the fishing personas."""
 
+import asyncio
 from datetime import datetime
 import os
+import re
 
-from pathfinder import assistant
-from pathfinder import user
 from simulation.persona import PersonaAgent
 from simulation.scenarios.fishing.agents.persona_v3.cognition import leaders as leaders_lib
 from simulation.utils import ModelWandbWrapper
 
 from .utils import COGNITION_RESPONSES_JSON
+from .utils import extract_first_match
 from .utils import get_sytem_prompt
 from .utils import location_time_info
 from .utils import log_to_file
@@ -17,8 +18,7 @@ from .utils import memory_prompt
 from .utils import reasoning_steps_prompt
 
 
-
-def prompt_action_choose_amount_of_fish_to_catch(
+async def aprompt_action_choose_amount_of_fish_to_catch(
     model: ModelWandbWrapper,
     agent: PersonaAgent,
     memories: list[str],
@@ -30,77 +30,55 @@ def prompt_action_choose_amount_of_fish_to_catch(
     leader_agenda: str = "",
     debug: bool = False,
 ):
-  """Choose amount of fish to catch prompt."""
   del consider_identity_persona
-  lm = model.start_chain(
+  session = model.start_prompt(
       agent.identity.name, "fishing_cognition_act", "choose_act_options"
   )
-  svo_prompt, _, leader_prompt = (
-      leaders_lib.get_leader_persona_prompts(agent)
+  svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
+  session.add_user(
+      f"{get_sytem_prompt(agent.identity)}\n"
+      f"{location_time_info(current_location, current_time)}"
+      f"Current context: {context}\n"
+      "\nThe current policy following the mayor's agenda is the following:"
+      f" {leader_agenda}\n"
+      f"{memory_prompt(agent.identity, memories)}\n"
+      f"{svo_prompt + chr(10) if svo_prompt else ''}"
+      f"{leader_prompt + chr(10) if leader_prompt else ''}"
+      f"Task: With a fishing range set between {interval[0]}-{interval[-1]}, how many tons of fish would you catch this month?\n"
+      f"{reasoning_steps_prompt()}\n"
+      'Return your answer in this format:\nReasoning: ...\nAnswer: N tons'
   )
-  with user():
-    lm += f"{get_sytem_prompt(agent.identity)}\n"
-    lm += location_time_info(current_location, current_time)
-    lm += f"Current context: {context}\n"
-    lm += (
-        "\nThe current policy following the mayor's agenda isthe following:"
-        f" {leader_agenda}\n"
-    )
-    lm += f"{memory_prompt(agent.identity, memories)}\n"
-    if svo_prompt:
-      lm += f"{svo_prompt}\n"
-    if leader_prompt:
-      lm += f"{leader_prompt}\n"
-    lm += (
-        f"Task: With a fishing range set between {interval[0]}-{interval[-1]},"
-        " how many tons of fish would you catch this month? "
-    )
-    lm += reasoning_steps_prompt()
-    lm += ' Put the final answer after "Answer:", example Answer: N tons.'
-    if debug:
-      print(f"\n\nCHOOSE AMOUNT PROMPT:\n\n{lm._current_prompt()}\n")
+  if debug:
+    print(f"\n\nCHOOSE AMOUNT PROMPT:\n\n{session._current_prompt()}\n")
+  response = await model.acomplete_prompt(
+      session,
+      default_value="Reasoning: No reasoning available.\nAnswer: 0 tons",
+  )
+  option = int(extract_first_match(r"Answer:\s*(\d+)", response, "0", re.IGNORECASE))
 
-  with assistant():
-    lm = model.gen(
-        lm,
-        "reasoning",
-        stop_regex=r"Answer:|So, the answer is:|\*\*Answer\*\*:",
-        save_stop_text=True,
-    )
-    lm = model.find(
-        lm,
-        regex=r"\d+",
-        default_value="0",
-        stop_regex=r"tons",
-        name="option",
-    )
-    option = int(lm["option"])
-  # Log the response to the experiment storage.
-  response_log_path = os.path.join(
-      agent.experiment_storage, COGNITION_RESPONSES_JSON
-  )
+  response_log_path = os.path.join(agent.experiment_storage, COGNITION_RESPONSES_JSON)
   log_to_file(
       log_type="action_response",
       data={
           "speaker": agent.identity.name,
           "svo": agent.svo_type.value,
-          "reasoning": lm["reasoning"],
+          "reasoning": response,
           "option": option,
       },
       log_path=response_log_path,
   )
   if debug:
-    print(
-        f"\n\nCHOOSE AMOUNT RESPONSE:\n\nREASON: {lm['reasoning']}\nCATCH:"
-        f" {option}"
-    )
+    print(f"\n\nCHOOSE AMOUNT RESPONSE:\n\n{response}\nCATCH: {option}")
 
-  model.end_chain(agent.identity.name, lm)
-
-  return option, lm.html()
+  model.end_prompt(session)
+  return option, session.html()
 
 
-def prompt_election_vote(
+def prompt_action_choose_amount_of_fish_to_catch(*args, **kwargs):
+  return asyncio.run(aprompt_action_choose_amount_of_fish_to_catch(*args, **kwargs))
+
+
+async def aprompt_election_vote(
     model: ModelWandbWrapper,
     agent: PersonaAgent,
     memories: list[str],
@@ -110,72 +88,61 @@ def prompt_election_vote(
     issues: dict[str, str],
     debug: bool = False,
 ) -> tuple[str, str]:
-  """Vote decision prompt."""
   del current_location, current_time
-  lm = model.start_chain(
+  session = model.start_prompt(
       agent.identity.name, "fishing_election", "vote_decision"
   )
-  _, _, leader_prompt = (
-      leaders_lib.get_leader_persona_prompts(agent)
+  _, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
+  candidate_block = "".join(f"- {candidate}: {issues[candidate]}\n" for candidate in candidates)
+  extra = ""
+  if leader_prompt:
+    extra += f"Coming into the election, {leader_prompt}\n"
+    extra += f"Leader agenda from last election: {agent.agenda}\n"
+    extra += f"Harvest report from last cycle: {agent.harvest_report}\n"
+  else:
+    extra += "There is no current leader.\n"
+  session.add_user(
+      f"{get_sytem_prompt(agent.identity)}\n"
+      f"{memory_prompt(agent.identity, memories)}"
+      f"{extra}"
+      "Task: Select a mayor for the fisheries union among the listed candidates and provide your rationale.\n"
+      "Candidate positions:\n"
+      f"{candidate_block}"
+      f"{reasoning_steps_prompt()}\n"
+      f"Return your answer in this format:\nReasoning: ...\nVote: one of {', '.join(candidates)}"
   )
-  with user():
-    lm += f"{get_sytem_prompt(agent.identity)}\n"
-    lm += memory_prompt(agent.identity, memories)
-    if leader_prompt:
-      lm += f"Coming into the election, {leader_prompt}\n"
-      lm += f"Leader agenda from last election: {agent.agenda}\n"
-      lm += f"Harvest report from last cycle: {agent.harvest_report}\n"
-    else:
-      lm += "There is no current leader.\n"
-    lm += (
-        "Task: Select a mayor for the fisheries union among a list of"
-        " candidates and provide your rationale for your selection."
-    )
-    lm += "\nCandidate positions:\n"
-    for candidate in candidates:
-      lm += f"- {candidate}: {issues[candidate]}\n"
-    lm += reasoning_steps_prompt()
-    lm += (
-        "\nTask: Based on fishing policies and agendas, who would you vote for?"
-        f" {', '.join(candidates)}?"
-    )
-    lm += ' Put the final answer after "Vote:", example "Vote: John"'
-    if debug:
-      print(f"\n\nVOTE PROMPT:\n\n{lm._current_prompt()}\n")
-
-  with assistant():
-    lm = model.gen(
-        lm,
-        "reasoning",
-        stop_regex=r"Vote:|\*\*Vote\*\*:",
-        save_stop_text=True,
-    )
-    lm = model.find(
-        lm,
-        regex=fr"{'|'.join(candidates)}",
-        default_value="none",
-        name="option",
-    )
-    reasoning = lm["reasoning"]
-    vote = lm["option"].strip()
-
-  # Log the response to the experiment storage.
-  response_log_path = os.path.join(
-      agent.experiment_storage, COGNITION_RESPONSES_JSON
+  if debug:
+    print(f"\n\nVOTE PROMPT:\n\n{session._current_prompt()}\n")
+  response = await model.acomplete_prompt(
+      session,
+      default_value=f"Reasoning: No clear preference.\nVote: {candidates[0]}",
   )
+  vote = extract_first_match(
+      rf"Vote:\s*({'|'.join(re.escape(candidate) for candidate in candidates)})",
+      response,
+      "none",
+      re.IGNORECASE,
+  )
+  if vote is None:
+    vote = "none"
+
+  response_log_path = os.path.join(agent.experiment_storage, COGNITION_RESPONSES_JSON)
   log_to_file(
       log_type="vote_response",
       data={
           "speaker": agent.identity.name,
           "svo": agent.svo_type.value,
-          "reasoning": lm["reasoning"],
-          "option": lm["option"],
+          "reasoning": response,
+          "option": vote,
       },
       log_path=response_log_path,
   )
   if debug:
-    print(f"\n\nVOTE RESPONSE:\n\nREASON: {lm['reasoning']}\nVOTE:"
-          f" {lm['option']}")
+    print(f"\n\nVOTE RESPONSE:\n\n{response}\n")
 
-  model.end_chain(agent.identity.name, lm)
-  return vote, lm.html()
+  model.end_prompt(session)
+  return vote, session.html()
+
+
+def prompt_election_vote(*args, **kwargs):
+  return asyncio.run(aprompt_election_vote(*args, **kwargs))

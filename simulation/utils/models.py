@@ -1,3 +1,5 @@
+import asyncio
+import os
 import re
 import traceback
 import warnings
@@ -9,7 +11,39 @@ import pathfinder
 from .logger import WandbLogger
 
 
+class PromptSession:
+    def __init__(self, agent_name: str, phase_name: str, query_name: str) -> None:
+        self.agent_name = agent_name
+        self.phase_name = phase_name
+        self.query_name = query_name
+        self.messages: list[dict[str, str]] = []
+
+    def add_message(self, role: str, content: str):
+        if self.messages and self.messages[-1]["role"] == role:
+            self.messages[-1]["content"] += content
+        else:
+            self.messages.append({"role": role, "content": content})
+
+    def add_user(self, content: str):
+        self.add_message("user", content)
+
+    def add_assistant(self, content: str):
+        self.add_message("assistant", content)
+
+    def _current_prompt(self):
+        return str(self.messages)
+
+    def html(self):
+        return "".join(
+            f'<div><strong>{message["role"].upper()}</strong>:'
+            f' {message["content"]}</div>'
+            for message in self.messages
+        )
+
+
 class ModelWandbWrapper:
+    _openai_semaphore = None
+
     def __init__(
         self,
         base_lm,
@@ -30,6 +64,99 @@ class ModelWandbWrapper:
         self.top_p = top_p
         self.seed = seed
         self.is_api = is_api
+        self.model_name = getattr(base_lm, "model_name", None)
+        self._async_client = None
+
+    def _get_async_client(self):
+        if self._async_client is not None:
+            return self._async_client
+
+        from openai import AsyncOpenAI
+
+        backend_name = type(self.base_lm).__name__.lower()
+        if "openrouter" in backend_name:
+            self._async_client = AsyncOpenAI(
+                base_url="https://openrouter.ai/api/v1",
+                api_key=os.getenv("OPENROUTER_API_KEY"),
+            )
+        else:
+            self._async_client = AsyncOpenAI(
+                api_key=os.getenv("OPENAI_API_KEY")
+            )
+        return self._async_client
+
+    def _get_openai_semaphore(self):
+        if ModelWandbWrapper._openai_semaphore is None:
+            max_concurrency = int(os.getenv("OPENAI_MAX_CONCURRENCY", "8"))
+            ModelWandbWrapper._openai_semaphore = asyncio.Semaphore(max_concurrency)
+        return ModelWandbWrapper._openai_semaphore
+
+    def start_prompt(self, agent_name, phase_name, query_name) -> PromptSession:
+        return PromptSession(agent_name, phase_name, query_name)
+
+    def end_prompt(self, session: PromptSession):
+        del session
+
+    async def acomplete_prompt(
+        self,
+        session: PromptSession,
+        *,
+        max_tokens=8000,
+        temperature=None,
+        top_p=None,
+        stop=None,
+        default_value="",
+    ) -> str:
+        if temperature is None:
+            temperature = self.temperature
+        if top_p is None:
+            top_p = self.top_p
+
+        response_text = default_value
+        try:
+            async with self._get_openai_semaphore():
+                out = await self._get_async_client().chat.completions.create(
+                    model=self.model_name,
+                    messages=session.messages,
+                    temperature=temperature,
+                    top_p=top_p,
+                    seed=self.seed,
+                    max_tokens=max_tokens,
+                    stop=stop,
+                )
+            response_text = out.choices[0].message.content or default_value
+        except Exception as e:
+            warnings.warn(
+                "An exception occured: "
+                f"{e}: {traceback.format_exc()}\nReturning default value in acomplete_prompt",
+                RuntimeWarning,
+            )
+            response_text = default_value
+        finally:
+            session.add_assistant(response_text)
+            self.seed += 1
+        return response_text
+
+    def complete_prompt(
+        self,
+        session: PromptSession,
+        *,
+        max_tokens=8000,
+        temperature=None,
+        top_p=None,
+        stop=None,
+        default_value="",
+    ) -> str:
+        return asyncio.run(
+            self.acomplete_prompt(
+                session,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                stop=stop,
+                default_value=default_value,
+            )
+        )
 
     def start_chain(
         self,

@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime, timedelta
 
 from simulation.utils import ModelWandbWrapper
@@ -12,6 +13,10 @@ class StoreComponent(Component):
     prompt_importance_chat: callable
     prompt_importance_event: callable
     prompt_importance_action: callable
+    aprompt_importance_thought: callable
+    aprompt_importance_chat: callable
+    aprompt_importance_event: callable
+    aprompt_importance_action: callable
 
     def __init__(
         self,
@@ -42,6 +47,27 @@ class StoreComponent(Component):
             raise ValueError(f"Unknown node type: {node.type}")
         node.importance_score = score
 
+    async def _acompute_importance(self, node: Node) -> float:
+        if node.type == NodeType.THOUGHT:
+            score = await self.aprompt_importance_thought(
+                self.model, self.persona.identity, node
+            )
+        elif node.type == NodeType.CHAT:
+            score = await self.aprompt_importance_chat(
+                self.model, self.persona.identity, node
+            )
+        elif node.type == NodeType.EVENT:
+            score = await self.aprompt_importance_event(
+                self.model, self.persona.identity, node
+            )
+        elif node.type == NodeType.ACTION:
+            score = await self.aprompt_importance_action(
+                self.model, self.persona.identity, node
+            )
+        else:
+            raise ValueError(f"Unknown node type: {node.type}")
+        node.importance_score = score
+
     def store_event(self, event: PersonaEvent):
         # s, p, o = prompt_text_to_triple(self.model, event.description)
         s, p, o = (None, None, None)
@@ -53,6 +79,18 @@ class StoreComponent(Component):
             node.always_include = True
         else:
             self._compute_importance(node)
+        self.associative_memory.append_to_memory_md(node)
+
+    async def astore_event(self, event: PersonaEvent):
+        s, p, o = (None, None, None)
+        node = self.associative_memory.add_event(
+            s, p, o, event.description, event.created, event.expiration
+        )
+        if event.always_include:
+            node.importance_score = 10
+            node.always_include = True
+        else:
+            await self._acompute_importance(node)
         self.associative_memory.append_to_memory_md(node)
 
     def store_chat(
@@ -73,6 +111,23 @@ class StoreComponent(Component):
         self._compute_importance(node)
         self.associative_memory.append_to_memory_md(node)
 
+    async def astore_chat(
+        self,
+        summary: str,
+        conversation: list[tuple[str, str]],
+        created: datetime,
+        expiration_delta: timedelta = None,
+    ):
+        if expiration_delta is None:
+            expiration_delta = timedelta(days=self.cfg.expiration_delta.days)
+        expiration = created + expiration_delta
+        s, p, o = (None, None, None)
+        node = self.associative_memory.add_chat(
+            s, p, o, summary, conversation, created, expiration
+        )
+        await self._acompute_importance(node)
+        self.associative_memory.append_to_memory_md(node)
+
     def store_action(
         self,
         description: str,
@@ -88,6 +143,22 @@ class StoreComponent(Component):
             s, p, o, description, created, expiration
         )
         self._compute_importance(node)
+        self.associative_memory.append_to_memory_md(node)
+
+    async def astore_action(
+        self,
+        description: str,
+        created: datetime,
+        expiration_delta: timedelta = None,
+    ):
+        if expiration_delta is None:
+            expiration_delta = timedelta(days=self.cfg.expiration_delta.days)
+        expiration = created + expiration_delta
+        s, p, o = (None, None, None)
+        node = self.associative_memory.add_action(
+            s, p, o, description, created, expiration
+        )
+        await self._acompute_importance(node)
         self.associative_memory.append_to_memory_md(node)
 
     def store_thought(
@@ -110,4 +181,25 @@ class StoreComponent(Component):
             node.always_include = True
         else:
             self._compute_importance(node)
+        self.associative_memory.append_to_memory_md(node)
+
+    async def astore_thought(
+        self,
+        description: str,
+        created: datetime,
+        expiration_delta: timedelta = None,
+        always_include: bool = False,
+    ):
+        if expiration_delta is None:
+            expiration_delta = timedelta(days=self.cfg.expiration_delta.days)
+        expiration = created + expiration_delta
+        s, p, o = (None, None, None)
+        node = self.associative_memory.add_thought(
+            s, p, o, description, created, expiration
+        )
+        if always_include:
+            node.importance_score = 10
+            node.always_include = True
+        else:
+            await self._acompute_importance(node)
         self.associative_memory.append_to_memory_md(node)

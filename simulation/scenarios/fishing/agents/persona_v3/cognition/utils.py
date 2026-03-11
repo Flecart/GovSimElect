@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import re
 from typing import Any
 
 from ......persona.common import PersonaIdentity
@@ -93,6 +94,29 @@ def log_to_file(
         "data": data,
     }
     f.write(json.dumps(entry) + "\n")
+
+
+def extract_first_match(
+    pattern: str,
+    text: str,
+    default: str | None = None,
+    flags: int = 0,
+) -> str | None:
+  match = re.search(pattern, text, flags)
+  if match:
+    return match.group(1) if match.groups() else match.group(0)
+  return default
+
+
+def extract_all_matches(
+    pattern: str,
+    text: str,
+    flags: int = 0,
+) -> list[str]:
+  return [
+      match.group(1) if match.groups() else match.group(0)
+      for match in re.finditer(pattern, text, flags)
+  ]
 
 
 def reasoning_steps_prompt() -> str:
@@ -235,4 +259,3 @@ def get_sytem_prompt_v3_nocom(persona):
     text += persona.goals
 
   return text
-

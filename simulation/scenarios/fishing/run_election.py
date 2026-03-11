@@ -1,5 +1,6 @@
 """Runs simulation with an election."""
 
+import asyncio
 import collections
 import datetime
 import json
@@ -47,59 +48,64 @@ def perform_election(
   print(f"\n\n\ROUND {curr_round}: ELECTION\n==================")
   leader_agendas = {}
   # Get updated leader agendas using the leader prompt functions
-  for _, leader in leader_candidates.items():
-    agenda, _ = leaders_lib.prompt_leader_agenda(
-        model=wrapper,
-        init_persona=leader,
-        current_location="restaurant",  # Elections are at the restaurant.
-        current_time=current_time,
-        init_retrieved_memory=leaders_lib.get_memories(leader),
-        total_fishers=len(personas),
-        svo_angle=leader.svo_angle,
-        last_winning_agenda=last_winning_agenda,
-        harvest_report=harvest_report,
-        harvest_stats=harvest_stats,
-        use_disinfo=disinfo,
+  async def gather_leader_agendas():
+    async def one_leader_agenda(leader):
+      agenda, _ = await leaders_lib.aprompt_leader_agenda(
+          model=wrapper,
+          init_persona=leader,
+          current_location="restaurant",
+          current_time=current_time,
+          init_retrieved_memory=leaders_lib.get_memories(leader),
+          total_fishers=len(personas),
+          svo_angle=leader.svo_angle,
+          last_winning_agenda=last_winning_agenda,
+          harvest_report=harvest_report,
+          harvest_stats=harvest_stats,
+          use_disinfo=disinfo,
+      )
+      return leader.identity.name, agenda
+
+    return await asyncio.gather(
+        *(one_leader_agenda(leader) for _, leader in leader_candidates.items())
     )
-    leader_agendas[leader.identity.name] = agenda
+
+  for leader_name, agenda in asyncio.run(gather_leader_agendas()):
+    leader_agendas[leader_name] = agenda
   votes = {leader.identity.name: 0 for leader in leader_candidates.values()}
   if len(leader_candidates) > 1:
     # Only run elections if there are multiple leaders.
-    for persona_id in personas:
-      # Only non-leader personas cast votes
-      if persona_id not in leader_candidates:
-        # Get memories.
+    async def gather_votes():
+      async def one_vote(persona_id):
         retireved_memory = leaders_lib.get_memories(personas[persona_id])
-        # Shuffle the candidates and agendas.
         candidates = [
             leader.identity.name for _, leader in leader_candidates.items()
         ]
         random.shuffle(candidates)
-        vote, _ = personas[persona_id].act.participate_in_election(
+        vote, _ = await personas[persona_id].act.aparticipate_in_election(
             retrieved_memories=retireved_memory,
-            current_location="",  # TODO(rfaulk): remove.
-            current_time=current_time.strftime(
-                "%H-%M-%S"
-            ),  # current time as string
+            current_location="",
+            current_time=current_time.strftime("%H-%M-%S"),
             candidates=candidates,
             leader_agendas=leader_agendas,
             debug=debug,
         )
-        # Determine candidate identifier: if vote has attribute 'name', use it;
-        # otherwise, use its string
-        candidate_id = vote.name if hasattr(vote, "name") else str(vote)
-        # Use the mapping to get the human-readable name; if not found, use
-        # candidate_id as is.
-        candidate_str = agent_id_to_name.get(candidate_id, candidate_id)
-        votes[candidate_str] = votes.get(candidate_str, 0) + 1
-        personas[persona_id].store.store_event(
-            PersonaEvent(
-                f"Round {curr_round} vote: {vote}",
-                created=current_time,
-                expiration=leaders_lib.get_expiration_next_month(current_time),
-                always_include=True,
-            )
-        )
+        return persona_id, vote
+
+      voter_ids = [persona_id for persona_id in personas if persona_id not in leader_candidates]
+      return await asyncio.gather(*(one_vote(persona_id) for persona_id in voter_ids))
+
+    for persona_id, vote in asyncio.run(gather_votes()):
+      candidate_id = vote.name if hasattr(vote, "name") else str(vote)
+      candidate_str = agent_id_to_name.get(candidate_id, candidate_id)
+      votes[candidate_str] = votes.get(candidate_str, 0) + 1
+      personas[persona_id].store.store_event(
+          PersonaEvent(
+              f"Round {curr_round} vote: {vote}",
+              created=current_time,
+              expiration=leaders_lib.get_expiration_next_month(current_time),
+              always_include=True,
+          )
+      )
 
     # Determine winner (as the candidate's human-readable name)
     # Randonly break ties.

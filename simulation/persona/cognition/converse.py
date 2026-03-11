@@ -1,4 +1,3 @@
-from pathfinder import assistant, system, user
 from simulation.utils import ModelWandbWrapper
 
 from ..common import PersonaIdentity

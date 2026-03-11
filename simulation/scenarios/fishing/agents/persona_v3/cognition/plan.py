@@ -1,4 +1,3 @@
-from pathfinder import assistant, system, user
 from simulation.persona.cognition.plan import PlanComponent
 from simulation.utils import ModelWandbWrapper
 

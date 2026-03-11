@@ -1,5 +1,6 @@
 """Handling conversation among the personas."""
 
+import asyncio
 import random
 
 from typing import Optional
@@ -149,25 +150,37 @@ class FishingConverseComponent(ConverseComponent):
         self.model_framework, self.conversation_render(current_conversation)
     )
     html_interactions.append(h)
-    for persona in target_personas:
+    async def finalize_persona_memory(persona):
       p = self.other_personas[persona.identity.name]
-      p.store.store_chat(
-          summary_conversation,
-          self.conversation_render(current_conversation),
-          self.persona.current_time,
-      )
-      p.reflect.reflect_on_convesation(
-          self.conversation_render(current_conversation)
-      )
+      tasks = [
+          p.store.astore_chat(
+              summary_conversation,
+              self.conversation_render(current_conversation),
+              self.persona.current_time,
+          ),
+          p.reflect.areflect_on_convesation(
+              self.conversation_render(current_conversation)
+          ),
+      ]
       if resource_limit is not None:
-        p.store.store_thought(
-            (
-                "The community agreed on a maximum limit of"
-                f" {resource_limit} tons of fish per person."
-            ),
-            self.persona.current_time,
-            always_include=True,
+        tasks.append(
+            p.store.astore_thought(
+                (
+                    "The community agreed on a maximum limit of"
+                    f" {resource_limit} tons of fish per person."
+                ),
+                self.persona.current_time,
+                always_include=True,
+            )
         )
+      await asyncio.gather(*tasks)
+
+    async def finalize_all_persona_memories():
+      await asyncio.gather(
+          *(finalize_persona_memory(persona) for persona in target_personas)
+      )
+
+    asyncio.run(finalize_all_persona_memories())
     if debug:
       print(
           "CONVERSATION TRANSCRIPT:"
@@ -184,4 +197,3 @@ class FishingConverseComponent(ConverseComponent):
       self, conversation: list[tuple[PersonaIdentity, str]]
   ):
     return [(p.name, u) for p, u in conversation]
-

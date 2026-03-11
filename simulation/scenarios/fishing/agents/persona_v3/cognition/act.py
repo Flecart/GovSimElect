@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from pathfinder import assistant, system, user
 from simulation.persona.cognition.act import ActComponent
 from simulation.utils import ModelWandbWrapper
 
 from .act_prompts import prompt_action_choose_amount_of_fish_to_catch
+from .act_prompts import aprompt_election_vote
 from .act_prompts import prompt_election_vote
 from .utils import get_universalization_prompt
 
@@ -84,3 +84,23 @@ class FishingActComponent(ActComponent):
     )
     return vote, [html]
 
+  async def aparticipate_in_election(
+      self,
+      retrieved_memories: list[str],
+      current_location: str,
+      current_time: str,
+      candidates: list[str],
+      leader_agendas: dict[str, str],
+      debug: bool = False,
+  ) -> tuple[str, list[str]]:
+    vote, html = await aprompt_election_vote(
+        self.model,
+        self.persona,
+        retrieved_memories,
+        current_location,
+        current_time,
+        candidates,
+        leader_agendas,
+        debug=debug,
+    )
+    return vote, [html]
