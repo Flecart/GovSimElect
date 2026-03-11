@@ -372,6 +372,53 @@ def make_leader_report(
   return leader_harvest_report
 
 
+async def amake_leader_report(
+    personas: dict[str, PersonaAgent],
+    leader_candidates: dict[str, PersonaAgent],
+    current_time: datetime,
+    wrapper: ModelWandbWrapper,
+    disinformation: bool,
+    agenda: str,
+    curr_round: int,
+    winner_id: str,
+    round_harvest_stats: dict[str, int],
+    regen_factor: float | None = None,
+    debug: bool = False,
+) -> str:
+  """Async variant of leader report generation for the async election runner."""
+  leader_harvest_report = make_harvest_report(
+      personas, round_harvest_stats
+  )
+  make_private_leader_memories(
+      leader=leader_candidates[winner_id],
+      current_time=current_time,
+      memory_str=(
+          f"Round {curr_round} population regeneration factor: {regen_factor}"
+      ),
+  )
+  if disinformation:
+    make_private_leader_memories(
+        leader=leader_candidates[winner_id],
+        current_time=current_time,
+        memory_str=leader_harvest_report,
+    )
+    if debug:
+      print(f"ROUND {curr_round} TRUE HARVEST REPORT:\n{leader_harvest_report}")
+    leader_harvest_report = await aprompt_harvest_report(
+        model=wrapper,
+        init_persona=personas[winner_id],
+        true_report=leader_harvest_report,
+        init_retrieved_memory=get_memories(personas[winner_id]),
+        svo_angle=leader_candidates[winner_id].svo_angle,
+        agenda=agenda,
+        regen_factor=regen_factor,
+    )
+  if debug:
+    print(f"\nROUND {curr_round} REGEN FACTOR: {regen_factor}\n")
+    print(f"ROUND {curr_round} HARVEST REPORT:\n{leader_harvest_report}")
+  return leader_harvest_report
+
+
 def sample_leader_svos(
     leader_population_type: LeaderPopulationType) -> list[float]:
   """Samples SVOs for a balanced leader group of four.

@@ -14,13 +14,15 @@ from simulation.utils import ModelWandbWrapper
 from .environment import FishingConcurrentEnv, FishingPerturbationEnv
 
 
-def run(
+async def run(
     cfg: DictConfig,
     logger: ModelWandbWrapper,
     wrappers: List[ModelWandbWrapper],
     framework_wrapper: ModelWandbWrapper,
     experiment_storage: str,
 ):
+    debug = bool(OmegaConf.select(cfg, "debug", default=False))
+
     if cfg.agent.agent_package == "persona_v3":
         from .agents.persona_v3 import FishingPersona
         from .agents.persona_v3.cognition import utils as cognition_utils
@@ -121,7 +123,7 @@ def run(
     curr_round = env.num_round
     while True:
         agent = personas[agent_id]
-        action = agent.loop(obs)
+        action = await agent.aloop(obs, debug=debug)
 
         (
             agent_id,

@@ -211,3 +211,91 @@ class FishingPersona(PersonaAgent):
 
     self.memory.save()  # periodically save memory
     return action
+
+  async def aloop(self, obs: HarvestingObs, debug: bool = False) -> PersonaAction:
+    self.current_time = obs.current_time
+
+    self.perceive.perceive(obs)
+
+    action = PersonaAction(self.agent_id, "lake")
+    if obs.current_location == "lake" and obs.phase == "lake":
+      retrieved_memory = self.retrieve.retrieve([obs.current_location], 10)
+      str_memory = [str(memory) for memory in retrieved_memory]
+      str_memory = "\n".join(str_memory)
+      if debug:
+        print(f"MEMORIES {self.identity.name}:\n{str_memory}")
+      if obs.current_resource_num > 0:
+        num_resource, html_interactions = (
+            await self.act.achoose_how_many_fish_to_catch(
+                retrieved_memory,
+                obs.current_location,
+                obs.current_time,
+                obs.context,
+                range(0, obs.current_resource_num + 1),
+                obs.before_harvesting_sustainability_threshold,
+                self._agenda,
+                debug=debug,
+            )
+        )
+        action = PersonaActionHarvesting(
+            self.agent_id,
+            "lake",
+            num_resource,
+            stats={f"{self.agent_id}_collected_resource": num_resource},
+            html_interactions=html_interactions,
+        )
+      else:
+        num_resource = 0
+        action = PersonaActionHarvesting(
+            self.agent_id,
+            "lake",
+            num_resource,
+            stats={},
+            html_interactions="<strong>Framework<strong/>: no fish to catch",
+        )
+      if debug:
+        print(f"HARVEST: {self.identity.name} {num_resource}.")
+    elif (
+        obs.current_location == "lake" and obs.phase == "pool_after_harvesting"
+    ):
+      action = PersonaAction(self.agent_id, "lake")
+    elif obs.current_location == "restaurant":
+      other_personas = []
+      for agent_id, location in obs.current_location_agents.items():
+        if location == "restaurant":
+          other_personas.append(
+              self.other_personas_from_id[agent_id]
+          )
+
+      (
+          conversation,
+          _,
+          resource_limit,
+          html_interactions,
+      ) = await self.converse.aconverse_group(
+          other_personas,
+          obs.current_location,
+          obs.current_time,
+          obs.context,
+          obs.agent_resource_num,
+          mayoral_agenda=self._agenda,
+          harvest_report=self._harvest_report,
+          leader_persona=self._current_leader,
+          debug=debug,
+      )
+      action = PersonaActionChat(
+          self.agent_id,
+          "restaurant",
+          conversation,
+          conversation_resource_limit=resource_limit,
+          stats={"conversation_resource_limit": resource_limit},
+          html_interactions=html_interactions,
+      )
+    elif obs.current_location == "home":
+      await self.reflect.arun(["harvesting"])
+      action = PersonaAction(self.agent_id, "home")
+      if debug:
+        print(f"REFLECT: {self.identity.name}.")
+
+    self.memory.save()
+    return action

@@ -1,5 +1,6 @@
 """Main file for GovSim Election simulation."""
 
+import asyncio
 import os
 from pathlib import Path
 import shutil
@@ -68,13 +69,19 @@ def main(cfg: DictConfig):
       is_api=True,
   )
   if cfg.experiment.scenario == "fishing":
-    run_scenario_fishing(
-        cfg.experiment,
-        logger,
-        wrapper,
-        wrapper,
-        experiment_storage,
-    )
+    async def run_and_close():
+      try:
+        await run_scenario_fishing(
+            cfg.experiment,
+            logger,
+            wrapper,
+            wrapper,
+            experiment_storage,
+        )
+      finally:
+        await wrapper.aclose()
+
+    asyncio.run(run_and_close())
   else:
     raise ValueError(f"Unknown experiment.scenario: {cfg.experiment.scenario}")
 

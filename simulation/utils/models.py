@@ -43,6 +43,7 @@ class PromptSession:
 
 class ModelWandbWrapper:
     _openai_semaphore = None
+    _openai_semaphore_loop = None
 
     def __init__(
         self,
@@ -66,9 +67,14 @@ class ModelWandbWrapper:
         self.is_api = is_api
         self.model_name = getattr(base_lm, "model_name", None)
         self._async_client = None
+        self._async_client_loop = None
 
     def _get_async_client(self):
-        if self._async_client is not None:
+        current_loop = asyncio.get_running_loop()
+        if (
+            self._async_client is not None
+            and self._async_client_loop is current_loop
+        ):
             return self._async_client
 
         from openai import AsyncOpenAI
@@ -83,12 +89,15 @@ class ModelWandbWrapper:
             self._async_client = AsyncOpenAI(
                 api_key=os.getenv("OPENAI_API_KEY")
             )
+        self._async_client_loop = current_loop
         return self._async_client
 
     def _get_openai_semaphore(self):
-        if ModelWandbWrapper._openai_semaphore is None:
+        current_loop = asyncio.get_running_loop()
+        if ModelWandbWrapper._openai_semaphore_loop is not current_loop:
             max_concurrency = int(os.getenv("OPENAI_MAX_CONCURRENCY", "8"))
             ModelWandbWrapper._openai_semaphore = asyncio.Semaphore(max_concurrency)
+            ModelWandbWrapper._openai_semaphore_loop = current_loop
         return ModelWandbWrapper._openai_semaphore
 
     def start_prompt(self, agent_name, phase_name, query_name) -> PromptSession:
@@ -96,6 +105,15 @@ class ModelWandbWrapper:
 
     def end_prompt(self, session: PromptSession):
         del session
+
+    async def aclose(self) -> None:
+        if self._async_client is None:
+            return
+        try:
+            await self._async_client.close()
+        finally:
+            self._async_client = None
+            self._async_client_loop = None
 
     async def acomplete_prompt(
         self,

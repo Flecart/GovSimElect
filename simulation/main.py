@@ -1,3 +1,4 @@
+import asyncio
 import os
 import shutil
 import uuid
@@ -84,38 +85,33 @@ def main(cfg: DictConfig):
         else:
             wrapper_framework = unique_configs[config_key]
 
-    if cfg.experiment.scenario == "fishing":
-        from .scenarios.fishing.run import run as run_scenario_fishing
+    async def close_wrappers():
+        seen = set()
+        for wrapper in [*wrappers, wrapper_framework]:
+            wrapper_id = id(wrapper)
+            if wrapper_id in seen:
+                continue
+            seen.add(wrapper_id)
+            await wrapper.aclose()
 
-        run_scenario_fishing(
-            cfg.experiment,
-            logger,
-            wrappers,
-            wrapper_framework,
-            experiment_storage,
-        )
-    elif cfg.experiment.scenario == "sheep":
-        from .scenarios.sheep.run import run as run_scenario_sheep
+    async def run_and_close():
+        try:
+            if cfg.experiment.scenario == "fishing":
+                from .scenarios.fishing.run import run as run_scenario_fishing
 
-        run_scenario_sheep(
-            cfg.experiment,
-            logger,
-            wrappers,
-            wrapper_framework,
-            experiment_storage,
-        )
-    elif cfg.experiment.scenario == "pollution":
-        from .scenarios.pollution.run import run as run_scenario_pollution
+                await run_scenario_fishing(
+                    cfg.experiment,
+                    logger,
+                    wrappers,
+                    wrapper_framework,
+                    experiment_storage,
+                )
+            else:
+                raise ValueError(f"Unknown experiment.scenario: {cfg.experiment.scenario}")
+        finally:
+            await close_wrappers()
 
-        run_scenario_pollution(
-            cfg.experiment,
-            logger,
-            wrappers,
-            wrapper_framework,
-            experiment_storage,
-        )
-    else:
-        raise ValueError(f"Unknown experiment.scenario: {cfg.experiment.scenario}")
+    asyncio.run(run_and_close())
 
     hydra_log_path = hydra.core.hydra_config.HydraConfig.get().runtime.output_dir
     shutil.copytree(f"{hydra_log_path}/.hydra/", f"{experiment_storage}/.hydra/")

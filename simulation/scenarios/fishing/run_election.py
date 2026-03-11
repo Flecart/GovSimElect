@@ -30,7 +30,7 @@ from .environment import FishingPerturbationEnv
 cognition_utils.SYS_VERSION = "v3"
 
 
-def perform_election(
+async def perform_election(
     personas: dict[str, PersonaAgent],
     leader_candidates: dict[str, PersonaAgent],
     current_time: datetime,
@@ -45,7 +45,7 @@ def perform_election(
     debug: bool = False,
 ) -> tuple[str, dict[str, int], dict[str, str]]:
   """Runs an election among the leaders."""
-  print(f"\n\n\ROUND {curr_round}: ELECTION\n==================")
+  print(f"\n\nROUND {curr_round}: ELECTION\n==================")
   leader_agendas = {}
   # Get updated leader agendas using the leader prompt functions
   async def gather_leader_agendas():
@@ -69,7 +69,7 @@ def perform_election(
         *(one_leader_agenda(leader) for _, leader in leader_candidates.items())
     )
 
-  for leader_name, agenda in asyncio.run(gather_leader_agendas()):
+  for leader_name, agenda in await gather_leader_agendas():
     leader_agendas[leader_name] = agenda
   votes = {leader.identity.name: 0 for leader in leader_candidates.values()}
   if len(leader_candidates) > 1:
@@ -94,7 +94,7 @@ def perform_election(
       voter_ids = [persona_id for persona_id in personas if persona_id not in leader_candidates]
       return await asyncio.gather(*(one_vote(persona_id) for persona_id in voter_ids))
 
-    for persona_id, vote in asyncio.run(gather_votes()):
+    for persona_id, vote in await gather_votes():
       candidate_id = vote.name if hasattr(vote, "name") else str(vote)
       candidate_str = agent_id_to_name.get(candidate_id, candidate_id)
       votes[candidate_str] = votes.get(candidate_str, 0) + 1
@@ -156,7 +156,7 @@ def perform_election(
   return winner, votes, leader_agendas
 
 
-def run(
+async def run(
     cfg: omegaconf.DictConfig,
     logger: ModelWandbWrapper,
     wrapper: ModelWandbWrapper,
@@ -323,7 +323,7 @@ def run(
   agenda = DEFAULT_AGENDA
   winner, votes, leader_agendas, harvest_report = None, None, None, None
   if leader_candidates:
-    winner, votes, leader_agendas = perform_election(
+    winner, votes, leader_agendas = await perform_election(
         personas,
         leader_candidates,
         obs.current_time,
@@ -366,7 +366,7 @@ def run(
       )
       if leader_candidates:
         assert winner is not None
-        harvest_report = leaders_lib.make_leader_report(
+        harvest_report = await leaders_lib.amake_leader_report(
             personas=personas,
             leader_candidates=leader_candidates,
             current_time=obs.current_time,
@@ -403,7 +403,7 @@ def run(
       agent.update_current_leader(
           leader_candidates[agent_name_to_id[winner]]
       )
-    action = agent.loop(obs, debug=cfg.debug)
+    action = await agent.aloop(obs, debug=cfg.debug)
 
     # TRIGGER ELECTION?
     if len(leader_candidates) > 1 and curr_round != env.num_round:
@@ -424,7 +424,7 @@ def run(
       logger.log_game(election_results[curr_round])
       # Update the current round and run the election.
       curr_round = env.num_round
-      winner, votes, leader_agendas = perform_election(
+      winner, votes, leader_agendas = await perform_election(
           personas,
           leader_candidates,
           obs.current_time,
