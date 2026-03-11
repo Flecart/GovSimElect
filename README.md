@@ -10,7 +10,7 @@ TODO: Update workflow above with election phases.
 
 To use the codes in this repo, first clone this repo:
     
-    git clone --recurse-submodules https://github.com/rfaulkner/GovSimElect.git
+    git clone https://github.com/rfaulkner/GovSimElect.git
     cd GovSimElect
 
 Then, to install the full local-model stack, run:

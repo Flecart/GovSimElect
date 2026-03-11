@@ -15,9 +15,7 @@ import hydra
 import wandb
 from omegaconf import DictConfig, OmegaConf
 
-from simulation.utils import ModelWandbWrapper, WandbLogger
-from simulation.utils import set_seed
-from pathfinder import get_model
+from simulation.utils import ModelWandbWrapper, WandbLogger, get_model, set_seed
 
 # Updated import: run fishing scenario from multi-turn election version.
 from simulation.scenarios.fishing.run_election import run as run_scenario_fishing

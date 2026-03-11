@@ -1,9 +1,7 @@
 from datetime import datetime
 
 from simulation.persona.common import PersonaIdentity
-
-from simulation.utils import ModelWandbWrapper
-from pathfinder import assistant, system, user
+from simulation.utils import ModelWandbWrapper, assistant, system, user
 
 from .utils import (
     get_basic_dynamic_description,

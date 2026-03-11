@@ -8,5 +8,4 @@ conda install -c conda-forge python-kaleido -y
 conda install -c "nvidia/label/cuda-12.1.0" cuda-toolkit cuda -y
 pip3 install vllm==0.6.4
 pip install flash-attn --no-build-isolation
-pip3 install -r pathfinder/requirements.txt
 pip3 install -r requirements.txt

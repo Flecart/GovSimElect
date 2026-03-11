@@ -7,8 +7,7 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 import wandb
-from pathfinder import get_model
-from simulation.utils import ModelWandbWrapper, WandbLogger, set_seed
+from simulation.utils import ModelWandbWrapper, WandbLogger, get_model, set_seed
 
 
 def _normalize_remote_model_name(path: str, backend: str) -> str:

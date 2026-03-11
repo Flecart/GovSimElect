@@ -11,8 +11,7 @@ from omegaconf import DictConfig, OmegaConf
 
 import wandb
 from simulation.persona.common import PersonaIdentity
-from simulation.utils import ModelWandbWrapper, WandbLogger, set_seed
-from pathfinder import get_model
+from simulation.utils import ModelWandbWrapper, WandbLogger, get_model, set_seed
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
