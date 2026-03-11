@@ -7,14 +7,11 @@ import hydra
 import numpy as np
 import statsmodels.stats.proportion as smprop
 import tqdm
-from hydra import compose, initialize
-from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
-from transformers import set_seed
 
 import wandb
 from simulation.persona.common import PersonaIdentity
-from simulation.utils import ModelWandbWrapper, WandbLogger
+from simulation.utils import ModelWandbWrapper, WandbLogger, set_seed
 from pathfinder import get_model
 
 
@@ -23,7 +20,7 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
     set_seed(cfg.seed)
 
-    model = get_model(cfg.llm.path, cfg.llm.is_api, cfg.seed, cfg.llm.backend)
+    model = get_model(cfg.llm.path, seed=cfg.seed, backend_name=cfg.llm.backend)
     logger = WandbLogger(
         f"subskills_check/fishing/{cfg.code_version}",
         OmegaConf.to_object(cfg),
@@ -43,7 +40,7 @@ def main(cfg: DictConfig):
         temperature=cfg.llm.temperature,
         top_p=cfg.llm.top_p,
         seed=cfg.seed,
-        is_api=cfg.llm.is_api,
+        is_api=True,
     )
 
     if cfg.llm.out_format == "freeform":

@@ -13,9 +13,16 @@ To use the codes in this repo, first clone this repo:
     git clone --recurse-submodules https://github.com/rfaulkner/GovSimElect.git
     cd GovSimElect
 
-Then, to install the dependencies, run the following command if you want to use the `transformers` library only.
+Then, to install the full local-model stack, run:
 
 ```setup
 bash ./setup.sh
 ```
 
+For a lighter cloud-only setup that targets OpenAI or OpenRouter and skips the local LLM stack, use:
+
+```setup
+bash ./setup_cloud.sh
+```
+
+The cloud setup also avoids requiring `sentence_transformers`; if that package is absent, the simulation falls back to a lightweight hash-based embedding for memory retrieval.

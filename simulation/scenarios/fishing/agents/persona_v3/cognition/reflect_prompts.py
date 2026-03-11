@@ -1,3 +1,4 @@
+import re
 from simulation.persona.common import PersonaIdentity
 from simulation.utils import ModelWandbWrapper
 from pathfinder import assistant, system, user
@@ -59,7 +60,6 @@ def prompt_insight_and_evidence(
                     acc.append(evidence.strip())
                     break
         model.end_chain(persona.name, lm)
-
     return acc
 
 
@@ -138,8 +138,6 @@ def prompt_find_harvesting_limit_from_conversation(
         lm += "Please provide the specific fishing limit per person as agreed upon in the conversation, if no limit was agreed upon, please answer N/A. "
         lm += reasoning_steps_prompt()
         lm += ' Put the final answer after "Answer:".'
-
-    option_fish_num = range(0, 101)
     with assistant():
         lm = model.gen(
             lm,
@@ -149,17 +147,16 @@ def prompt_find_harvesting_limit_from_conversation(
         lm += f"Answer: "
         lm = model.find(
             lm,
-            regex=r"\d+",
-            default_value="-1",
+            regex=r"N/A|\d+",
+            default_value="N/A",
             name="num_resource",
         )
+        parsed = lm["num_resource"].strip()
 
-        resource_limit_agreed = int(lm["num_resource"]) != -1
-
-        if resource_limit_agreed:
-            res = int(lm["num_resource"])
-            model.end_chain("framework", lm)
-            return res, lm.html()
-        else:
+        if parsed.upper() == "N/A":
             model.end_chain("framework", lm)
             return None, lm.html()
+
+        res = int(parsed)
+        model.end_chain("framework", lm)
+        return res, lm.html()

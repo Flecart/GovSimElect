@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v agent >/dev/null 2>&1; then
+  echo "error: 'agent' CLI not found in PATH" >&2
+  exit 1
+fi
+
+if [ "$#" -lt 3 ]; then
+  echo "usage: tools/cursor-agent-edit <file...> --instruction \"...\"" >&2
+  exit 1
+fi
+
+instruction=""
+files=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --instruction)
+      shift
+      if [ "$#" -eq 0 ]; then
+        echo "error: --instruction requires a value" >&2
+        exit 1
+      fi
+      instruction="$1"
+      ;;
+    *)
+      files+=("$1")
+      ;;
+  esac
+  shift
+done
+
+if [ -z "$instruction" ]; then
+  echo "error: missing --instruction" >&2
+  exit 1
+fi
+
+if [ "${#files[@]}" -eq 0 ]; then
+  echo "error: provide at least one target file" >&2
+  exit 1
+fi
+
+targets=$(printf '%s\n' "${files[@]}")
+
+prompt=$(cat <<EOF
+You are making a bounded edit in the current workspace.
+
+Task:
+$instruction
+
+Constraints:
+- Only edit the listed target files if the task can be completed there.
+- Do not touch unrelated files.
+- Keep the change minimal and preserve existing style.
+- If the request is ambiguous or requires broader exploration, do not improvise; stop and explain why.
+
+Target files:
+$targets
+
+After editing, print:
+1. the files changed
+2. a one-paragraph summary of what changed
+3. any follow-up verification worth running
+EOF
+)
+
+exec agent --print --force --trust --sandbox enabled --workspace "$PWD" "$prompt"

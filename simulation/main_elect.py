@@ -13,9 +13,9 @@ sys.path.append(str(project_root))
 import hydra
 import wandb
 from omegaconf import DictConfig, OmegaConf
-from transformers import set_seed
 
 from simulation.utils import ModelWandbWrapper, WandbLogger
+from simulation.utils import set_seed
 from pathfinder import get_model
 
 from .persona import EmbeddingModel
@@ -29,7 +29,7 @@ def main(cfg: DictConfig):
   set_seed(cfg.experiment.seed)
 
   model = get_model(
-      cfg.llm.path, cfg.llm.is_api, cfg.experiment.seed, cfg.llm.backend
+      cfg.llm.path, seed=cfg.experiment.seed, backend_name=cfg.llm.backend
   )
   logger = WandbLogger(
       cfg.experiment.name, OmegaConf.to_object(cfg), debug=cfg.debug
@@ -58,7 +58,7 @@ def main(cfg: DictConfig):
       temperature=cfg.llm.temperature,
       top_p=cfg.llm.top_p,
       seed=cfg.experiment.seed,
-      is_api=cfg.llm.is_api,
+      is_api=True,
   )
   embedding_model = EmbeddingModel(device="cpu")
 
@@ -94,4 +94,3 @@ def main(cfg: DictConfig):
 if __name__ == "__main__":
   OmegaConf.register_resolver("uuid", lambda: f"run_{uuid.uuid4()}")
   main()
-

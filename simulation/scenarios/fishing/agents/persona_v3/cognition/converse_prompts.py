@@ -88,7 +88,7 @@ def prompt_converse_utterance_in_group(
         # name can be mispelled by LLM sometimes.
         stop_regex=r"Conversation conclusion by me:",
     )
-    utterance = lm["utterance"].strip()
+    utterance = (lm["utterance"] or "").strip()
     if utterance and utterance[-1] == '"' and utterance[0] == '"':
       utterance = utterance[1:-1]
     lm += answer_stop
@@ -160,4 +160,3 @@ def prompt_summarize_conversation_in_one_sentence(
 
   model.end_chain("framework", lm)
   return summary, lm.html()
-

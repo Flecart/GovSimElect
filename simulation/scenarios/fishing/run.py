@@ -75,6 +75,7 @@ def run(
             ),
         },
     )
+    num_personas = cfg.personas.num
     personas = {
         f"persona_{i}": FishingPersona(
             cfg.agent,
@@ -82,12 +83,10 @@ def run(
             framework_wrapper,
             embedding_model,
             os.path.join(experiment_storage, f"persona_{i}"),
+            experiment_storage=experiment_storage,
         )
-        for i in range(12)
+        for i in range(num_personas)
     }
-
-    # NOTE persona characteristics, up to design choices
-    num_personas = cfg.personas.num
 
     identities = {}
     for i in range(num_personas):
@@ -117,8 +116,8 @@ def run(
         cfg.env,
         experiment_storage,
         agent_id_to_name,
-        num_agents=12)
-    agent_id, obs = env.reset(sustainability_threshold=4)
+    )
+    agent_id, obs = env.reset()
     round_harvest_stats = collections.defaultdict(
           lambda: collections.defaultdict(int)
     )
@@ -140,7 +139,7 @@ def run(
         stats = {}
         STATS_KEYS = [
             "conversation_resource_limit",
-            *[f"persona_{i}_collected_resource" for i in range(12)],
+            *[f"persona_{i}_collected_resource" for i in range(num_personas)],
         ]
         for s in STATS_KEYS:
             if s in action.stats:

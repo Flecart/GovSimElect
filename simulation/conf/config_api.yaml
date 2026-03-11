@@ -2,14 +2,11 @@ code_version: v7.0
 group_name: ''
 
 llm:
-  path: openrouter
+  path: openai/gpt-4o-mini
   backend: OpenRouter
-  is_api: true
   render: false
   temperature: 0.0
   top_p: 1.0
-  base_url: "https://openrouter.ai/api/v1"  # Replace with your actual vONF endpoint URL.
-  api_key: ""
   iter: 0
 
 mix_llm: [] # disable
@@ -26,4 +23,3 @@ hydra:
     - ./simulation/scenarios/fishing/conf
     - ./simulation/scenarios/sheep/conf
     - ./simulation/scenarios/pollution/conf
-

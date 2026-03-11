@@ -2,9 +2,9 @@ import re
 import traceback
 import warnings
 from datetime import datetime
+from typing import Any
 
 import pathfinder
-from pathfinder import Model
 
 from .logger import WandbLogger
 
@@ -77,7 +77,7 @@ class ModelWandbWrapper:
 
     def gen(
         self,
-        previous_lm: Model,
+        previous_lm: Any,
         name=None,
         default_value="",
         *,
@@ -90,6 +90,8 @@ class ModelWandbWrapper:
     ):
         start_time_ms = datetime.now().timestamp() * 1000
         prompt = previous_lm._current_prompt()
+        lm = previous_lm
+        res = default_value
 
         if temperature is None:
             temperature = self.temperature
@@ -98,7 +100,7 @@ class ModelWandbWrapper:
             top_p = 1.0
 
         try:
-            lm: Model = previous_lm + pathfinder.gen(
+            lm = previous_lm + pathfinder.gen(
                 name=name,
                 max_tokens=max_tokens,
                 stop_regex=stop_regex,
@@ -143,7 +145,7 @@ class ModelWandbWrapper:
 
     def find(
         self,
-        previous_lm: Model,
+        previous_lm: Any,
         name=None,
         default_value="",
         *,
@@ -155,6 +157,8 @@ class ModelWandbWrapper:
     ):
         start_time_ms = datetime.now().timestamp() * 1000
         prompt = previous_lm._current_prompt()
+        lm = previous_lm
+        res = default_value
 
         if temperature is None:
             temperature = self.temperature
@@ -163,7 +167,7 @@ class ModelWandbWrapper:
             top_p = 1.0
 
         try:
-            lm: Model = previous_lm + pathfinder.find(
+            lm = previous_lm + pathfinder.find(
                 name=name,
                 max_tokens=max_tokens,
                 regex=regex,
@@ -216,10 +220,12 @@ class ModelWandbWrapper:
     ):
         start_time_ms = datetime.now().timestamp() * 1000
         prompt = previous_lm._current_prompt()
+        lm = previous_lm
+        res = default_value
 
         error_message = None
         try:
-            lm: Model = previous_lm + pathfinder.select(
+            lm = previous_lm + pathfinder.select(
                 options=options,
                 name=name,
             )

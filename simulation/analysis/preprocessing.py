@@ -53,6 +53,10 @@ def get_summary_runs(subset_name, WANDB=False):
 
     acc = []
 
+    if not subset_name:
+        empty = pd.DataFrame(columns=["name", "group", "run_id"])
+        return empty, empty.set_index(pd.Index([], name="group"))
+
     if "final" in subset_name:
         WANDB = False
 
@@ -124,27 +128,26 @@ def get_summary_runs(subset_name, WANDB=False):
             )
     else:
         base_path = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "results", subset_name)
-)
+            os.path.join(os.path.dirname(__file__), "..", "results", subset_name)
+        )
+        if not os.path.isdir(base_path):
+            empty = pd.DataFrame(columns=["name", "group", "run_id"])
+            return empty, empty.set_index(pd.Index([], name="group"))
         for group in os.listdir(base_path):
             group_path = os.path.join(base_path, group)
             if not os.path.isdir(group_path):
                 continue
-            for run in os.listdir(group_path):
 
-                run_path = os.path.join(group_path, run)
-                if not os.path.isdir(run_path):
+            for root, _, files in os.walk(group_path):
+                if "log_env.json" not in files:
                     continue
 
-                # from here should be the same as the wandb part
-                log_path = os.path.join(run_path, "log_env.json")
-                if not os.path.exists(log_path):
-                    continue
-                run_path = os.path.join(run_path, ".hydra/config.yaml")
+                rel_run_path = os.path.relpath(root, group_path)
+                config_path = os.path.join(root, ".hydra", "config.yaml")
                 flat_data = {}
-                if os.path.exists(run_path):
+                if os.path.exists(config_path):
                     # Read the YAML file
-                    with open(run_path, "r") as file:
+                    with open(config_path, "r") as file:
                         yaml_data = yaml.safe_load(file)
 
                     # Flatten the YAML data
@@ -156,14 +159,18 @@ def get_summary_runs(subset_name, WANDB=False):
                 acc.append(
                     pd.DataFrame(
                         {
-                            "name": [run],
+                            "name": [rel_run_path],
                             "group": [f"{subset_name}/{group}"],
-                            "run_id": [f"{group}/{run}"],
+                            "run_id": [f"{group}/{rel_run_path}"],
                             **flat_data,
                         },
                         index=[len(acc)],
                     )
                 )
+
+    if not acc:
+        empty = pd.DataFrame(columns=["name", "group", "run_id"])
+        return empty, empty.set_index(pd.Index([], name="group"))
 
     summary_df = pd.concat(acc)
     non_relevant = columns_non_relevant(summary_df)
@@ -228,6 +235,14 @@ def get_summary_runs(subset_name, WANDB=False):
 def load_runs_data(summary_df, summary_group_df):
 
     base_path = os.path.dirname(os.path.abspath(__file__))
+
+    if summary_df.empty:
+        return {
+            "summary_group_df": summary_group_df,
+            "summary_df": summary_df,
+            "run_data": {},
+            "resource_in_pool": {},
+        }
 
     run_data = {}
     for id, row in summary_df.iterrows():

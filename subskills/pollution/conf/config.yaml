@@ -2,10 +2,9 @@ code_version: v7.1
 
 split: single
 
-llm: 
-  path: TheBloke/Nous-Hermes-2-Mixtral-8x7B-DPO-GPTQ
-  backend: transformers
-  is_api: false
+llm:
+  path: openai/gpt-4o-mini
+  backend: OpenRouter
   render: false
   temperature: 0.0
   top_p: 1.0

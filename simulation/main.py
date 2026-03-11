@@ -3,20 +3,13 @@ import shutil
 import uuid
 
 import hydra
-import numpy as np
-from hydra import compose, initialize
-from hydra.core.global_hydra import GlobalHydra
 from omegaconf import DictConfig, OmegaConf
-from transformers import set_seed
 
 import wandb
 from pathfinder import get_model
-from simulation.utils import ModelWandbWrapper, WandbLogger
+from simulation.utils import ModelWandbWrapper, WandbLogger, set_seed
 
 from .persona import EmbeddingModel
-from .scenarios.fishing.run import run as run_scenario_fishing
-from .scenarios.pollution.run import run as run_scenario_pollution
-from .scenarios.sheep.run import run as run_scenario_sheep
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
@@ -33,18 +26,24 @@ def main(cfg: DictConfig):
         f"./results/{cfg.experiment.name}/{run_name}",
     )
 
-    if len(cfg.mix_llm) == 0:
-        model = get_model(cfg.llm.path, cfg.llm.is_api, cfg.seed, cfg.llm.backend)
-
-        wrapper = ModelWandbWrapper(
-            model,
-            render=cfg.llm.render,
-            wanbd_logger=logger,
-            temperature=cfg.llm.temperature,
-            top_p=cfg.llm.top_p,
+    def build_wrapper(llm_cfg):
+        model = get_model(
+            llm_cfg.path,
             seed=cfg.seed,
-            is_api=cfg.llm.is_api,
+            backend_name=llm_cfg.backend,
         )
+        return ModelWandbWrapper(
+            model,
+            render=llm_cfg.render,
+            wanbd_logger=logger,
+            temperature=llm_cfg.temperature,
+            top_p=llm_cfg.top_p,
+            seed=cfg.seed,
+            is_api=True,
+        )
+
+    if len(cfg.mix_llm) == 0:
+        wrapper = build_wrapper(cfg.llm)
         wrappers = [wrapper] * cfg.experiment.personas.num
         wrapper_framework = wrapper
     else:
@@ -59,62 +58,24 @@ def main(cfg: DictConfig):
             llm_config = llm_config.llm
             config_key = (
                 llm_config.path,
-                llm_config.is_api,
                 llm_config.backend,
                 llm_config.temperature,
                 llm_config.top_p,
-                llm_config.gpu_list,
             )
             if config_key not in unique_configs:
-                # Initialize the model only if its config is not already in the unique set
-                model = get_model(
-                    llm_config.path,
-                    llm_config.is_api,
-                    cfg.seed,
-                    llm_config.backend,
-                    llm_config.gpu_list,
-                )
-                wrapper = ModelWandbWrapper(
-                    model,
-                    render=llm_config.render,
-                    wanbd_logger=logger,
-                    temperature=llm_config.temperature,
-                    top_p=llm_config.top_p,
-                    seed=cfg.seed,
-                    is_api=llm_config.is_api,
-                )
-                unique_configs[config_key] = wrapper
+                unique_configs[config_key] = build_wrapper(llm_config)
 
-            # Use the already initialized wrapper for this configuration
             wrappers.append(unique_configs[config_key])
 
-        # The last wrapper is the framework
         llm_framework_config = cfg.framework_model
         config_key = (
             llm_framework_config.path,
-            llm_framework_config.is_api,
             llm_framework_config.backend,
             llm_framework_config.temperature,
             llm_framework_config.top_p,
-            llm_framework_config.gpu_list,
         )
         if config_key not in unique_configs:
-            model = get_model(
-                llm_framework_config.path,
-                llm_framework_config.is_api,
-                cfg.seed,
-                llm_framework_config.backend,
-                llm_framework_config.gpu_list,
-            )
-            wrapper_framework = ModelWandbWrapper(
-                model,
-                render=llm_framework_config.render,
-                wanbd_logger=logger,
-                temperature=llm_framework_config.temperature,
-                top_p=llm_framework_config.top_p,
-                seed=cfg.seed,
-                is_api=llm_framework_config.is_api,
-            )
+            wrapper_framework = build_wrapper(llm_framework_config)
             unique_configs[config_key] = wrapper_framework
         else:
             wrapper_framework = unique_configs[config_key]
@@ -122,6 +83,8 @@ def main(cfg: DictConfig):
     embedding_model = EmbeddingModel(device="cpu")
 
     if cfg.experiment.scenario == "fishing":
+        from .scenarios.fishing.run import run as run_scenario_fishing
+
         run_scenario_fishing(
             cfg.experiment,
             logger,
@@ -131,6 +94,8 @@ def main(cfg: DictConfig):
             experiment_storage,
         )
     elif cfg.experiment.scenario == "sheep":
+        from .scenarios.sheep.run import run as run_scenario_sheep
+
         run_scenario_sheep(
             cfg.experiment,
             logger,
@@ -140,6 +105,8 @@ def main(cfg: DictConfig):
             experiment_storage,
         )
     elif cfg.experiment.scenario == "pollution":
+        from .scenarios.pollution.run import run as run_scenario_pollution
+
         run_scenario_pollution(
             cfg.experiment,
             logger,

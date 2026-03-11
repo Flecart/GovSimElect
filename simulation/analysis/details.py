@@ -154,8 +154,8 @@ details_layout = dmc.Stack(
     ],
 )
 def update_details_graph(subset_name, url, max_y_axis):
-    if not "details" in url:
-        return dash.no_update
+    if not subset_name or not url or "details" not in url:
+        return go.Figure(), go.Figure()
     url = "/".join([u for u in url.split("/") if u != ""])
     group_name = "/".join(url.split("/")[:2])
     preprocessing_data = global_store(subset_name)
@@ -172,7 +172,7 @@ def update_details_graph(subset_name, url, max_y_axis):
     Input("url", "pathname"),
 )
 def update_group_name(url):
-    if not "details" in url:
+    if not url or "details" not in url:
         return dash.no_update
     url = "/".join([u for u in url.split("/") if u != ""])
     group_name = "/".join(url.split("/")[:2])
@@ -194,6 +194,8 @@ def update_group_name(url):
 def update_conversation_run_selection(
     subset_name, url, clickData_num_resource, clickData_resource_by_persona
 ):
+    if not subset_name:
+        return [], None
     preprocessing_data = global_store(subset_name)
     summary_df = preprocessing_data["summary_df"]
 
@@ -212,11 +214,13 @@ def update_conversation_run_selection(
 
         return dash.no_update, run_name
     else:
-        if not "details" in url:
-            return dash.no_update
+        if not url or "details" not in url:
+            return [], None
         url = "/".join([u for u in url.split("/") if u != ""])
         group_name = "/".join(url.split("/")[:2])
         runs = summary_df[summary_df["group"] == group_name]["name"]
+        if runs.empty:
+            return [], None
         return [{"label": i, "value": i} for i in runs], runs.iloc[0]
 
 
@@ -238,8 +242,12 @@ def update_conversation_run_selection(
 def update_conversation_day_selection(
     subset_name, run_name, clickData_num_resource, clickData_resource_by_persona
 ):
+    if not subset_name or not run_name:
+        return [], None, dash.no_update, "conversation", dash.no_update
     preprocessing_data = global_store(subset_name)
     run_data = preprocessing_data["run_data"]
+    if run_name not in run_data:
+        return [], None, dash.no_update, "conversation", dash.no_update
     max_round = run_data[run_name]["round"].max()
 
     day = 0
@@ -286,10 +294,12 @@ def update_conversation_day_selection(
     ],
 )
 def update_details_graph(subset_name, url, run, day):
+    if not subset_name or not url or "details" not in url or run is None or day is None:
+        return html.Div("No conversation selected.")
     preprocessing_data = global_store(subset_name)
     run_data = preprocessing_data["run_data"]
-    if not "details" in url:
-        return dash.no_update
+    if run not in run_data:
+        return html.Div("Run not found.")
 
     df = run_data[run]
 
@@ -307,6 +317,8 @@ def update_details_graph(subset_name, url, run, day):
         )
         acc.append((f"{round+1})", conv[["agent_name", "utterance"]]))
 
+    if day >= len(acc):
+        return html.Div("Conversation not available for that round.")
     c = acc[day][1]
     return dmc.Table(
         striped=True,
@@ -328,14 +340,18 @@ def update_details_graph(subset_name, url, run, day):
     ],
 )
 def update_details_graph_conv_analysis(subset_name, url, run, day, prompt):
+    if not subset_name or not url or "details" not in url or run is None or day is None:
+        return html.Div("No analysis selected.")
     preprocessing_data = global_store(subset_name)
     run_data = preprocessing_data["run_data"]
-    if not "details" in url:
-        return dash.no_update
+    if run not in run_data:
+        return html.Div("Run not found.")
 
     df = run_data[run]
 
     d = df[df["action"] == prompt].groupby("round").first()
+    if d.empty or day >= len(d):
+        return html.Div("Analysis not available for that round.")
     h = d.iloc[day]
 
     return html.Iframe(
@@ -357,10 +373,19 @@ def update_details_graph_conv_analysis(subset_name, url, run, day, prompt):
     ],
 )
 def update_harvesting_prompts(subset_name, url, run, day, persona):
+    if (
+        not subset_name
+        or not url
+        or "details" not in url
+        or run is None
+        or day is None
+        or persona is None
+    ):
+        return html.Div("No harvesting prompt selected.")
     preprocessing_data = global_store(subset_name)
     run_data = preprocessing_data["run_data"]
-    if not "details" in url:
-        return dash.no_update
+    if run not in run_data:
+        return html.Div("Run not found.")
 
     df = run_data[run]
 
@@ -368,7 +393,10 @@ def update_harvesting_prompts(subset_name, url, run, day, persona):
         (df["action"] == "harvesting")
         & (df["round"] == day)
         & (df["agent_id"] == persona)
-    ].iloc[0]
+    ]
+    if h.empty:
+        return html.Div("Harvesting prompt not available for that selection.")
+    h = h.iloc[0]
 
     return html.Iframe(
         sandbox="",

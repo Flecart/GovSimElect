@@ -2,25 +2,19 @@ code_version: v7.0
 group_name: ''
 
 weak_model:
-  path: Qwen/Qwen2.5-0.5B-Instruct
-  backend: transformers
-  is_api: false
+  path: gpt-4o-mini
+  backend: OpenAI
   render: false
   temperature: 0.0
   top_p: 1.0
-  gpu_list: 
-  - 0
 
 
 strong_model:
-  path: Qwen/Qwen2.5-0.5B-Instruct
-  backend: transformers
-  is_api: false
+  path: openai/gpt-4o-mini
+  backend: OpenRouter
   render: false
   temperature: 0.0
   top_p: 1.0
-  gpu_list: 
-  - 0
 
 mix_llm:
 - llm: ${strong_model}

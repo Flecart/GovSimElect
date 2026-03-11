@@ -18,7 +18,8 @@ from utils.charts import get_LLM_order, get_pretty_name_llm
 from .app import app, global_store
 from .utils import create_table, generate_colors, prepare_fig_for_export
 
-pio.kaleido.scope.mathjax = None
+if getattr(pio, "kaleido", None) is not None and getattr(pio.kaleido, "scope", None) is not None:
+    pio.kaleido.scope.mathjax = None
 
 # Run selection
 run_selection = html.Div(
@@ -65,8 +66,12 @@ run_selection = html.Div(
     Input("runs-group", "data"),
 )
 def run_selection_display(group_name):
+    if not group_name:
+        return [], [], []
     preprocessing_data = global_store(group_name)
     summary_group_df = preprocessing_data["summary_group_df"]
+    if summary_group_df.empty:
+        return [], [], []
     summary_group_df["display_name"] = summary_group_df["llm.path"].apply(
         get_pretty_name_llm
     )
@@ -157,7 +162,7 @@ group = html.Div(
     Input("datatable-groups", "derived_virtual_indices"),
 )
 def update_runs_display(row_ids):
-    return row_ids
+    return row_ids or []
 
 
 from .plots import get_figures_group
@@ -178,6 +183,10 @@ from .plots import get_figures_group
     ],
 )
 def update_statistics(group_name, selected_groups, table_data, export_clicks):
+    empty_fig = go.Figure()
+    if not group_name or not table_data:
+        return empty_fig, empty_fig, empty_fig, empty_fig
+
     export = False
     ctx = dash.callback_context
     if not ctx.triggered:
@@ -274,7 +283,7 @@ def update_statistics(group_name, selected_groups, table_data, export_clicks):
     [State("url", "pathname")],
 )
 def handle_graph_click(clickData, current_path):
-    if clickData:
+    if clickData and current_path:
         # Extract clicked element information (e.g., curve number)
         d = clickData["points"][0]
 

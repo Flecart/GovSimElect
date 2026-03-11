@@ -179,4 +179,3 @@ def prompt_election_vote(
 
   model.end_chain(agent.identity.name, lm)
   return vote, lm.html()
-

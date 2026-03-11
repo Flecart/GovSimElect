@@ -1,3 +1,5 @@
+import os
+
 import dash
 import dash_mantine_components as dmc
 import numpy as np
@@ -10,6 +12,52 @@ from flask_caching import Cache
 from plotly.subplots import make_subplots
 
 from .preprocessing import get_data
+
+
+def get_available_subsets():
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    if not os.path.isdir(base_path):
+        return []
+    return sorted(
+        entry
+        for entry in os.listdir(base_path)
+        if os.path.isdir(os.path.join(base_path, entry))
+    )
+
+
+def get_home_layout(message=None):
+    subsets = get_available_subsets()
+    children = [
+        dmc.Title("GovSim Analysis", order=1),
+        dmc.Text("Select a result subset to browse the recorded runs."),
+    ]
+    if message:
+        children.append(dmc.Alert(message, color="yellow", title="Notice"))
+
+    if subsets:
+        children.append(
+            dmc.Stack(
+                [
+                    dcc.Link(
+                        subset,
+                        href=f"/{subset}",
+                        style={"fontSize": "1.1rem"},
+                    )
+                    for subset in subsets
+                ],
+                spacing="xs",
+            )
+        )
+    else:
+        children.append(
+            dmc.Alert(
+                "No subsets were found under simulation/results yet.",
+                color="blue",
+                title="No Data",
+            )
+        )
+
+    return dmc.Container(dmc.Stack(children, spacing="md"), size="lg", pt="xl")
 
 # Setup app
 app = dash.Dash(
@@ -68,20 +116,25 @@ app.layout = dmc.MantineProvider(
     [Input("url", "pathname")],
 )
 def display_page(pathname):
-    # take gropup name before first /
+    pathname = pathname or "/"
+    clean_parts = [part for part in pathname.split("/") if part]
+    if not clean_parts:
+        return get_home_layout(), None
 
-    if not "details" in pathname:
+    if "details" not in pathname:
         from .group import group
 
-        a = pathname.split("/")
-        group_name = a[1]
+        group_name = clean_parts[0]
+        if group_name not in get_available_subsets():
+            return get_home_layout(f"Unknown subset: {group_name}"), None
 
         return group, group_name
     else:
         from .details import details_layout
 
-        pathname = "/".join([u for u in pathname.split("/") if u != ""])
-        group_name = pathname.split("/")[0]
+        group_name = clean_parts[0]
+        if group_name not in get_available_subsets():
+            return get_home_layout(f"Unknown subset: {group_name}"), None
 
         return details_layout, group_name
 
@@ -90,5 +143,17 @@ def display_page(pathname):
 from .details import *
 from .group import *
 
+
+def _env_flag(name, default=False):
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.lower() in {"1", "true", "yes", "on"}
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(
+        debug=_env_flag("SIM_ANALYSIS_DEBUG", False),
+        host=os.getenv("SIM_ANALYSIS_HOST", "0.0.0.0"),
+        port=int(os.getenv("SIM_ANALYSIS_PORT", "8050")),
+    )
