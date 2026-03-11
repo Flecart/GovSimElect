@@ -8,7 +8,6 @@ import numpy as np
 from omegaconf import DictConfig, OmegaConf
 
 from simulation.persona.common import PersonaActionHarvesting
-from simulation.persona import EmbeddingModel
 from simulation.persona.common import PersonaIdentity
 from simulation.utils import ModelWandbWrapper
 
@@ -20,7 +19,6 @@ def run(
     logger: ModelWandbWrapper,
     wrappers: List[ModelWandbWrapper],
     framework_wrapper: ModelWandbWrapper,
-    embedding_model: EmbeddingModel,
     experiment_storage: str,
 ):
     if cfg.agent.agent_package == "persona_v3":
@@ -81,7 +79,6 @@ def run(
             cfg.agent,
             wrappers[i],
             framework_wrapper,
-            embedding_model,
             os.path.join(experiment_storage, f"persona_{i}"),
             experiment_storage=experiment_storage,
         )

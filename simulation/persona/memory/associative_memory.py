@@ -4,8 +4,6 @@ import typing
 from datetime import datetime
 from enum import Enum
 
-import numpy as np
-
 
 class NodeType(Enum):
     CHAT = 1
@@ -192,16 +190,6 @@ class Action(Node):
         )
 
 
-import os
-
-
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
-
-
 class AssociativeMemory:
     def __init__(self, base_path, do_load=False) -> None:
         self.id_to_node: typing.Dict[int, Node] = dict()
@@ -213,43 +201,23 @@ class AssociativeMemory:
 
         self.nodes_without_chat_by_time: list[Node] = []
 
-        self.embeddings: dict[int, list[float]] = dict()
-
         self.base_path = base_path
-        if (
-            os.path.exists(f"{base_path}/embeddings.json")
-            and os.path.exists(f"{base_path}/nodes.json")
-            and do_load
-        ):
+        self.init_memory_md()
+        if os.path.exists(f"{base_path}/nodes.json") and do_load:
             self._load(base_path)
 
+    def init_memory_md(self):
+        memory_md_path = f"{self.base_path}/MEMORY.md"
+        if not os.path.exists(memory_md_path):
+            with open(memory_md_path, "w") as f:
+                f.write("# Private Memory\n")
+
     def _load(self, base_path):
-        raise NotImplementedError("Not sure if it works")
-        self.embeddings = json.load(open(f"{base_path}/embeddings.json"))
-        saved_nodes = json.load(open(f"{base_path}/nodes.json"))
-        for node in saved_nodes:
-            self.id_to_node[node["id"]] = Node(
-                node["id"],
-                NodeType[node["type"]],
-                node["subject"],
-                node["predicate"],
-                node["object"],
-                node["description"],
-                node["embedding_key"],
-                node["created"],
-                node["expiration"],
-            )
+        raise NotImplementedError("AssociativeMemory loading is not implemented.")
 
     def save(self):
-        json.dump(
-            [node.toJSON() for node in self.id_to_node.values()],
-            open(f"{self.base_path}/nodes.json", "w"),
-        )
-        json.dump(
-            self.embeddings,
-            open(f"{self.base_path}/embeddings.json", "w"),
-            cls=NumpyEncoder,
-        )
+        with open(f"{self.base_path}/nodes.json", "w") as f:
+            json.dump([node.toJSON() for node in self.id_to_node.values()], f)
 
     def _add(
         self, subject, predicate, obj, description, type, created, expiration
@@ -318,8 +286,88 @@ class AssociativeMemory:
                 nodes.append(node)
         return nodes
 
-    def get_node_embedding(self, node_id: int):
-        return self.embeddings[node_id]
+    def append_to_memory_md(self, node: Node):
+        type_name = node.type.name.lower()
+        description_lines = node.description.splitlines() or [""]
 
-    def set_node_embedding(self, node_id: int, embedding: list[float]):
-        self.embeddings[node_id] = embedding
+        with open(f"{self.base_path}/MEMORY.md", "a") as f:
+            if os.path.getsize(f"{self.base_path}/MEMORY.md") > 0:
+                f.write("\n")
+            f.write(
+                "- "
+                f"{node.created.strftime('%Y-%m-%d %H:%M:%S')} | "
+                f"type={type_name} | "
+                f"importance={node.importance_score:g} | "
+                f"expires={node.expiration.strftime('%Y-%m-%d %H:%M:%S')} | "
+                f"always_include={'true' if node.always_include else 'false'}\n"
+            )
+            for line in description_lines:
+                f.write(f"  {line}\n")
+
+    def read_memory_md(
+        self, current_time: datetime
+    ) -> list[tuple[datetime, str, float, bool]]:
+        memory_md_path = f"{self.base_path}/MEMORY.md"
+        if not os.path.exists(memory_md_path):
+            self.init_memory_md()
+            return []
+
+        def parse_entry(header: str, description_lines: list[str]):
+            if not header.startswith("- "):
+                return None
+
+            parts = [part.strip() for part in header[2:].split(" | ")]
+            if len(parts) < 5:
+                return None
+
+            created = datetime.strptime(parts[0], "%Y-%m-%d %H:%M:%S")
+            fields = {}
+            for part in parts[1:]:
+                if "=" not in part:
+                    return None
+                key, value = part.split("=", 1)
+                fields[key] = value
+
+            if fields.get("type") == "chat":
+                return None
+
+            expires = datetime.strptime(fields["expires"], "%Y-%m-%d %H:%M:%S")
+            if expires <= current_time:
+                return None
+
+            description = "\n".join(description_lines).strip()
+            importance = float(fields["importance"])
+            always_include = fields["always_include"].lower() == "true"
+            return (created, description, importance, always_include)
+
+        entries: list[tuple[datetime, str, float, bool]] = []
+        current_header = None
+        current_description_lines: list[str] = []
+
+        with open(memory_md_path, "r") as f:
+            for raw_line in f:
+                line = raw_line.rstrip("\n")
+
+                if line.startswith("# "):
+                    continue
+                if line.startswith("- "):
+                    if current_header is not None:
+                        entry = parse_entry(current_header, current_description_lines)
+                        if entry is not None:
+                            entries.append(entry)
+                    current_header = line
+                    current_description_lines = []
+                    continue
+                if current_header is None:
+                    continue
+
+                current_description_lines.append(
+                    line[2:] if line.startswith("  ") else line
+                )
+
+        if current_header is not None:
+            entry = parse_entry(current_header, current_description_lines)
+            if entry is not None:
+                entries.append(entry)
+
+        return entries

@@ -8,7 +8,6 @@ from simulation.persona.common import PersonaAction
 from simulation.persona.common import PersonaActionChat
 from simulation.persona.common import PersonaActionHarvesting
 from simulation.persona.common import PersonaIdentity
-from simulation.persona.embedding_model import EmbeddingModel
 from simulation.persona.memory import AssociativeMemory
 from simulation.scenarios.common.environment import HarvestingObs
 from simulation.scenarios.fishing.agents.persona_v3.cognition import FishingActComponent
@@ -35,7 +34,6 @@ class FishingPersona(PersonaAgent):
       cfg,
       model: ModelWandbWrapper,
       framework_model: ModelWandbWrapper,
-      embedding_model: EmbeddingModel,
       base_path: str,
       memory_cls: type[AssociativeMemory] = AssociativeMemory,
       perceive_cls: type[PerceiveComponent] = PerceiveComponent,
@@ -56,7 +54,6 @@ class FishingPersona(PersonaAgent):
         cfg,
         model,
         framework_model,
-        embedding_model,
         base_path,
         memory_cls,
         perceive_cls,
@@ -214,4 +211,3 @@ class FishingPersona(PersonaAgent):
 
     self.memory.save()  # periodically save memory
     return action
-

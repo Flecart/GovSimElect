@@ -10,7 +10,6 @@ from typing import Any
 
 import numpy as np
 import omegaconf
-from simulation.persona import EmbeddingModel
 from simulation.persona import PersonaAgent
 from simulation.persona import SVOPersonaType
 from simulation.persona.common import PersonaActionHarvesting
@@ -156,7 +155,6 @@ def run(
     logger: ModelWandbWrapper,
     wrapper: ModelWandbWrapper,
     framework_wrapper: ModelWandbWrapper,
-    embedding_model: EmbeddingModel,
     experiment_storage: str,
 ):
   """Run the simulation."""
@@ -210,7 +208,6 @@ def run(
         cfg.agent,
         wrapper,
         framework_wrapper,
-        embedding_model,
         os.path.join(experiment_storage, f"persona_{i}"),
         svo_angle=svo_angle,
         svo_type=svo_type,
@@ -228,7 +225,6 @@ def run(
         cfg.agent,
         wrapper,
         framework_wrapper,
-        embedding_model,
         os.path.join(experiment_storage, f"persona_{i}"),
         experiment_storage=experiment_storage,
     )
@@ -504,4 +500,3 @@ def run(
   env.save_log()
   for persona in personas:
     personas[persona].memory.save()
-

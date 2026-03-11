@@ -22,7 +22,6 @@ from .cognition import (
     RetrieveComponent,
     StoreComponent,
 )
-from .embedding_model import EmbeddingModel
 from .memory import AssociativeMemory, Scratch
 
 
@@ -50,7 +49,6 @@ class PersonaAgent:
       cfg,
       model: ModelWandbWrapper,
       model_framework: ModelWandbWrapper,
-      embedding_model: EmbeddingModel,
       base_path: str,
       memory_cls: type[AssociativeMemory] = AssociativeMemory,
       perceive_cls: type[PerceiveComponent] = PerceiveComponent,
@@ -68,11 +66,9 @@ class PersonaAgent:
     self.current_time = datetime.now()
     self.memory = memory_cls(base_path)
     self.perceive = perceive_cls(model, model_framework)
-    self.retrieve = retrieve_cls(
-        model, model_framework, self.memory, embedding_model
-    )
+    self.retrieve = retrieve_cls(model, model_framework, self.memory)
     self.store = store_cls(
-        model, model_framework, self.memory, embedding_model, self.cfg.store
+        model, model_framework, self.memory, self.cfg.store
     )
     self.reflect = reflect_cls(model, model_framework)
     self.plan = plan_cls(model, model_framework)
@@ -117,4 +113,3 @@ class PersonaAgent:
 
   def loop(self, obs: PersonaOberservation) -> PersonaAction:
     raise NotImplementedError("needs to be implemented in subclass")
-

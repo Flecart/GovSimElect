@@ -9,8 +9,6 @@ import wandb
 from pathfinder import get_model
 from simulation.utils import ModelWandbWrapper, WandbLogger, set_seed
 
-from .persona import EmbeddingModel
-
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
@@ -80,8 +78,6 @@ def main(cfg: DictConfig):
         else:
             wrapper_framework = unique_configs[config_key]
 
-    embedding_model = EmbeddingModel(device="cpu")
-
     if cfg.experiment.scenario == "fishing":
         from .scenarios.fishing.run import run as run_scenario_fishing
 
@@ -90,7 +86,6 @@ def main(cfg: DictConfig):
             logger,
             wrappers,
             wrapper_framework,
-            embedding_model,
             experiment_storage,
         )
     elif cfg.experiment.scenario == "sheep":
@@ -101,7 +96,6 @@ def main(cfg: DictConfig):
             logger,
             wrappers,
             wrapper_framework,
-            embedding_model,
             experiment_storage,
         )
     elif cfg.experiment.scenario == "pollution":
@@ -112,7 +106,6 @@ def main(cfg: DictConfig):
             logger,
             wrappers,
             wrapper_framework,
-            embedding_model,
             experiment_storage,
         )
     else:

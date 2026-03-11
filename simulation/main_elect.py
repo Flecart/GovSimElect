@@ -18,7 +18,6 @@ from simulation.utils import ModelWandbWrapper, WandbLogger
 from simulation.utils import set_seed
 from pathfinder import get_model
 
-from .persona import EmbeddingModel
 # Updated import: run fishing scenario from multi-turn election version.
 from simulation.scenarios.fishing.run_election import run as run_scenario_fishing
 
@@ -60,15 +59,12 @@ def main(cfg: DictConfig):
       seed=cfg.experiment.seed,
       is_api=True,
   )
-  embedding_model = EmbeddingModel(device="cpu")
-
   if cfg.experiment.scenario == "fishing":
     run_scenario_fishing(
         cfg.experiment,
         logger,
         wrapper,
         wrapper,
-        embedding_model,
         experiment_storage,
     )
   else:

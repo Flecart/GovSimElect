@@ -17,6 +17,7 @@ debug: false
   
 
 defaults:
+- _self_
 - experiment: basic
 
 
