@@ -73,6 +73,9 @@ class FishingPersona(PersonaAgent):
     self._harvest_report = harvest_report
     self._current_leader = current_leader
     self._experiment_storage = experiment_storage
+    self._contracting_runtime = None
+    self._formal_contract = ""
+    self._formal_contract_mode = ""
 
   def update_agenda(self, agenda: str) -> None:
     self._agenda = agenda
@@ -114,6 +117,21 @@ class FishingPersona(PersonaAgent):
   def experiment_storage(self) -> float:
     return self._experiment_storage
 
+  @property
+  def contracting_runtime(self):
+    return self._contracting_runtime
+
+  def set_contracting_runtime(self, contracting_runtime) -> None:
+    self._contracting_runtime = contracting_runtime
+
+  def set_formal_contract(
+      self,
+      contract_text: str,
+      contract_mode: str,
+  ) -> None:
+    self._formal_contract = contract_text
+    self._formal_contract_mode = contract_mode
+
   def loop(self, obs: HarvestingObs, debug: bool = False) -> PersonaAction:
     self.current_time = obs.current_time  # update current time
 
@@ -140,6 +158,8 @@ class FishingPersona(PersonaAgent):
                 range(0, obs.current_resource_num + 1),
                 obs.before_harvesting_sustainability_threshold,
                 self._agenda,
+                formal_contract=self._formal_contract,
+                contract_mode=self._formal_contract_mode,
                 debug=debug,
             )
         )
@@ -187,7 +207,9 @@ class FishingPersona(PersonaAgent):
           obs.current_location,
           obs.current_time,
           obs.context,
+          obs.current_resource_num,
           obs.agent_resource_num,
+          obs.before_harvesting_sustainability_threshold,
           mayoral_agenda=self._agenda,
           harvest_report=self._harvest_report,
           leader_persona=self._current_leader,
@@ -234,6 +256,8 @@ class FishingPersona(PersonaAgent):
                 range(0, obs.current_resource_num + 1),
                 obs.before_harvesting_sustainability_threshold,
                 self._agenda,
+                formal_contract=self._formal_contract,
+                contract_mode=self._formal_contract_mode,
                 debug=debug,
             )
         )
@@ -277,7 +301,9 @@ class FishingPersona(PersonaAgent):
           obs.current_location,
           obs.current_time,
           obs.context,
+          obs.current_resource_num,
           obs.agent_resource_num,
+          obs.before_harvesting_sustainability_threshold,
           mayoral_agenda=self._agenda,
           harvest_report=self._harvest_report,
           leader_persona=self._current_leader,

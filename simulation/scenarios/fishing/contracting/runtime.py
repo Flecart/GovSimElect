@@ -1,0 +1,415 @@
+"""Runtime orchestration for fishing formal contracts."""
+
+import asyncio
+import json
+import os
+import re
+from dataclasses import asdict, dataclass
+from datetime import timedelta
+from typing import Any
+
+from simulation.persona import PersonaAgent
+from simulation.persona.common import PersonaIdentity
+from simulation.scenarios.common.environment.concurrent_env import (
+    get_expiration_next_month,
+)
+
+from .coding_agent import CodingAgent
+from .contract import (
+    ContractMode,
+    ContractType,
+    EnforcementResult,
+    FishingContractState,
+    NegotiationProtocol,
+)
+from .enforcers import CodeNLJudge
+from .managers import LawContractManager, NLContractManager, NoCommsManager
+from .negotiation import (
+    CodedContractVotingManager,
+    MayoralVotingNegotiationManager,
+    RoundRobinNegotiationManager,
+)
+
+try:
+  from omegaconf import OmegaConf
+except ImportError:  # pragma: no cover - optional in lightweight smoke tests
+  OmegaConf = None
+
+
+@dataclass
+class ContractingConfig:
+  enabled: bool = False
+  mode: str = ContractMode.NO_COMMUNICATION.value
+  negotiation_protocol: str = NegotiationProtocol.ROUND_ROBIN.value
+  max_turns: int = 6
+  min_agree_agents: int | None = None
+  max_coding_retries: int = 2
+  coding_temperature: float = 0.3
+  judge_temperature: float = 0.3
+
+
+class ContractingOrchestrator:
+  def __init__(
+      self,
+      cfg: Any,
+      framework_model,
+      experiment_storage: str,
+      max_rounds: int,
+  ) -> None:
+    self.cfg = self._coerce_cfg(cfg)
+    self.framework_model = framework_model
+    self.experiment_storage = experiment_storage
+    self.max_rounds = max_rounds
+    self.current_round = 0
+    self.log_path = os.path.join(experiment_storage, "contracting_results.jsonl")
+    self.framework_identity = PersonaIdentity("framework", "Framework")
+    self.coding_identity = PersonaIdentity("coding_agent", "CodingAgent")
+    self._manager = self._build_manager()
+    self._coding_agent = CodingAgent(
+        framework_model,
+        temperature=self.cfg.coding_temperature,
+    )
+    self._judge = CodeNLJudge(
+        framework_model,
+        temperature=self.cfg.judge_temperature,
+    )
+    if isinstance(self._manager, NLContractManager):
+      self._manager.judge = self._judge
+
+  @classmethod
+  def from_cfg(
+      cls,
+      cfg: Any,
+      framework_model,
+      experiment_storage: str,
+      max_rounds: int,
+  ) -> "ContractingOrchestrator | None":
+    if cfg is None:
+      return None
+    orchestrator = cls(cfg, framework_model, experiment_storage, max_rounds)
+    if not orchestrator.enabled:
+      return None
+    return orchestrator
+
+  @property
+  def enabled(self) -> bool:
+    return self.cfg.enabled and self.mode in {
+        ContractMode.CODE_LAW,
+        ContractMode.CODE_NL,
+    }
+
+  @property
+  def mode(self) -> ContractMode:
+    return ContractMode(self.cfg.mode)
+
+  @property
+  def manager(self):
+    return self._manager
+
+  def set_round(self, round_number: int) -> None:
+    self.current_round = round_number
+
+  async def aconduct_negotiation(
+      self,
+      personas: list[PersonaAgent],
+      current_time,
+      current_resource_num: int,
+      sustainability_threshold: int,
+      agent_resource_num: dict[str, int],
+  ) -> tuple[list[tuple[PersonaIdentity, str]], str, int | None, list[str]]:
+    state = FishingContractState(
+        round_number=self.current_round,
+        fish_population=float(current_resource_num),
+        sustainability_threshold=float(sustainability_threshold),
+        num_agents=len(personas),
+        max_rounds=self.max_rounds,
+        speaker_idx=self.current_round,
+    )
+    self._manager.clear_contract()
+
+    if self.cfg.negotiation_protocol == NegotiationProtocol.MAYORAL_VOTING.value:
+      negotiation_manager = MayoralVotingNegotiationManager(
+          personas,
+          max_turns=self.cfg.max_turns,
+      )
+    else:
+      negotiation_manager = RoundRobinNegotiationManager(
+          personas,
+          max_turns=self.cfg.max_turns,
+          min_agree_agents=self.cfg.min_agree_agents,
+      )
+
+    result = await negotiation_manager.run_nl_negotiation(
+        state=state,
+        mode=self.mode,
+        agent_resource_num=agent_resource_num,
+    )
+    for turn in result.conversations:
+      self._manager.add_conversation_turn(
+          agent_name=turn["agent"],
+          message=turn["message"],
+          turn_number=turn.get("turn", 0),
+          phase=turn.get("phase", "nl_negotiation"),
+          html=turn.get("html", ""),
+      )
+
+    final_contract_text = None
+    coding_response = None
+    if result.nl_contract:
+      if self.mode == ContractMode.CODE_NL:
+        final_contract_text = result.nl_contract
+      elif self.mode == ContractMode.CODE_LAW:
+        final_contract_text, coding_response = await self._run_coding_phase(
+            personas=personas,
+            state=state,
+            nl_contract=result.nl_contract,
+        )
+
+    if final_contract_text:
+      agent_names = [persona.identity.name for persona in personas]
+      self._manager.set_contract(
+          content=final_contract_text,
+          agreed_at_round=self.current_round,
+          agent_names=agent_names,
+      )
+      contract = self._manager.get_contract()
+      assert contract is not None
+      contract.metadata.update({
+          "mode": self.mode.value,
+          "nl_contract": result.nl_contract,
+      })
+      self._manager.set_voting_data(
+          voting_scheme=self.cfg.negotiation_protocol,
+          votes=result.votes,
+          agreements=result.agreements,
+          passed=True,
+          consensus_threshold=self.cfg.min_agree_agents,
+      )
+      await self._store_contract_memories(
+          personas=personas,
+          current_time=current_time,
+          nl_contract=result.nl_contract or "",
+      )
+      self._sync_persona_contract_state(personas, result.nl_contract or "")
+      summary = self._contract_summary(contract.contract_type, result.nl_contract or "")
+    else:
+      self._sync_persona_contract_state(personas, "")
+      summary = "No formal contract was adopted for the next round."
+
+    transcript = self._build_transcript(self._manager._conversation)
+    html_interactions = [turn.get("html", "") for turn in self._manager._conversation]
+    transcript.append((self.framework_identity, summary))
+    html_interactions.append(f"<div><strong>FRAMEWORK</strong>: {summary}</div>")
+
+    resource_limit = self._extract_resource_limit(result.nl_contract)
+    limit_text = (
+        f"Detected negotiated resource limit: {resource_limit}"
+        if resource_limit is not None
+        else "Detected negotiated resource limit: N/A"
+    )
+    transcript.append((self.framework_identity, limit_text))
+    html_interactions.append(f"<div><strong>FRAMEWORK</strong>: {limit_text}</div>")
+
+    self._log(
+        "negotiation",
+        {
+            "round": self.current_round,
+            "state": asdict(state),
+            "summary": summary,
+            "result": {
+                "nl_contract": result.nl_contract,
+                "votes": result.votes,
+                "agreements": result.agreements,
+            },
+            "contract": (
+                self._manager.get_contract().to_dict()
+                if self._manager.get_contract()
+                else None
+            ),
+        },
+    )
+    return transcript, summary, resource_limit, html_interactions
+
+  def enforce_catches(self, decisions: dict[str, float], env) -> EnforcementResult:
+    if not self._manager.has_contract():
+      return EnforcementResult(
+          success=True,
+          modified_catches=decisions,
+          reasoning="No active contract for this round.",
+      )
+    state = FishingContractState(
+        round_number=env.num_round,
+        fish_population=float(env.internal_global_state["resource_before_harvesting"]),
+        sustainability_threshold=float(env.internal_global_state["sustainability_threshold"]),
+        num_agents=len(decisions),
+        max_rounds=self.max_rounds,
+        speaker_idx=env.num_round,
+    )
+    result = self._manager.enforce(decisions, state)
+    result.modified_catches = self._normalize_catches(result.modified_catches, decisions)
+    self._log(
+        "enforcement",
+        {
+            "round": env.num_round,
+            "state": asdict(state),
+            "contract": (
+                self._manager.get_contract().to_dict()
+                if self._manager.get_contract()
+                else None
+            ),
+            "result": result.to_dict(),
+        },
+    )
+    return result
+
+  def _normalize_catches(
+      self,
+      modified: dict[str, float],
+      original: dict[str, float],
+  ) -> dict[str, int]:
+    normalized = {}
+    for agent, amount in original.items():
+      value = modified.get(agent, amount)
+      try:
+        normalized[agent] = max(0, int(round(float(value))))
+      except (TypeError, ValueError):
+        normalized[agent] = int(amount)
+    return normalized
+
+  def _build_manager(self):
+    if self.mode == ContractMode.CODE_LAW:
+      return LawContractManager()
+    if self.mode == ContractMode.CODE_NL:
+      return NLContractManager()
+    return NoCommsManager()
+
+  async def _run_coding_phase(
+      self,
+      personas: list[PersonaAgent],
+      state: FishingContractState,
+      nl_contract: str,
+  ) -> tuple[str | None, str | None]:
+    voting_manager = CodedContractVotingManager(personas)
+    feedback = None
+    last_response = None
+    for retry_attempt in range(self.cfg.max_coding_retries + 1):
+      coded_contract, response, html = await self._coding_agent.translate(
+          nl_contract=nl_contract,
+          mode=self.mode,
+          state=state,
+          feedback=feedback,
+      )
+      last_response = response
+      self._manager.add_conversation_turn(
+          agent_name=self.coding_identity.name,
+          message=response,
+          turn_number=len(self._manager._conversation),
+          phase="coding_agent_translation",
+          html=html,
+      )
+      if coded_contract is None:
+        return None, response
+      passed, payload, vote_conversations, votes = await voting_manager.vote_on_coded_contract(
+          coded_contract=coded_contract,
+          nl_contract=nl_contract,
+          retry_attempt=retry_attempt,
+      )
+      for idx, turn in enumerate(vote_conversations, start=len(self._manager._conversation)):
+        self._manager.add_conversation_turn(
+            agent_name=turn["agent"],
+            message=turn["message"],
+            turn_number=idx,
+            phase=turn.get("phase", "coded_contract_vote"),
+            html=turn.get("html", ""),
+        )
+      if passed:
+        contract_votes = votes
+        self._log(
+            "coded_vote",
+            {
+                "round": self.current_round,
+                "votes": contract_votes,
+                "passed": True,
+                "retry_attempt": retry_attempt,
+            },
+        )
+        return coded_contract, response
+      feedback = payload
+    return None, last_response
+
+  async def _store_contract_memories(
+      self,
+      personas: list[PersonaAgent],
+      current_time,
+      nl_contract: str,
+  ) -> None:
+    description = (
+        "A formal contract was adopted for the next round: "
+        f"{nl_contract}"
+    )
+    await asyncio.gather(*[
+        persona.store.astore_thought(
+            description=description,
+            created=current_time,
+            expiration_delta=timedelta(
+                days=(get_expiration_next_month(current_time) - current_time).days
+            ),
+            always_include=True,
+        )
+        for persona in personas
+    ])
+
+  def _build_transcript(
+      self,
+      conversations: list[dict[str, Any]],
+  ) -> list[tuple[PersonaIdentity, str]]:
+    identities = {}
+    transcript = []
+    for turn in conversations:
+      name = turn["agent"]
+      if name not in identities:
+        identities[name] = PersonaIdentity(name, name)
+      transcript.append((identities[name], turn["message"]))
+    return transcript
+
+  def _contract_summary(
+      self,
+      contract_type: ContractType,
+      nl_contract: str,
+  ) -> str:
+    if contract_type == ContractType.PYTHON_LAW:
+      return f"Formal Python-law contract adopted for next round: {nl_contract}"
+    if contract_type == ContractType.NATURAL_LANGUAGE:
+      return f"Formal natural-language contract adopted for next round: {nl_contract}"
+    return "No contract was adopted."
+
+  def _sync_persona_contract_state(
+      self,
+      personas: list[PersonaAgent],
+      nl_contract: str,
+  ) -> None:
+    contract_mode = self.mode.value if nl_contract else ""
+    for persona in personas:
+      persona.set_formal_contract(nl_contract, contract_mode)
+
+  def _extract_resource_limit(self, text: str | None) -> int | None:
+    if not text:
+      return None
+    matches = re.findall(
+        r"(?:at most|no more than|maximum of|limit of|cap of)\s+(\d+)",
+        text.lower(),
+    )
+    if matches:
+      return int(matches[0])
+    return None
+
+  def _log(self, log_type: str, data: dict[str, Any]) -> None:
+    with open(self.log_path, "a") as handle:
+      handle.write(json.dumps({"type": log_type, "data": data}) + "\n")
+
+  def _coerce_cfg(self, cfg: Any) -> ContractingConfig:
+    if OmegaConf is not None and OmegaConf.is_config(cfg):
+      raw_cfg = OmegaConf.to_container(cfg, resolve=True)
+    else:
+      raw_cfg = cfg
+    return ContractingConfig(**raw_cfg)

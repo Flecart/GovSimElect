@@ -28,6 +28,8 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
     interval: list[int],
     consider_identity_persona: bool = True,
     leader_agenda: str = "",
+    formal_contract: str = "",
+    contract_mode: str = "",
     debug: bool = False,
 ):
   del consider_identity_persona
@@ -35,12 +37,21 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
       agent.identity.name, "fishing_cognition_act", "choose_act_options"
   )
   svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
+  contract_context = (
+      "\nThe current formal contract for this round is the following:"
+      f" {formal_contract}\n"
+      f"This contract is enforced in mode: {contract_mode}.\n"
+      "You should account for this formal contract when choosing your catch.\n"
+      if formal_contract else
+      "\nThere is no active formal contract for this round.\n"
+  )
   session.add_user(
       f"{get_sytem_prompt(agent.identity)}\n"
       f"{location_time_info(current_location, current_time)}"
       f"Current context: {context}\n"
       "\nThe current policy following the mayor's agenda is the following:"
       f" {leader_agenda}\n"
+      f"{contract_context}"
       f"{memory_prompt(agent.identity, memories)}\n"
       f"{svo_prompt + chr(10) if svo_prompt else ''}"
       f"{leader_prompt + chr(10) if leader_prompt else ''}"

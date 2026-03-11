@@ -31,12 +31,26 @@ class FishingConverseComponent(ConverseComponent):
       current_location: str,
       current_time: datetime,
       current_context: str,
+      current_resource_num: int,
       agent_resource_num: dict[str, int],
+      sustainability_threshold: int,
       mayoral_agenda: str | None = None,
       harvest_report: str | None = None,
       leader_persona: PersonaAgent | None = None,
       debug: bool = False,
   ) -> tuple[list[tuple[str, str]], str]:
+    contract_runtime = getattr(self.persona, "contracting_runtime", None)
+    if contract_runtime is not None and contract_runtime.enabled:
+      return asyncio.run(
+          contract_runtime.aconduct_negotiation(
+              personas=target_personas,
+              current_time=current_time,
+              current_resource_num=current_resource_num,
+              sustainability_threshold=sustainability_threshold,
+              agent_resource_num=agent_resource_num,
+          )
+      )
+
     current_conversation: list[tuple[PersonaIdentity, str]] = []
 
     html_interactions = []
@@ -202,12 +216,24 @@ class FishingConverseComponent(ConverseComponent):
       current_location: str,
       current_time: datetime,
       current_context: str,
+      current_resource_num: int,
       agent_resource_num: dict[str, int],
+      sustainability_threshold: int,
       mayoral_agenda: str | None = None,
       harvest_report: str | None = None,
       leader_persona: PersonaAgent | None = None,
       debug: bool = False,
   ) -> tuple[list[tuple[str, str]], str]:
+    contract_runtime = getattr(self.persona, "contracting_runtime", None)
+    if contract_runtime is not None and contract_runtime.enabled:
+      return await contract_runtime.aconduct_negotiation(
+          personas=target_personas,
+          current_time=current_time,
+          current_resource_num=current_resource_num,
+          sustainability_threshold=sustainability_threshold,
+          agent_resource_num=agent_resource_num,
+      )
+
     current_conversation: list[tuple[PersonaIdentity, str]] = []
 
     html_interactions = []

@@ -52,3 +52,13 @@ agent:
   store:
     expiration_delta:
       days: 63
+
+contracting:
+  enabled: false
+  mode: no_communication
+  negotiation_protocol: round_robin
+  max_turns: 6
+  min_agree_agents: null
+  max_coding_retries: 2
+  coding_temperature: 0.3
+  judge_temperature: 0.3

@@ -11,6 +11,7 @@ from simulation.persona.common import PersonaActionHarvesting
 from simulation.persona.common import PersonaIdentity
 from simulation.utils import ModelWandbWrapper
 
+from .contracting import ContractingOrchestrator
 from .environment import FishingConcurrentEnv, FishingPerturbationEnv
 
 
@@ -116,11 +117,23 @@ async def run(
         experiment_storage,
         agent_id_to_name,
     )
+    contracting_runtime = ContractingOrchestrator.from_cfg(
+        OmegaConf.select(cfg, "contracting", default=None),
+        framework_wrapper,
+        experiment_storage,
+        cfg.env.max_num_rounds,
+    )
+    if contracting_runtime is not None:
+        for persona in personas.values():
+            persona.set_contracting_runtime(contracting_runtime)
+        env.set_harvest_enforcer(contracting_runtime.enforce_catches)
     agent_id, obs = env.reset()
     round_harvest_stats = collections.defaultdict(
           lambda: collections.defaultdict(int)
     )
     curr_round = env.num_round
+    if contracting_runtime is not None:
+        contracting_runtime.set_round(curr_round)
     while True:
         agent = personas[agent_id]
         action = await agent.aloop(obs, debug=debug)
@@ -162,6 +175,8 @@ async def run(
             )
         if curr_round != env.num_round:
             curr_round = env.num_round
+            if contracting_runtime is not None:
+                contracting_runtime.set_round(curr_round)
         logger.save(experiment_storage, agent_name_to_id)
 
     log_to_file("harvest", round_harvest_stats)

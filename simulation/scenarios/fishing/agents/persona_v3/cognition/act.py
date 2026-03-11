@@ -32,6 +32,8 @@ class FishingActComponent(ActComponent):
       interval: list[int],
       overusage_threshold: int,
       leader_agenda: str,
+      formal_contract: str = "",
+      contract_mode: str = "",
       debug: bool = False,
   ):
     if self.cfg.universalization_prompt:
@@ -46,6 +48,8 @@ class FishingActComponent(ActComponent):
         interval,
         consider_identity_persona=self.cfg.consider_identity_persona,
         leader_agenda=leader_agenda,
+        formal_contract=formal_contract,
+        contract_mode=contract_mode,
         debug=debug,
     )
     res = int(res)
@@ -60,6 +64,8 @@ class FishingActComponent(ActComponent):
       interval: list[int],
       overusage_threshold: int,
       leader_agenda: str,
+      formal_contract: str = "",
+      contract_mode: str = "",
       debug: bool = False,
   ):
     if self.cfg.universalization_prompt:
@@ -74,6 +80,8 @@ class FishingActComponent(ActComponent):
         interval,
         consider_identity_persona=self.cfg.consider_identity_persona,
         leader_agenda=leader_agenda,
+        formal_contract=formal_contract,
+        contract_mode=contract_mode,
         debug=debug,
     )
     res = int(res)

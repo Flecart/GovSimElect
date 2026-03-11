@@ -55,6 +55,8 @@ class ConcurrentEnv:
 
     self.POOL_LOCATION = "pool"
     self._regen_factor_range = regen_factor_range
+    self._harvest_enforcer = None
+    self._post_harvest_observer = None
 
   ### Prompt text
 
@@ -196,6 +198,12 @@ class ConcurrentEnv:
     """
     pass
 
+  def set_harvest_enforcer(self, callback):
+    self._harvest_enforcer = callback
+
+  def set_post_harvest_observer(self, callback):
+    self._post_harvest_observer = callback
+
   def _init_agent(self, agent):
     self.internal_global_state["collected_resource"][agent] = 0
     self.internal_global_state["wanted_resource"][agent] = 0
@@ -253,6 +261,7 @@ class ConcurrentEnv:
         "next_time": {},
         "action": {},
         "regen_factor": init_regen_factor,  # Initialise to 2.0 (doubling).
+        "contract_enforcement": None,
     }
     self._set_sustainability_threshold()
 
@@ -391,7 +400,23 @@ class ConcurrentEnv:
         self.agent_selection
     ] = self.POOL_LOCATION
     if self._agent_selector.is_last():
+      if self._harvest_enforcer is not None:
+        enforcement_result = self._harvest_enforcer(
+            self.internal_global_state["wanted_resource"].copy(),
+            self,
+        )
+        self.internal_global_state["contract_enforcement"] = enforcement_result
+        if enforcement_result and hasattr(enforcement_result, "modified_catches"):
+          self.internal_global_state["wanted_resource"].update(
+              enforcement_result.modified_catches
+          )
       self._assign_resource()
+      if self._post_harvest_observer is not None:
+        self._post_harvest_observer(
+            self.internal_global_state["last_collected_resource"].copy(),
+            self,
+            self.internal_global_state.get("contract_enforcement"),
+        )
       self.phase = self._phase_selector.next()
     self.agent_selection = self._agent_selector.next()
 
@@ -567,4 +592,3 @@ class ConcurrentEnv:
         index=[len(self.df_acc)],
     )
     self.df_acc.append(df_log)
-
