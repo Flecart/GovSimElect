@@ -22,13 +22,21 @@ from pathfinder import get_model
 from simulation.scenarios.fishing.run_election import run as run_scenario_fishing
 
 
+def _normalize_remote_model_name(path: str, backend: str) -> str:
+  if backend.lower() == "openai" and path.lower().startswith("openai/"):
+    return path.split("/", 1)[1]
+  return path
+
+
 @hydra.main(version_base=None, config_path="conf", config_name="config_api")
 def main(cfg: DictConfig):
   print(OmegaConf.to_yaml(cfg))
   set_seed(cfg.experiment.seed)
 
   model = get_model(
-      cfg.llm.path, seed=cfg.experiment.seed, backend_name=cfg.llm.backend
+      _normalize_remote_model_name(cfg.llm.path, cfg.llm.backend),
+      seed=cfg.experiment.seed,
+      backend_name=cfg.llm.backend,
   )
   logger = WandbLogger(
       cfg.experiment.name, OmegaConf.to_object(cfg), debug=cfg.debug

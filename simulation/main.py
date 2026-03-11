@@ -10,6 +10,12 @@ from pathfinder import get_model
 from simulation.utils import ModelWandbWrapper, WandbLogger, set_seed
 
 
+def _normalize_remote_model_name(path: str, backend: str) -> str:
+    if backend.lower() == "openai" and path.lower().startswith("openai/"):
+        return path.split("/", 1)[1]
+    return path
+
+
 @hydra.main(version_base=None, config_path="conf", config_name="config")
 def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
@@ -26,7 +32,7 @@ def main(cfg: DictConfig):
 
     def build_wrapper(llm_cfg):
         model = get_model(
-            llm_cfg.path,
+            _normalize_remote_model_name(llm_cfg.path, llm_cfg.backend),
             seed=cfg.seed,
             backend_name=llm_cfg.backend,
         )
