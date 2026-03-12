@@ -52,7 +52,8 @@ interface RoundContractBundle {
   negotiation?: ContractingEvent;
   codedVote?: ContractingEvent;
   enforcement?: ContractingEvent;
-  contract?: ContractSnapshot | null;
+  negotiatedContract?: ContractSnapshot | null;
+  enforcedContract?: ContractSnapshot | null;
   turns: ContractTurn[];
   toolCalls: ToolCallRecord[];
 }
@@ -297,7 +298,11 @@ export const RunView: React.FC<RunViewProps> = ({
       const snapshot =
         Object.keys(contract).length === 0 ? null : (contract as ContractSnapshot);
       if (snapshot) {
-        bucket.contract = snapshot;
+        if (event.type === "negotiation") {
+          bucket.negotiatedContract = snapshot;
+        } else if (event.type === "enforcement") {
+          bucket.enforcedContract = snapshot;
+        }
       }
       if (event.type === "negotiation") {
         bucket.negotiation = event;
@@ -310,11 +315,9 @@ export const RunView: React.FC<RunViewProps> = ({
 
     for (const bucket of buckets.values()) {
       const sourceContract =
-        bucket.negotiation && asRecord(bucket.negotiation.data.contract)
-          ? (asRecord(bucket.negotiation.data.contract) as ContractSnapshot)
-          : bucket.enforcement && asRecord(bucket.enforcement.data.contract)
-            ? (asRecord(bucket.enforcement.data.contract) as ContractSnapshot)
-            : bucket.contract ?? null;
+        bucket.negotiatedContract ??
+        bucket.enforcedContract ??
+        null;
       const turns = contractTurnsFrom(sourceContract);
       bucket.turns = turns;
       bucket.toolCalls = turns.flatMap((turn) => parseToolCalls(turn.message));
@@ -330,8 +333,11 @@ export const RunView: React.FC<RunViewProps> = ({
 
   const latestContract = useMemo(() => {
     for (let index = contractRounds.length - 1; index >= 0; index -= 1) {
-      if (contractRounds[index].contract) {
-        return contractRounds[index].contract ?? null;
+      if (contractRounds[index].negotiatedContract) {
+        return contractRounds[index].negotiatedContract ?? null;
+      }
+      if (contractRounds[index].enforcedContract) {
+        return contractRounds[index].enforcedContract ?? null;
       }
     }
     return null;
@@ -486,7 +492,8 @@ export const RunView: React.FC<RunViewProps> = ({
                   const negotiationData = asRecord(bundle.negotiation?.data);
                   const enforcementData = asRecord(bundle.enforcement?.data);
                   const codedVoteData = asRecord(bundle.codedVote?.data);
-                  const contract = bundle.contract ?? null;
+                  const negotiatedContract = bundle.negotiatedContract ?? null;
+                  const enforcedContract = bundle.enforcedContract ?? null;
                   const result = asRecord(enforcementData.result);
                   const votes = asRecord(codedVoteData.votes);
                   const executionLog = asArray<string>(result.execution_log);
@@ -531,39 +538,75 @@ export const RunView: React.FC<RunViewProps> = ({
                         </div>
                       )}
 
-                      {contract && (
+                      {enforcedContract && (
                         <div className="contract-block">
-                          <div className="section-kicker">Law in force</div>
+                          <div className="section-kicker">Law used for enforcement this round</div>
                           <div className="badge-row">
-                            <span className="status-badge">{contract.contract_type ?? "unknown"}</span>
                             <span className="status-badge">
-                              proposer: {contract.proposer ?? "n/a"}
+                              {enforcedContract.contract_type ?? "unknown"}
                             </span>
                             <span className="status-badge">
-                              created: {contract.round_created ?? "n/a"}
+                              proposer: {enforcedContract.proposer ?? "n/a"}
+                            </span>
+                            <span className="status-badge">
+                              created: {enforcedContract.round_created ?? "n/a"}
                             </span>
                           </div>
-                          {latestNlLaw && (
-                            <div className="contract-law-grid">
-                              <div>
-                                <div className="section-kicker">Natural-language law</div>
-                                <MarkdownView
-                                  content={
-                                    asString(asRecord(contract.metadata).nl_contract) ||
-                                    "No natural-language law recorded."
-                                  }
-                                />
-                              </div>
-                              <div>
-                                <div className="section-kicker">Rendered contract code</div>
-                                {contractMarkdown(contract) ? (
-                                  <MarkdownView content={contractMarkdown(contract) ?? ""} />
-                                ) : (
-                                  <p>No code attached to this contract.</p>
-                                )}
-                              </div>
+                          <div className="contract-law-grid">
+                            <div>
+                              <div className="section-kicker">Natural-language law</div>
+                              <MarkdownView
+                                content={
+                                  asString(asRecord(enforcedContract.metadata).nl_contract) ||
+                                  "No natural-language law recorded."
+                                }
+                              />
                             </div>
-                          )}
+                            <div>
+                              <div className="section-kicker">Rendered contract code</div>
+                              {contractMarkdown(enforcedContract) ? (
+                                <MarkdownView content={contractMarkdown(enforcedContract) ?? ""} />
+                              ) : (
+                                <p>No code attached to this contract.</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {negotiatedContract && (
+                        <div className="contract-block">
+                          <div className="section-kicker">Law adopted at end of round</div>
+                          <div className="badge-row">
+                            <span className="status-badge">
+                              {negotiatedContract.contract_type ?? "unknown"}
+                            </span>
+                            <span className="status-badge">
+                              proposer: {negotiatedContract.proposer ?? "n/a"}
+                            </span>
+                            <span className="status-badge">
+                              created: {negotiatedContract.round_created ?? "n/a"}
+                            </span>
+                          </div>
+                          <div className="contract-law-grid">
+                            <div>
+                              <div className="section-kicker">Negotiated English law</div>
+                              <MarkdownView
+                                content={
+                                  asString(asRecord(negotiatedContract.metadata).nl_contract) ||
+                                  "No natural-language law recorded."
+                                }
+                              />
+                            </div>
+                            <div>
+                              <div className="section-kicker">Negotiated contract code</div>
+                              {contractMarkdown(negotiatedContract) ? (
+                                <MarkdownView content={contractMarkdown(negotiatedContract) ?? ""} />
+                              ) : (
+                                <p>No code attached to this contract.</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
 

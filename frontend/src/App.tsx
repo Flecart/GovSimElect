@@ -10,7 +10,14 @@ interface ApiSubsetsResponse {
 
 interface ApiSubsetDataResponse {
   summary_groups: SummaryGroupRow[];
-  summary_runs: { name: string; group: string; [key: string]: unknown }[];
+  summary_runs: {
+    name: string;
+    group: string;
+    run_key: string;
+    run_label: string;
+    chart_key: string;
+    [key: string]: unknown;
+  }[];
   run_data: Record<string, RunRow[]>;
   resource_in_pool: Record<string, ResourceRow[]>;
   contracting_data: Record<string, ContractingEvent[]>;
@@ -96,7 +103,7 @@ export const App: React.FC = () => {
             ? []
             : (data.summary_runs ?? [])
                 .filter((r) => r.group === nextActiveGroup)
-                .map((r) => r.name)
+                .map((r) => r.run_key)
                 .sort();
         const preferredRun =
           activeRun && nextRuns.includes(activeRun) ? activeRun : null;
@@ -129,9 +136,29 @@ export const App: React.FC = () => {
     if (!activeGroup) return [];
     return summaryRuns
       .filter((r) => r.group === activeGroup)
-      .map((r) => r.name)
-      .sort();
+      .map((r) => ({
+        key: r.run_key,
+        label: r.run_label,
+        chartKey: r.chart_key
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [summaryRuns, activeGroup]);
+
+  const chartKeyByRun = useMemo(
+    () =>
+      Object.fromEntries(
+        summaryRuns.map((run) => [run.run_key, run.chart_key])
+      ) as Record<string, string>,
+    [summaryRuns]
+  );
+
+  const runLabelByKey = useMemo(
+    () =>
+      Object.fromEntries(
+        summaryRuns.map((run) => [run.run_key, run.run_label])
+      ) as Record<string, string>,
+    [summaryRuns]
+  );
 
   useEffect(() => {
     if (!activeGroup && groups.length) {
@@ -146,10 +173,10 @@ export const App: React.FC = () => {
       return;
     }
     if (!activeRun) {
-      setActiveRun(runsForActiveGroup[0]);
+      setActiveRun(runsForActiveGroup[0].key);
     }
     if (!selectedRuns.length) {
-      setSelectedRuns([runsForActiveGroup[0]]);
+      setSelectedRuns([runsForActiveGroup[0].key]);
     }
   }, [runsForActiveGroup, activeRun, selectedRuns.length]);
 
@@ -165,7 +192,7 @@ export const App: React.FC = () => {
         setActiveRun(null);
         setSelectedRuns([]);
       }}
-      runs={runsForActiveGroup}
+      runs={runsForActiveGroup.map((run) => ({ key: run.key, label: run.label }))}
       activeRun={activeRun}
       selectedRuns={selectedRuns}
       onRunChange={(run) => {
@@ -221,12 +248,14 @@ export const App: React.FC = () => {
 
       {viewMode === "run" ? (
         <RunView
-          runName={activeRun}
+          runName={activeRun ? runLabelByKey[activeRun] ?? activeRun : null}
           runData={activeRun ? runDataByName[activeRun] ?? null : null}
           contractingEvents={activeRun ? contractingDataByRun[activeRun] ?? [] : []}
           activeGroup={activeGroup}
           resourceInPoolByGroup={resourceInPoolByGroup}
-          selectedRuns={selectedRuns}
+          selectedRuns={selectedRuns
+            .map((runKey) => chartKeyByRun[runKey] ?? "")
+            .filter((value) => value.length > 0)}
         />
       ) : (
         <DashboardView

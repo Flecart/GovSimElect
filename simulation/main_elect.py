@@ -16,7 +16,7 @@ import wandb
 from omegaconf import DictConfig, OmegaConf
 
 from simulation.utils import ModelWandbWrapper, WandbLogger, get_model, set_seed
-from simulation.utils import make_unique_run_name, resolve_config_run_name
+from simulation.utils import reserve_run_storage_path
 
 # Updated import: run fishing scenario from multi-turn election version.
 from simulation.scenarios.fishing.run_election import run as run_scenario_fishing
@@ -43,7 +43,7 @@ def main(cfg: DictConfig):
       f"./results/{cfg.experiment.name}",
   )
   os.makedirs(results_root, exist_ok=True)
-  run_name = make_unique_run_name(results_root, resolve_config_run_name(cfg))
+  run_name = reserve_run_storage_path(results_root, cfg)
   logger = WandbLogger(
       cfg.experiment.name,
       OmegaConf.to_object(cfg),

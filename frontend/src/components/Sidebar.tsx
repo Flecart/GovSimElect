@@ -7,11 +7,11 @@ interface SidebarProps {
   groups: string[];
   activeGroup: string | null;
   onGroupChange: (group: string) => void;
-  runs: string[];
+  runs: { key: string; label: string }[];
   activeRun: string | null;
   selectedRuns: string[];
-  onRunChange: (run: string) => void;
-  onRunToggle: (run: string) => void;
+  onRunChange: (runKey: string) => void;
+  onRunToggle: (runKey: string) => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -71,23 +71,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <h2 className="sidebar-title">Runs</h2>
         <ul className="sidebar-list">
           {runs.map((run) => (
-            <li key={run}>
+            <li key={run.key}>
               <div className="sidebar-run-row">
                 <label className="sidebar-run-checkbox">
                   <input
                     type="checkbox"
-                    checked={selectedRuns.includes(run)}
-                    onChange={() => onRunToggle(run)}
+                    checked={selectedRuns.includes(run.key)}
+                    onChange={() => onRunToggle(run.key)}
                   />
                   <span />
                 </label>
                 <button
                   className={
-                    "sidebar-item" + (run === activeRun ? " sidebar-item--active" : "")
+                    "sidebar-item" + (run.key === activeRun ? " sidebar-item--active" : "")
                   }
-                  onClick={() => onRunChange(run)}
+                  onClick={() => onRunChange(run.key)}
                 >
-                  {run}
+                  {run.label}
                 </button>
               </div>
             </li>
@@ -97,4 +97,3 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 };
-

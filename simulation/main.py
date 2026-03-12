@@ -11,8 +11,7 @@ from simulation.utils import (
     ModelWandbWrapper,
     WandbLogger,
     get_model,
-    make_unique_run_name,
-    resolve_config_run_name,
+    reserve_run_storage_path,
     set_seed,
 )
 
@@ -33,8 +32,7 @@ def main(cfg: DictConfig):
         f"./results/{cfg.experiment.name}",
     )
     os.makedirs(results_root, exist_ok=True)
-    configured_base_name = resolve_config_run_name(cfg)
-    run_name = make_unique_run_name(results_root, configured_base_name)
+    run_name = reserve_run_storage_path(results_root, cfg)
     logger = WandbLogger(
         cfg.experiment.name,
         OmegaConf.to_object(cfg),
