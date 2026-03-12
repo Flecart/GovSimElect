@@ -98,32 +98,34 @@ class RetrieveComponent(Component):
         importance_scores = self._importance_retrieval(nodes)
 
         acc_nodes = dict()
+        combined_scores = dict()
+        
+        # ANG: I don't understand what giorgio was trying to accomplish here
+        # looks like it was a bug here... But probably not important. Functionally it's the same.
 
-        for focal_point in focal_points:
-            # combine scores
-            combined_scores = dict()
-
-            for node_index in recency_scores.keys():
-                combined_scores[node_index] = (
-                    recency_scores[node_index] * self.weights["recency"]
-                    + importance_scores[node_index] * self.weights["importance"]
-                )
-
-            # Put max score to node with always_include flag
-            max_value = max(combined_scores.values()) if combined_scores else 10
-            for node_index, (_, _, _, always_include) in enumerate(nodes):
-                if always_include:
-                    combined_scores[node_index] = max_value + 1
-
-            # sort by combined scores
-            sorted_nodes = sorted(
-                enumerate(nodes),
-                key=lambda item: combined_scores[item[0]],
-                reverse=True,
+        for node_index in recency_scores.keys():
+            combined_scores[node_index] = (
+                recency_scores[node_index] * self.weights["recency"]
+                + importance_scores[node_index] * self.weights["importance"]
             )
 
-            # pick top k
-            top_k_nodes = [node for _, node in sorted_nodes[:top_k]]
+        # Put max score to node with always_include flag
+        max_value = max(combined_scores.values()) if combined_scores else 10
+        for node_index, (_, _, _, always_include) in enumerate(nodes):
+            if always_include:
+                combined_scores[node_index] = max_value + 1
+
+        # sort by combined scores
+        sorted_nodes = sorted(
+            enumerate(nodes),
+            key=lambda item: combined_scores[item[0]],
+            reverse=True,
+        )
+
+        # pick top k
+        top_k_nodes = [node for _, node in sorted_nodes[:top_k]]
+
+        for focal_point in focal_points:
             acc_nodes[focal_point] = top_k_nodes
         return acc_nodes
 
