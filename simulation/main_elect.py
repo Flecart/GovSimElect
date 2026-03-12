@@ -16,6 +16,7 @@ import wandb
 from omegaconf import DictConfig, OmegaConf
 
 from simulation.utils import ModelWandbWrapper, WandbLogger, get_model, set_seed
+from simulation.utils import make_unique_run_name, resolve_config_run_name
 
 # Updated import: run fishing scenario from multi-turn election version.
 from simulation.scenarios.fishing.run_election import run as run_scenario_fishing
@@ -37,24 +38,19 @@ def main(cfg: DictConfig):
       seed=cfg.experiment.seed,
       backend_name=cfg.llm.backend,
   )
-  logger = WandbLogger(
-      cfg.experiment.name, OmegaConf.to_object(cfg), debug=cfg.debug
-  )
-  run_name = (
-      logger.run_name
-      if logger.run_name
-      else f"{cfg.llm.path}_disinfo_{cfg.experiment.env.disinformation}_population_{cfg.experiment.agent.leader_population}_run_{cfg.experiment.seed}"
-  )
-  if "gpt" in cfg.llm.path:
-    run_name = os.path.join("gpt", run_name)
-  experiment_storage = os.path.join(
+  results_root = os.path.join(
       os.path.dirname(__file__),
-      f"./results/{cfg.experiment.name}/{run_name}",
+      f"./results/{cfg.experiment.name}",
   )
-  if os.path.exists(f"{experiment_storage}"):
-    # os.remove(f"{experiment_storage}")
-    shutil.rmtree(experiment_storage)
-    print(f"Removed old '{experiment_storage}' ...")
+  os.makedirs(results_root, exist_ok=True)
+  run_name = make_unique_run_name(results_root, resolve_config_run_name(cfg))
+  logger = WandbLogger(
+      cfg.experiment.name,
+      OmegaConf.to_object(cfg),
+      debug=cfg.debug,
+      run_name=run_name,
+  )
+  experiment_storage = os.path.join(results_root, run_name)
   print(f"Experiment storage: {experiment_storage}")
 
   wrapper = ModelWandbWrapper(

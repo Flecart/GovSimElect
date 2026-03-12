@@ -20,6 +20,7 @@ async def run(
     logger: ModelWandbWrapper,
     wrappers: List[ModelWandbWrapper],
     framework_wrapper: ModelWandbWrapper,
+    coding_wrapper: ModelWandbWrapper,
     experiment_storage: str,
 ):
     debug = bool(OmegaConf.select(cfg, "debug", default=False))
@@ -120,6 +121,7 @@ async def run(
     contracting_runtime = ContractingOrchestrator.from_cfg(
         OmegaConf.select(cfg, "contracting", default=None),
         framework_wrapper,
+        coding_wrapper,
         experiment_storage,
         cfg.env.max_num_rounds,
     )

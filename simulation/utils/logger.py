@@ -13,7 +13,14 @@ logger.setLevel(logging.WARNING)
 
 
 class WandbLogger:
-    def __init__(self, scenario_name, configs, debug=False, tags=[]) -> None:
+    def __init__(
+        self,
+        scenario_name,
+        configs,
+        debug=False,
+        tags=[],
+        run_name: str | None = None,
+    ) -> None:
         wandb_mode = "disabled" if debug or not os.getenv("WANDB_API_KEY") else "online"
         run = wandb.init(
             project="EMS",
@@ -22,6 +29,7 @@ class WandbLogger:
             tags=tags,
             save_code=True,
             mode=wandb_mode,
+            name=run_name,
         )
         print(f"Storage name: {run.name}-{run.id}")
         self.run_id = run.id

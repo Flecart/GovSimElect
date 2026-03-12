@@ -189,6 +189,12 @@ class ModelWandbWrapper:
             ModelWandbWrapper._openai_semaphore_loop = current_loop
         return ModelWandbWrapper._openai_semaphore
 
+    def _completion_length_param(self, max_tokens: int) -> dict[str, int]:
+        model_name = (self.model_name or "").lower()
+        if model_name.startswith("gpt-5"):
+            return {"max_completion_tokens": max_tokens}
+        return {"max_tokens": max_tokens}
+
     async def _achat_completion(
         self,
         messages: list[dict[str, str]],
@@ -199,14 +205,15 @@ class ModelWandbWrapper:
         stop: list[str] | str | None = None,
     ) -> tuple[str, int, int]:
         async with self._get_openai_semaphore():
+            length_kwargs = self._completion_length_param(max_tokens)
             out = await self._get_async_client().chat.completions.create(
                 model=self.model_name,
                 messages=messages,
                 temperature=temperature,
                 top_p=top_p,
                 seed=self.seed,
-                max_tokens=max_tokens,
                 stop=stop,
+                **length_kwargs,
             )
         message_content = out.choices[0].message.content
         if isinstance(message_content, str):

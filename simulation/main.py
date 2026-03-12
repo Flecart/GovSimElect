@@ -7,7 +7,14 @@ import hydra
 from omegaconf import DictConfig, OmegaConf
 
 import wandb
-from simulation.utils import ModelWandbWrapper, WandbLogger, get_model, set_seed
+from simulation.utils import (
+    ModelWandbWrapper,
+    WandbLogger,
+    get_model,
+    make_unique_run_name,
+    resolve_config_run_name,
+    set_seed,
+)
 
 
 def _normalize_remote_model_name(path: str, backend: str) -> str:
@@ -21,14 +28,20 @@ def main(cfg: DictConfig):
     print(OmegaConf.to_yaml(cfg))
     set_seed(cfg.seed)
 
-    logger = WandbLogger(cfg.experiment.name, OmegaConf.to_object(cfg), debug=cfg.debug)
-    run_name = logger.run_name if logger.run_name else f"{cfg.llm.path}_run_{cfg.llm.iter}_vanilla"
-    if "gpt" in cfg.llm.path:
-        run_name = os.path.join("gpt", run_name)
-    experiment_storage = os.path.join(
+    results_root = os.path.join(
         os.path.dirname(__file__),
-        f"./results/{cfg.experiment.name}/{run_name}",
+        f"./results/{cfg.experiment.name}",
     )
+    os.makedirs(results_root, exist_ok=True)
+    configured_base_name = resolve_config_run_name(cfg)
+    run_name = make_unique_run_name(results_root, configured_base_name)
+    logger = WandbLogger(
+        cfg.experiment.name,
+        OmegaConf.to_object(cfg),
+        debug=cfg.debug,
+        run_name=run_name,
+    )
+    experiment_storage = os.path.join(results_root, run_name)
 
     def build_wrapper(llm_cfg):
         model = get_model(
@@ -84,9 +97,15 @@ def main(cfg: DictConfig):
         else:
             wrapper_framework = unique_configs[config_key]
 
+    coding_llm_cfg = OmegaConf.select(cfg, "experiment.contracting.coding_llm", default=None)
+    if coding_llm_cfg is not None:
+        wrapper_coding = build_wrapper(coding_llm_cfg)
+    else:
+        wrapper_coding = wrapper_framework
+
     async def close_wrappers():
         seen = set()
-        for wrapper in [*wrappers, wrapper_framework]:
+        for wrapper in [*wrappers, wrapper_framework, wrapper_coding]:
             wrapper_id = id(wrapper)
             if wrapper_id in seen:
                 continue
@@ -103,6 +122,7 @@ def main(cfg: DictConfig):
                     logger,
                     wrappers,
                     wrapper_framework,
+                    wrapper_coding,
                     experiment_storage,
                 )
             else:

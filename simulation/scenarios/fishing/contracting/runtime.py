@@ -4,7 +4,7 @@ import asyncio
 import json
 import os
 import re
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, fields
 from datetime import timedelta
 from typing import Any
 
@@ -46,6 +46,7 @@ class ContractingConfig:
   max_coding_retries: int = 2
   coding_temperature: float = 0.3
   judge_temperature: float = 0.3
+  coding_llm: dict[str, Any] | None = None
 
 
 class ContractingOrchestrator:
@@ -53,6 +54,7 @@ class ContractingOrchestrator:
       self,
       cfg: Any,
       framework_model,
+      coding_model,
       experiment_storage: str,
       max_rounds: int,
   ) -> None:
@@ -66,7 +68,7 @@ class ContractingOrchestrator:
     self.coding_identity = PersonaIdentity("coding_agent", "CodingAgent")
     self._manager = self._build_manager()
     self._coding_agent = CodingAgent(
-        framework_model,
+        coding_model,
         temperature=self.cfg.coding_temperature,
     )
     self._judge = CodeNLJudge(
@@ -81,12 +83,19 @@ class ContractingOrchestrator:
       cls,
       cfg: Any,
       framework_model,
+      coding_model,
       experiment_storage: str,
       max_rounds: int,
   ) -> "ContractingOrchestrator | None":
     if cfg is None:
       return None
-    orchestrator = cls(cfg, framework_model, experiment_storage, max_rounds)
+    orchestrator = cls(
+        cfg,
+        framework_model,
+        coding_model,
+        experiment_storage,
+        max_rounds,
+    )
     if not orchestrator.enabled:
       return None
     return orchestrator
@@ -312,6 +321,7 @@ class ContractingOrchestrator:
       passed, payload, vote_conversations, votes = await voting_manager.vote_on_coded_contract(
           coded_contract=coded_contract,
           nl_contract=nl_contract,
+          state=state,
           retry_attempt=retry_attempt,
       )
       for idx, turn in enumerate(vote_conversations, start=len(self._manager._conversation)):
@@ -395,12 +405,18 @@ class ContractingOrchestrator:
   def _extract_resource_limit(self, text: str | None) -> int | None:
     if not text:
       return None
-    matches = re.findall(
+    patterns = [
         r"(?:at most|no more than|maximum of|limit of|cap of)\s+(\d+)",
-        text.lower(),
-    )
-    if matches:
-      return int(matches[0])
+        r"catch\s+no\s+more\s+than\s+(\d+)",
+        r"catch\s+at\s+most\s+(\d+)",
+        r"limit(?:ing)?\s+(?:our|their|the)?\s*catch(?:es)?\s+to\s+(\d+)",
+        r"(\d+)\s+tons?\s+(?:each|per person|per fisher|per fisherman)",
+    ]
+    lowered = text.lower()
+    for pattern in patterns:
+      matches = re.findall(pattern, lowered)
+      if matches:
+        return int(matches[0])
     return None
 
   def _log(self, log_type: str, data: dict[str, Any]) -> None:
@@ -412,4 +428,8 @@ class ContractingOrchestrator:
       raw_cfg = OmegaConf.to_container(cfg, resolve=True)
     else:
       raw_cfg = cfg
-    return ContractingConfig(**raw_cfg)
+    valid_fields = {field.name for field in fields(ContractingConfig)}
+    filtered_cfg = {
+        key: value for key, value in raw_cfg.items() if key in valid_fields
+    }
+    return ContractingConfig(**filtered_cfg)

@@ -73,7 +73,7 @@ class MayoralVotingNegotiationManager:
         "contracting",
         "mayor_proposal",
         system_prompt,
-        mayor_proposal_prompt(state, agent_resource_num),
+        mayor_proposal_prompt(mayor, state, agent_resource_num),
         default_value=(
             "No contract at all"
         ),
@@ -92,19 +92,18 @@ class MayoralVotingNegotiationManager:
     votes = {mayor.identity.name: True}
     for idx, agent in enumerate(others, start=1):
       retrieved = agent.retrieve.retrieve(["contract", cleaned, "lake"], 8)
-      system_prompt = negotiation_system_prompt(
+      system_prompt, user_prompt = voter_prompt(
           agent,
-          self.agents,
-          retrieved,
           state,
-          mode,
+          cleaned,
+          agent_resource_num,
       )
       vote_response, vote_html = await _aprompt_persona(
           agent,
           "contracting",
           "mayor_vote",
           system_prompt,
-          voter_prompt(cleaned),
+          user_prompt,
           default_value="<VOTE_YES>",
       )
       voted_yes = self._parse_vote(vote_response)
@@ -174,7 +173,7 @@ class RoundRobinNegotiationManager:
           "contracting",
           "round_robin_contract",
           system_prompt,
-          round_robin_prompt(conversations[-5:], state, agent_resource_num),
+          round_robin_prompt(speaker, conversations[-5:], state, agent_resource_num),
           default_value="No proposal at this time.",
       )
       response, clarification_html = await self._ensure_tagged_round_robin_response(
@@ -194,7 +193,14 @@ class RoundRobinNegotiationManager:
 
       has_agree, target_agent, has_disagree = self._parse_agreement_signal(response)
       nl_contract = self._clean_message(response)
-      if nl_contract and not has_agree and not has_disagree:
+      is_own_proposal = self._is_own_proposal_message(
+          speaker_name=speaker_name,
+          nl_contract=nl_contract,
+          has_agree=has_agree,
+          target_agent=target_agent,
+          has_disagree=has_disagree,
+      )
+      if is_own_proposal:
         proposals.append((turn, speaker_name, nl_contract))
         agreements[speaker_name] = nl_contract
       if has_agree and proposals:
@@ -295,6 +301,38 @@ class RoundRobinNegotiationManager:
     cleaned = re.sub(r"\s+", " ", message).strip()
     return cleaned if len(cleaned) > 5 else None
 
+  def _is_own_proposal_message(
+      self,
+      speaker_name: str,
+      nl_contract: str | None,
+      has_agree: bool,
+      target_agent: str | None,
+      has_disagree: bool,
+  ) -> bool:
+    if not nl_contract:
+      return False
+    if has_disagree:
+      return self._looks_like_counterproposal(nl_contract)
+    if not has_agree:
+      return True
+    if target_agent is None:
+      return True
+    return target_agent == speaker_name
+
+  def _looks_like_counterproposal(self, message: str) -> bool:
+    lowered = message.lower()
+    proposal_markers = [
+        "i propose",
+        "my proposal",
+        "counterproposal",
+        "instead,",
+        "rather,",
+        "no more than",
+        "at most",
+        "each of us should",
+    ]
+    return any(marker in lowered for marker in proposal_markers)
+
 
 class CodedContractVotingManager:
   def __init__(
@@ -307,12 +345,15 @@ class CodedContractVotingManager:
       self,
       coded_contract: str,
       nl_contract: str,
+      state: FishingContractState,
       retry_attempt: int = 0,
   ) -> tuple[bool, str | None, list[dict[str, str]], dict[str, bool]]:
     votes: dict[str, bool] = {}
     conversations: list[dict[str, str]] = []
     for agent in self.agents:
       system_prompt, user_prompt = coded_contract_vote_prompt(
+          persona=agent,
+          state=state,
           nl_contract=nl_contract,
           coded_contract=coded_contract,
           retry_attempt=retry_attempt,
@@ -338,7 +379,7 @@ class CodedContractVotingManager:
     yes_votes = sum(1 for voted_yes in votes.values() if voted_yes)
     if yes_votes > len(self.agents) / 2:
       return True, coded_contract, conversations, votes
-    feedback = await self._gather_feedback(votes, coded_contract, nl_contract)
+    feedback = await self._gather_feedback(votes, coded_contract, nl_contract, state)
     return False, feedback, conversations, votes
 
   async def _gather_feedback(
@@ -346,12 +387,15 @@ class CodedContractVotingManager:
       votes: dict[str, bool],
       coded_contract: str,
       nl_contract: str,
+      state: FishingContractState,
   ) -> str:
     feedback = []
     for agent in self.agents:
       if votes.get(agent.identity.name, False):
         continue
       system_prompt, user_prompt = coded_contract_feedback_prompt(
+          persona=agent,
+          state=state,
           nl_contract=nl_contract,
           coded_contract=coded_contract,
       )

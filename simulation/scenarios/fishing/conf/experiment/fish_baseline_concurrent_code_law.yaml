@@ -1,4 +1,6 @@
 name: fishing_${code_version}/${group_name}
+run_name: ""
+storage_name: ""
 scenario: fishing
 
 defaults:
@@ -62,3 +64,9 @@ contracting:
   max_coding_retries: 2
   coding_temperature: 0.3
   judge_temperature: 0.3
+  coding_llm:
+    path: openai/gpt-5.4
+    backend: OpenAI
+    render: false
+    temperature: 0.3
+    top_p: 1.0
