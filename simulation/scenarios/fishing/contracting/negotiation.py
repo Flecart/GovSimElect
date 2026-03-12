@@ -14,6 +14,7 @@ from .prompts import (
     round_robin_tag_clarification_prompt,
     voter_prompt,
 )
+from .tooling import ContractToolbox
 
 
 async def _aprompt_persona(
@@ -37,6 +38,53 @@ async def _aprompt_persona(
   return response, session.html()
 
 
+async def _aprompt_persona_with_tools(
+    persona: PersonaAgent,
+    phase_name: str,
+    query_name: str,
+    system_prompt: str,
+    user_prompt: str,
+    *,
+    toolbox: ContractToolbox | None,
+    max_tool_calls: int,
+    temperature: float | None = None,
+    default_value: str = "",
+) -> tuple[str, str, int]:
+  if toolbox is None or max_tool_calls <= 0:
+    response, html = await _aprompt_persona(
+        persona,
+        phase_name,
+        query_name,
+        system_prompt,
+        user_prompt,
+        temperature=temperature,
+        default_value=default_value,
+    )
+    return response, html, 0
+
+  session = persona.act.model.start_prompt(persona.identity.name, phase_name, query_name)
+  session.add_message("system", system_prompt)
+  session.add_user(user_prompt)
+  tool_calls_used = 0
+
+  while True:
+    response = await persona.act.model.acomplete_prompt(
+        session,
+        temperature=temperature,
+        default_value=default_value,
+    )
+    tool_call = toolbox.parse_tool_call(response)
+    if tool_call is None or tool_calls_used >= max_tool_calls:
+      return response, session.html(), tool_calls_used
+    tool_result = toolbox.execute(tool_call)
+    tool_calls_used += 1
+    session.add_user(
+        "TOOL RESULT:\n"
+        f"{tool_result}\n\n"
+        "Continue the negotiation. If you need another tool, you may call one. Otherwise answer normally."
+    )
+
+
 def _parse_vote_tag(message: str) -> bool:
   upper = message.upper()
   return "<VOTE_YES>" in upper or "YES" in upper.split()[:5]
@@ -47,33 +95,51 @@ class MayoralVotingNegotiationManager:
       self,
       agents: list[PersonaAgent],
       max_turns: int = 10,
+      toolbox: ContractToolbox | None = None,
+      max_tool_calls: int = 0,
   ) -> None:
     self.agents = agents
     self.max_turns = max_turns
+    self.toolbox = toolbox
+    self.max_tool_calls = max_tool_calls
 
   async def run_nl_negotiation(
       self,
       state: FishingContractState,
       mode: ContractMode,
       agent_resource_num: dict[str, int],
+      active_law_text: str = "",
   ) -> NLNegotiationResult:
     mayor_idx = state.speaker_idx % len(self.agents)
     mayor = self.agents[mayor_idx]
     others = [agent for agent in self.agents if agent != mayor]
     retrieved_memories = mayor.retrieve.retrieve(["contract", "agreement", "lake"], 8)
+    tool_instructions = (
+        self.toolbox.render_tool_instructions() if self.toolbox is not None else ""
+    )
     system_prompt = negotiation_system_prompt(
         mayor,
         self.agents,
         retrieved_memories,
         state,
         mode,
+        tool_instructions=tool_instructions,
+        active_law_text=active_law_text,
     )
-    proposal, proposal_html = await _aprompt_persona(
+    proposal, proposal_html, tool_calls_used = await _aprompt_persona_with_tools(
         mayor,
         "contracting",
         "mayor_proposal",
         system_prompt,
-        mayor_proposal_prompt(mayor, state, agent_resource_num),
+        mayor_proposal_prompt(
+            mayor,
+            state,
+            agent_resource_num,
+            tool_instructions=tool_instructions,
+            active_law_text=active_law_text,
+        ),
+        toolbox=self.toolbox,
+        max_tool_calls=self.max_tool_calls,
         default_value=(
             "No contract at all"
         ),
@@ -85,6 +151,7 @@ class MayoralVotingNegotiationManager:
         "message": proposal,
         "phase": "nl_negotiation",
         "html": proposal_html,
+        "tool_calls_used": tool_calls_used,
     }]
     if not cleaned:
       return NLNegotiationResult(nl_contract=None, conversations=conversations)
@@ -142,16 +209,21 @@ class RoundRobinNegotiationManager:
       agents: list[PersonaAgent],
       max_turns: int = 10,
       min_agree_agents: int | None = None,
+      toolbox: ContractToolbox | None = None,
+      max_tool_calls: int = 0,
   ) -> None:
     self.agents = agents
     self.max_turns = max_turns
     self.min_agree_agents = min_agree_agents
+    self.toolbox = toolbox
+    self.max_tool_calls = max_tool_calls
 
   async def run_nl_negotiation(
       self,
       state: FishingContractState,
       mode: ContractMode,
       agent_resource_num: dict[str, int],
+      active_law_text: str = "",
   ) -> NLNegotiationResult:
     conversations: list[dict[str, str]] = []
     proposals: list[tuple[int, str, str]] = []
@@ -161,19 +233,33 @@ class RoundRobinNegotiationManager:
       speaker_idx = (state.speaker_idx + turn) % len(self.agents)
       speaker = self.agents[speaker_idx]
       retrieved = speaker.retrieve.retrieve(["contract", "agreement", "lake"], 8)
+      tool_instructions = (
+          self.toolbox.render_tool_instructions() if self.toolbox is not None else ""
+      )
       system_prompt = negotiation_system_prompt(
           speaker,
           self.agents,
           retrieved,
           state,
           mode,
+          tool_instructions=tool_instructions,
+          active_law_text=active_law_text,
       )
-      response, html = await _aprompt_persona(
+      response, html, tool_calls_used = await _aprompt_persona_with_tools(
           speaker,
           "contracting",
           "round_robin_contract",
           system_prompt,
-          round_robin_prompt(speaker, conversations[-5:], state, agent_resource_num),
+          round_robin_prompt(
+              speaker,
+              conversations[-5:],
+              state,
+              agent_resource_num,
+              tool_instructions=tool_instructions,
+              active_law_text=active_law_text,
+          ),
+          toolbox=self.toolbox,
+          max_tool_calls=self.max_tool_calls,
           default_value="No proposal at this time.",
       )
       response, clarification_html = await self._ensure_tagged_round_robin_response(
@@ -189,6 +275,7 @@ class RoundRobinNegotiationManager:
           "message": response,
           "phase": "nl_negotiation",
           "html": html,
+          "tool_calls_used": tool_calls_used,
       })
 
       has_agree, target_agent, has_disagree = self._parse_agreement_signal(response)

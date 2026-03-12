@@ -48,7 +48,8 @@ class CodingAgent:
         temperature=self.temperature,
         default_value=(
             "```python\n"
-            "modified_catches = dict(catches)\n"
+            "def catch(name, amount, month):\n"
+            "    return amount\n"
             "```"
         ),
     )

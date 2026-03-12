@@ -56,8 +56,12 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
       f"{svo_prompt + chr(10) if svo_prompt else ''}"
       f"{leader_prompt + chr(10) if leader_prompt else ''}"
       f"Task: With a fishing range set between {interval[0]}-{interval[-1]}, how many tons of fish would you catch this month?\n"
+      f"You may express the action explicitly as fish({agent.identity.name}, N).\n"
       f"{reasoning_steps_prompt()}\n"
-      'Return your answer in this format:\nReasoning: ...\nAnswer: N tons'
+      "Return your answer in one of these formats:\n"
+      f"Reasoning: ...\nAction: fish({agent.identity.name}, N)\n"
+      "or\n"
+      "Reasoning: ...\nAnswer: N tons"
   )
   if debug:
     print(f"\n\nCHOOSE AMOUNT PROMPT:\n\n{session._current_prompt()}\n")
@@ -65,7 +69,14 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
       session,
       default_value="Reasoning: No reasoning available.\nAnswer: 0 tons",
   )
-  option = int(extract_first_match(r"Answer:\s*(\d+)", response, "0", re.IGNORECASE))
+  action_match = extract_first_match(
+      rf"Action:\s*fish\(\s*{re.escape(agent.identity.name)}\s*,\s*(\d+)\s*\)",
+      response,
+      None,
+      re.IGNORECASE,
+  )
+  answer_match = extract_first_match(r"Answer:\s*(\d+)", response, "0", re.IGNORECASE)
+  option = int(action_match or answer_match or "0")
 
   response_log_path = os.path.join(agent.experiment_storage, COGNITION_RESPONSES_JSON)
   log_to_file(

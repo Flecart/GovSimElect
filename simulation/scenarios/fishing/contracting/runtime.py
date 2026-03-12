@@ -29,6 +29,7 @@ from .negotiation import (
     MayoralVotingNegotiationManager,
     RoundRobinNegotiationManager,
 )
+from .tooling import ContractToolbox
 
 try:
   from omegaconf import OmegaConf
@@ -47,6 +48,7 @@ class ContractingConfig:
   coding_temperature: float = 0.3
   judge_temperature: float = 0.3
   coding_llm: dict[str, Any] | None = None
+  max_tool_calls_per_turn: int = 2
 
 
 class ContractingOrchestrator:
@@ -66,6 +68,7 @@ class ContractingOrchestrator:
     self.log_path = os.path.join(experiment_storage, "contracting_results.jsonl")
     self.framework_identity = PersonaIdentity("framework", "Framework")
     self.coding_identity = PersonaIdentity("coding_agent", "CodingAgent")
+    self._contract_history: list[dict[str, Any]] = []
     self._manager = self._build_manager()
     self._coding_agent = CodingAgent(
         coding_model,
@@ -77,6 +80,7 @@ class ContractingOrchestrator:
     )
     if isinstance(self._manager, NLContractManager):
       self._manager.judge = self._judge
+    self._install_default_contract()
 
   @classmethod
   def from_cfg(
@@ -126,6 +130,13 @@ class ContractingOrchestrator:
       sustainability_threshold: int,
       agent_resource_num: dict[str, int],
   ) -> tuple[list[tuple[PersonaIdentity, str]], str, int | None, list[str]]:
+    named_resource_num = self._normalize_agent_resource_num(personas, agent_resource_num)
+    existing_contract = self._manager.get_contract()
+    active_law_text = ""
+    if existing_contract is not None:
+      active_law_text = str(
+          existing_contract.metadata.get("nl_contract", existing_contract.content)
+      )
     state = FishingContractState(
         round_number=self.current_round,
         fish_population=float(current_resource_num),
@@ -134,24 +145,29 @@ class ContractingOrchestrator:
         max_rounds=self.max_rounds,
         speaker_idx=self.current_round,
     )
-    self._manager.clear_contract()
+    self._manager.clear_conversation()
 
     if self.cfg.negotiation_protocol == NegotiationProtocol.MAYORAL_VOTING.value:
       negotiation_manager = MayoralVotingNegotiationManager(
           personas,
           max_turns=self.cfg.max_turns,
+          toolbox=ContractToolbox(self._contract_history),
+          max_tool_calls=self.cfg.max_tool_calls_per_turn,
       )
     else:
       negotiation_manager = RoundRobinNegotiationManager(
           personas,
           max_turns=self.cfg.max_turns,
           min_agree_agents=self.cfg.min_agree_agents,
+          toolbox=ContractToolbox(self._contract_history),
+          max_tool_calls=self.cfg.max_tool_calls_per_turn,
       )
 
     result = await negotiation_manager.run_nl_negotiation(
         state=state,
         mode=self.mode,
-        agent_resource_num=agent_resource_num,
+        agent_resource_num=named_resource_num,
+        active_law_text=active_law_text,
     )
     for turn in result.conversations:
       self._manager.add_conversation_turn(
@@ -187,6 +203,7 @@ class ContractingOrchestrator:
           "mode": self.mode.value,
           "nl_contract": result.nl_contract,
       })
+      self._record_contract_history(contract, result.nl_contract or "")
       self._manager.set_voting_data(
           voting_scheme=self.cfg.negotiation_protocol,
           votes=result.votes,
@@ -202,15 +219,40 @@ class ContractingOrchestrator:
       self._sync_persona_contract_state(personas, result.nl_contract or "")
       summary = self._contract_summary(contract.contract_type, result.nl_contract or "")
     else:
-      self._sync_persona_contract_state(personas, "")
-      summary = "No formal contract was adopted for the next round."
+      active_contract = self._manager.get_contract()
+      if active_contract is not None:
+        active_nl_contract = str(
+            active_contract.metadata.get("nl_contract", active_contract.content)
+        )
+        self._sync_persona_contract_state(personas, active_nl_contract)
+        if existing_contract is not None:
+          summary = (
+              "No new formal contract was adopted. "
+              f"The existing law remains in force: {active_nl_contract}"
+          )
+        else:
+          summary = (
+              "No new formal contract was adopted. "
+              f"The active law remains in force: {active_nl_contract}"
+          )
+      else:
+        self._sync_persona_contract_state(personas, "")
+        summary = "No formal contract was adopted for the next round."
 
     transcript = self._build_transcript(self._manager._conversation)
     html_interactions = [turn.get("html", "") for turn in self._manager._conversation]
     transcript.append((self.framework_identity, summary))
     html_interactions.append(f"<div><strong>FRAMEWORK</strong>: {summary}</div>")
 
-    resource_limit = self._extract_resource_limit(result.nl_contract)
+    limit_source = result.nl_contract
+    if limit_source is None and self._manager.get_contract() is not None:
+      limit_source = str(
+          self._manager.get_contract().metadata.get(
+              "nl_contract",
+              self._manager.get_contract().content,
+          )
+      )
+    resource_limit = self._extract_resource_limit(limit_source)
     limit_text = (
         f"Detected negotiated resource limit: {resource_limit}"
         if resource_limit is not None
@@ -240,6 +282,10 @@ class ContractingOrchestrator:
     return transcript, summary, resource_limit, html_interactions
 
   def enforce_catches(self, decisions: dict[str, float], env) -> EnforcementResult:
+    named_decisions = {
+        env.agent_id_to_name.get(agent_id, agent_id): amount
+        for agent_id, amount in decisions.items()
+    }
     if not self._manager.has_contract():
       return EnforcementResult(
           success=True,
@@ -250,12 +296,22 @@ class ContractingOrchestrator:
         round_number=env.num_round,
         fish_population=float(env.internal_global_state["resource_before_harvesting"]),
         sustainability_threshold=float(env.internal_global_state["sustainability_threshold"]),
-        num_agents=len(decisions),
+        num_agents=len(named_decisions),
         max_rounds=self.max_rounds,
         speaker_idx=env.num_round,
     )
-    result = self._manager.enforce(decisions, state)
-    result.modified_catches = self._normalize_catches(result.modified_catches, decisions)
+    result = self._manager.enforce(named_decisions, state)
+    result.modified_catches = self._normalize_catches(
+        {
+            agent_id: result.modified_catches.get(env.agent_id_to_name.get(agent_id, agent_id), amount)
+            for agent_id, amount in decisions.items()
+        },
+        decisions,
+    )
+    result.reward_adjustments = {
+        agent_id: float(result.reward_adjustments.get(env.agent_id_to_name.get(agent_id, agent_id), 0.0))
+        for agent_id in decisions
+    }
     self._log(
         "enforcement",
         {
@@ -422,6 +478,72 @@ class ContractingOrchestrator:
   def _log(self, log_type: str, data: dict[str, Any]) -> None:
     with open(self.log_path, "a") as handle:
       handle.write(json.dumps({"type": log_type, "data": data}) + "\n")
+
+  def _record_contract_history(self, contract, nl_contract: str) -> None:
+    self._contract_history.append({
+        "round_created": contract.round_created,
+        "contract_type": contract.contract_type.value,
+        "content": contract.content,
+        "nl_contract": nl_contract,
+        "agent_names": list(contract.agent_names),
+        "metadata": dict(contract.metadata),
+    })
+
+  def _default_nl_law(self) -> str:
+    return (
+        "Unless and until replaced by a duly adopted law, each fisher shall remain "
+        "free to choose and act according to their own judgment regarding harvest."
+    )
+
+  def _default_code_law(self) -> str:
+    return (
+        "def catch(name, amount, month):\n"
+        "    return amount\n"
+    )
+
+  def _install_default_contract(self) -> None:
+    if self.mode == ContractMode.NO_COMMUNICATION:
+      return
+    default_nl_law = self._default_nl_law()
+    if self.mode == ContractMode.CODE_LAW:
+      self._manager.set_contract(
+          content=self._default_code_law(),
+          agreed_at_round=-1,
+          agent_names=[],
+      )
+    elif self.mode == ContractMode.CODE_NL:
+      self._manager.set_contract(
+          content=default_nl_law,
+          agreed_at_round=-1,
+          agent_names=[],
+      )
+    else:
+      return
+    contract = self._manager.get_contract()
+    if contract is None:
+      return
+    contract.proposer = self.framework_identity.name
+    contract.enforcement_status = "active"
+    contract.metadata.update({
+        "mode": self.mode.value,
+        "nl_contract": default_nl_law,
+        "default_contract": True,
+    })
+    contract.passed = True
+    self._record_contract_history(contract, default_nl_law)
+
+  def _normalize_agent_resource_num(
+      self,
+      personas: list[PersonaAgent],
+      agent_resource_num: dict[str, int],
+  ) -> dict[str, int]:
+    id_to_name = {
+        persona.agent_id: persona.identity.name for persona in personas
+    }
+    normalized = {}
+    for key, value in agent_resource_num.items():
+      normalized[id_to_name.get(key, key)] = value
+    return normalized
 
   def _coerce_cfg(self, cfg: Any) -> ContractingConfig:
     if OmegaConf is not None and OmegaConf.is_config(cfg):

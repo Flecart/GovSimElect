@@ -23,6 +23,7 @@ class ContractManager(ABC):
   def __init__(self) -> None:
     self._contract: Contract | None = None
     self._conversation: list[dict[str, Any]] = []
+    self._execution_state: dict[str, Any] = {}
 
   def _extract_code_block(self, message: str) -> str | None:
     matches = re.findall(r"```(?:\w+)?\s*\n?(.*?)```", message, re.DOTALL)
@@ -108,6 +109,13 @@ class ContractManager(ABC):
   def clear_contract(self) -> None:
     self._contract = None
     self._conversation = []
+    self._execution_state = {}
+
+  def clear_conversation(self) -> None:
+    self._conversation = []
+
+  def get_execution_state(self) -> dict[str, Any]:
+    return self._execution_state
 
   def enforce(
       self,
@@ -120,12 +128,17 @@ class ContractManager(ABC):
           modified_catches=decisions,
           reasoning="No active contract.",
       )
-    return self.get_enforcer().enforce(
+    result = self.get_enforcer().enforce(
         contract=self._contract,
         decisions=decisions,
         state=state,
         context=self.get_enforcement_context(),
+        execution_state=self._execution_state,
     )
+    next_state = result.metadata.get("execution_state")
+    if isinstance(next_state, dict):
+      self._execution_state = next_state
+    return result
 
 
 class NLContractManager(ContractManager):
@@ -150,6 +163,7 @@ class NLContractManager(ContractManager):
       agreed_at_round: int,
       agent_names: list[str],
   ) -> None:
+    self._execution_state = {}
     self._contract = Contract(
         contract_type=ContractType.NATURAL_LANGUAGE,
         content=content,
@@ -180,6 +194,7 @@ class LawContractManager(ContractManager):
       agreed_at_round: int,
       agent_names: list[str],
   ) -> None:
+    self._execution_state = {}
     self._contract = Contract(
         contract_type=ContractType.PYTHON_LAW,
         content=content,

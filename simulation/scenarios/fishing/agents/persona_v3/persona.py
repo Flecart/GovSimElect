@@ -167,6 +167,7 @@ class FishingPersona(PersonaAgent):
             self.agent_id,
             "lake",
             num_resource,
+            commands=[f"fish({self.identity.name}, {num_resource})"],
             stats={f"{self.agent_id}_collected_resource": num_resource},
             html_interactions=html_interactions,
         )
@@ -176,6 +177,7 @@ class FishingPersona(PersonaAgent):
             self.agent_id,
             "lake",
             num_resource,
+            commands=[f"fish({self.identity.name}, {num_resource})"],
             stats={},
             html_interactions="<strong>Framework<strong/>: no fish to catch",
         )
@@ -265,6 +267,7 @@ class FishingPersona(PersonaAgent):
             self.agent_id,
             "lake",
             num_resource,
+            commands=[f"fish({self.identity.name}, {num_resource})"],
             stats={f"{self.agent_id}_collected_resource": num_resource},
             html_interactions=html_interactions,
         )
@@ -274,6 +277,7 @@ class FishingPersona(PersonaAgent):
             self.agent_id,
             "lake",
             num_resource,
+            commands=[f"fish({self.identity.name}, {num_resource})"],
             stats={},
             html_interactions="<strong>Framework<strong/>: no fish to catch",
         )

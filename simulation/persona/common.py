@@ -136,17 +136,20 @@ class PersonaActionHarvesting(PersonaAction):
   """Action of harvesting."""
 
   quantity: int
+  commands: list[str]
 
   def __init__(
       self,
       agent_id,
       location: str,
       quantity: int,
+      commands: list[str] | None = None,
       stats=None,
       html_interactions=None,
   ) -> None:
     super().__init__(agent_id, location, stats, html_interactions)
     self.quantity = quantity
+    self.commands = commands or []
 
 
 class PersonaActionChat(PersonaAction):
@@ -188,4 +191,3 @@ class PersonaEvent:
     self.created = created
     self.expiration = expiration
     self.always_include = always_include
-

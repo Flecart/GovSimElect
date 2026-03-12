@@ -62,6 +62,7 @@ contracting:
   max_turns: 6
   min_agree_agents: null
   max_coding_retries: 2
+  max_tool_calls_per_turn: 2
   coding_temperature: 0.3
   judge_temperature: 0.3
   coding_llm:

@@ -27,6 +27,15 @@ def _resource_report(agent_resource_num: dict[str, int]) -> str:
   return "Latest observed harvests:\n" + "\n".join(items)
 
 
+def _active_law_block(active_law_text: str = "") -> str:
+  if not active_law_text:
+    return "There is currently no active formal law.\n"
+  return (
+      "CURRENT ACTIVE LAW (remains in force unless replaced by a new vote):\n"
+      f"{active_law_text}\n"
+  )
+
+
 def _persona_role_context(persona: PersonaAgent) -> str:
   svo_prompt, disinfo_prompt, leader_prompt = leaders_lib.get_leader_persona_prompts(
       persona
@@ -57,6 +66,8 @@ def negotiation_system_prompt(
     retrieved_memories: list[tuple],
     state: FishingContractState,
     mode: ContractMode,
+    tool_instructions: str = "",
+    active_law_text: str = "",
 ) -> str:
   counterpart_names = [p.identity.name for p in target_personas]
   contract_mode = {
@@ -73,6 +84,8 @@ def negotiation_system_prompt(
       "You are in the monthly post-harvest discussion with "
       f"{list_to_comma_string(counterpart_names)}.\n"
       f"Your goal is to negotiate {contract_mode} for the next round.\n"
+      f"{_active_law_block(active_law_text)}"
+      f"{tool_instructions + chr(10) if tool_instructions else ''}"
       f"{_state_lines(state)}"
   )
 
@@ -81,12 +94,17 @@ def mayor_proposal_prompt(
     persona: PersonaAgent,
     state: FishingContractState,
     agent_resource_num: dict[str, int],
+    tool_instructions: str = "",
+    active_law_text: str = "",
 ) -> str:
   return (
       f"{_persona_harvest_context(persona, agent_resource_num)}"
       f"{_resource_report(agent_resource_num)}\n\n"
+      f"{_active_law_block(active_law_text)}"
       f"{_state_lines(state)}\n"
+      f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Propose one clear contract for the next round in plain English.\n"
+      "If there is already an active law, either keep it, amend it, or propose to replace it.\n"
       "Keep it concrete and enforceable. Do not write Python code.\n"
       "If helpful, specify numeric catch limits, sanctions, redistribution rules,"
       " or a required amount of fish to leave in the lake.\n"
@@ -130,6 +148,8 @@ def round_robin_prompt(
     history: list[dict[str, str]],
     state: FishingContractState,
     agent_resource_num: dict[str, int],
+    tool_instructions: str = "",
+    active_law_text: str = "",
 ) -> str:
   history_text = conversation_to_string_with_dash(
       [(turn["agent"], turn["message"]) for turn in history]
@@ -137,10 +157,13 @@ def round_robin_prompt(
   return (
       f"{_persona_harvest_context(persona, agent_resource_num)}"
       f"{_resource_report(agent_resource_num)}\n\n"
+      f"{_active_law_block(active_law_text)}"
       f"{_state_lines(state)}\n"
+      f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Conversation so far:\n"
       f"{history_text}\n"
       "Respond with your next message in the contract negotiation.\n"
+      "If there is an active law, treat the discussion as keeping, amending, or replacing that law.\n"
       "If you propose a contract, state it plainly in English.\n"
       "If you agree, you must include either <AGREE> or <AGREE to=Name>.\n"
       "If you disagree or reject the current proposal, you must include <DISAGREE>.\n"
@@ -186,7 +209,7 @@ def coding_agent_prompt(
     system_prompt = (
         "You are a contract-to-code translator for a fishing commons simulation.\n"
         "Your ONLY job: convert an agreed natural-language fishing contract into\n"
-        "minimal Python code that sets each fisher's catch amount.\n"
+        "a persistent Python law that stays in force across future months until replaced.\n"
         "Be literal. Be minimal. Do not invent constraints the contract does not state."
     )
 
@@ -194,7 +217,9 @@ def coding_agent_prompt(
         f"{_state_lines(state)}\n"
         "\n"
         "# YOUR TASK\n"
-        "Translate the natural-language contract below into Python code.\n"
+        "Translate the natural-language contract below into a deployed-law style Python contract.\n"
+        "The law should be stable across months and use persistent `contract_state` for memory.\n"
+        "Once adopted, the law remains active until a later vote replaces it.\n"
         "\n"
         "# AVAILABLE VARIABLES (pre-defined — do NOT redeclare them)\n"
         "  catches: dict[str, float]\n"
@@ -204,23 +229,63 @@ def coding_agent_prompt(
         "    Current tons of fish in the lake BEFORE catches are deducted.\n"
         "  num_agents: int\n"
         "    Number of fishers.\n"
+        "  contract_state: dict[str, Any]\n"
+        "    Persistent contract state carried across rounds for this law.\n"
+        "    Use it for ledgers, escrow balances, sanctions, insurance pools, or violation counts.\n"
         "  sustainability_threshold: float\n"
         "    A legacy variable that may be present in the runtime.\n"
         "    IGNORE IT unless the contract explicitly refers to it by name.\n"
         "\n"
+        "# AVAILABLE PRIMITIVES\n"
+        "  fish(name, amount)\n"
+        "    Set a fisher's desired catch by name.\n"
+        "  transfer(src, dst, amount, reason='')\n"
+        "    Move payoff from one fisher to another.\n"
+        "  escrow(name, amount, bucket='default', reason='')\n"
+        "    Lock payoff into persistent escrow tracked in contract_state.\n"
+        "  release_escrow(name, amount=None, bucket='default', recipient=None, reason='')\n"
+        "    Release some or all escrow back to the fisher or to a recipient.\n"
+        "  sanction(name, amount, reason='')\n"
+        "    Apply a direct monetary penalty.\n"
+        "  graduated_sanction(name, base_amount, key='default', multiplier=1.0, reason='')\n"
+        "    Increase sanctions based on prior violation counts stored in contract_state.\n"
+        "  insurance(name, premium=0.0, payout=0.0, pool='default', recipient=None, reason='')\n"
+        "    Collect premiums and/or pay out from an insurance pool tracked in contract_state.\n"
+        "  participation_cost(name, amount, reason='')\n"
+        "    Charge a monetary participation fee.\n"
+        "\n"
+        "# REQUIRED INTERFACE\n"
+        "Define a top-level function with this exact signature:\n"
+        "```python\n"
+        "def catch(name, amount, month):\n"
+        "    ...\n"
+        "```\n"
+        "- `name` is the fisher's human-readable name.\n"
+        "- `amount` is that fisher's submitted catch choice for the month.\n"
+        "- `month` is the current month index / round number.\n"
+        "- The function may return a replacement catch amount, or `None` if it directly calls `fish(name, ...)`.\n"
+        "- Use `contract_state` for permanence across months, like a deployed blockchain contract.\n"
+        "\n"
         "# EXECUTION MODEL\n"
-        "Your code runs ONCE per round. After it executes, the framework will:\n"
+        "Your code is deployed once and then reused every round until replaced.\n"
+        "At enforcement time, the framework will execute your law and call `catch(name, amount, month)` once for each fisher.\n"
+        "After contract execution, the framework will:\n"
         "  1. Deduct each fisher's catch from fish_population.\n"
         "  2. Apply the reproduction rule (remaining fish double).\n"
+        "  3. Apply any payoff adjustments produced by transfer / escrow / sanction / insurance / participation_cost.\n"
         "Do NOT simulate deduction or reproduction — the framework handles both.\n"
-        "Your ONLY responsibility is setting values in `catches`.\n"
+        "Your responsibility is setting catches and any explicit contractual payoff mechanics.\n"
         "\n"
         "# TRANSLATION RULES\n"
         "- Be LITERAL: encode only constraints the contract states.\n"
+        "- Prefer the named primitives above, especially inside `catch(name, amount, month)`, over raw dict manipulation.\n"
         "- If the contract says 'each fisher catches at most X tons' → set each catch to X.\n"
         "- If the contract says 'leave at least Y tons in the lake' →\n"
         "    cap total catches at max(0, fish_population - Y), then divide fairly.\n"
         "    But ONLY if the contract explicitly states this constraint.\n"
+        "- If the contract specifies escrow, sanctions, insurance, participation fees, or transfers, encode them using the provided primitives.\n"
+        "- Use `contract_state` only for persistent contract state; do not invent unrelated state.\n"
+        "- The law must keep working in future months, not just the current one.\n"
         "- Do NOT add formulas, safety margins, or dynamic calculations the contract does not specify.\n"
         "- Do NOT model reproduction or compute post-catch population.\n"
         "- Do NOT use `sustainability_threshold` unless the contract explicitly names it.\n"
@@ -228,7 +293,8 @@ def coding_agent_prompt(
         "\n"
         "# OUTPUT FORMAT\n"
         "Write a single ```python fenced block. Nothing else.\n"
-        "- Edit `catches` in place.\n"
+        "- The code must define `catch(name, amount, month)`.\n"
+        "- You may call the named primitives and edit `catches` in place if needed.\n"
         "- No imports, no print(), no tests, no example usage.\n"
         "\n"
         f"{feedback_section}"

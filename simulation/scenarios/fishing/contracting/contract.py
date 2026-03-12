@@ -84,6 +84,8 @@ class EnforcementResult:
   success: bool
   modified_catches: dict[str, float]
   reasoning: str
+  reward_adjustments: dict[str, float] = field(default_factory=dict)
+  execution_log: list[str] = field(default_factory=list)
   metadata: dict[str, Any] = field(default_factory=dict)
 
   def to_dict(self) -> dict[str, Any]:
@@ -91,5 +93,7 @@ class EnforcementResult:
         "success": self.success,
         "modified_catches": self.modified_catches,
         "reasoning": self.reasoning,
+        "reward_adjustments": self.reward_adjustments,
+        "execution_log": self.execution_log,
         "metadata": self.metadata,
     }

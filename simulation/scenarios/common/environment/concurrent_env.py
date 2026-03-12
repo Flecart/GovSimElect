@@ -262,6 +262,7 @@ class ConcurrentEnv:
         "action": {},
         "regen_factor": init_regen_factor,  # Initialise to 2.0 (doubling).
         "contract_enforcement": None,
+        "contract_reward_adjustments": {},
     }
     self._set_sustainability_threshold()
 
@@ -391,6 +392,22 @@ class ConcurrentEnv:
       self.internal_global_state["last_collected_resource"][agent] = res
 
       self.rewards[agent] += res
+
+    self._apply_contract_reward_adjustments()
+
+  def _apply_contract_reward_adjustments(self):
+    enforcement_result = self.internal_global_state.get("contract_enforcement")
+    adjustments = getattr(enforcement_result, "reward_adjustments", {}) or {}
+    normalized = {}
+    for agent in self.agents:
+      delta = adjustments.get(agent, 0.0)
+      try:
+        delta = float(delta)
+      except (TypeError, ValueError):
+        delta = 0.0
+      self.rewards[agent] += delta
+      normalized[agent] = delta
+    self.internal_global_state["contract_reward_adjustments"] = normalized
 
   def _step_lake_bet(self, action: PersonaActionHarvesting):
     res = action.quantity
@@ -545,6 +562,12 @@ class ConcurrentEnv:
         "concurrent_harvesting": [True],
         "resource_collected": [resource_collected],
         "wanted_resource": [action.quantity],
+        "commands": [getattr(action, "commands", [])],
+        "contract_reward_adjustment": [
+            self.internal_global_state.get("contract_reward_adjustments", {}).get(
+                action.agent_id, 0.0
+            )
+        ],
         "html_interactions": [action.html_interactions],
     }
     if "sustainable_intention" in action.stats:
