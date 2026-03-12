@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Layout } from "./components/Layout";
 import { Sidebar } from "./components/Sidebar";
-import { RunView, RunRow } from "./components/RunView";
+import { ContractingEvent, RunView, RunRow } from "./components/RunView";
 import { DashboardView, ResourceRow, SummaryGroupRow } from "./components/DashboardView";
 
 interface ApiSubsetsResponse {
@@ -13,6 +13,7 @@ interface ApiSubsetDataResponse {
   summary_runs: { name: string; group: string; [key: string]: unknown }[];
   run_data: Record<string, RunRow[]>;
   resource_in_pool: Record<string, ResourceRow[]>;
+  contracting_data: Record<string, ContractingEvent[]>;
 }
 
 export const App: React.FC = () => {
@@ -31,6 +32,9 @@ export const App: React.FC = () => {
   const [summaryGroups, setSummaryGroups] = useState<SummaryGroupRow[]>([]);
   const [resourceInPoolByGroup, setResourceInPoolByGroup] = useState<
     Record<string, ResourceRow[]>
+  >({});
+  const [contractingDataByRun, setContractingDataByRun] = useState<
+    Record<string, ContractingEvent[]>
   >({});
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
@@ -75,6 +79,7 @@ export const App: React.FC = () => {
         setSummaryRuns(data.summary_runs ?? []);
         setRunDataByName(data.run_data ?? {});
         setResourceInPoolByGroup(data.resource_in_pool ?? {});
+        setContractingDataByRun(data.contracting_data ?? {});
         setLastUpdatedAt(Date.now());
 
         // Preserve current selections when possible.
@@ -182,8 +187,8 @@ export const App: React.FC = () => {
       <header className="main-header">
         <h1>GovSim Agent Explorer</h1>
         <p>
-          Visualise simulation runs and inspect what each agent is thinking and doing
-          across time.
+          Visualise simulation runs, formal contract negotiations, code-law drafts,
+          tool use, and round-by-round fishing execution.
         </p>
         {lastUpdatedAt && (
           <p className="main-subtle">
@@ -218,6 +223,7 @@ export const App: React.FC = () => {
         <RunView
           runName={activeRun}
           runData={activeRun ? runDataByName[activeRun] ?? null : null}
+          contractingEvents={activeRun ? contractingDataByRun[activeRun] ?? [] : []}
           activeGroup={activeGroup}
           resourceInPoolByGroup={resourceInPoolByGroup}
           selectedRuns={selectedRuns}
@@ -234,4 +240,3 @@ export const App: React.FC = () => {
 
   return <Layout sidebar={sidebar} main={main} />;
 };
-

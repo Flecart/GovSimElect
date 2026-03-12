@@ -1,3 +1,4 @@
+import json
 import os
 
 import dash
@@ -161,6 +162,33 @@ def _serialize_dataframe(df):
     return cleaned.to_dict(orient="records")
 
 
+def _load_contracting_events(summary_df):
+    if summary_df is None or summary_df.empty:
+        return {}
+
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    contracting_data = {}
+    for _, row in summary_df.iterrows():
+        run_path = os.path.join(
+            base_path, row["group"], row["name"], "contracting_results.jsonl"
+        )
+        if not os.path.exists(run_path):
+            continue
+
+        events = []
+        with open(run_path, "r") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    events.append(json.loads(line))
+                except json.JSONDecodeError:
+                    continue
+        contracting_data[row["name"]] = events
+    return contracting_data
+
+
 @server.route("/api/results", methods=["GET"])
 def api_list_results():
     subsets = get_available_subsets()
@@ -184,6 +212,7 @@ def api_result_subset(subset_name):
     summary_df = data.get("summary_df")
     run_data = data.get("run_data", {})
     resource_in_pool = data.get("resource_in_pool", {})
+    contracting_data = _load_contracting_events(summary_df)
 
     return {
         "summary_groups": _serialize_dataframe(summary_group_df),
@@ -200,6 +229,7 @@ def api_result_subset(subset_name):
             )
             for group_name, df in resource_in_pool.items()
         },
+        "contracting_data": contracting_data,
     }
 
 
