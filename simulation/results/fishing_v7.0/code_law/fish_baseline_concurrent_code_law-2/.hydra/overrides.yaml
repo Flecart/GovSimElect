@@ -1,0 +1,3 @@
+- experiment=fish_baseline_concurrent_code_law
+- debug=true
+- experiment.run_name=code_law
