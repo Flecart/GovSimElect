@@ -26,3 +26,38 @@ bash ./setup_cloud.sh
 ```
 
 The cloud setup also avoids requiring `sentence_transformers`; if that package is absent, the simulation falls back to a lightweight hash-based embedding for memory retrieval.
+
+## Frontend
+
+The repo also includes a React frontend for browsing simulation results under [`frontend/`](/home/angeloh/Desktop/work/GovSimElect/frontend).
+
+Install the frontend dependencies with:
+
+```bash
+cd frontend
+pnpm install
+```
+
+For local development, run:
+
+```bash
+cd frontend
+pnpm dev
+```
+
+This starts both:
+- the Vite frontend on `http://localhost:5173`
+- the analysis backend on `http://localhost:8050`
+
+To build the frontend bundle:
+
+```bash
+cd frontend
+pnpm build
+```
+
+If you want to run the analysis backend separately without the Vite dev server:
+
+```bash
+uv run python3 -m simulation.analysis.app
+```

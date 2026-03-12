@@ -177,6 +177,13 @@ def _build_run_label(row):
     return "run"
 
 
+def _build_chart_key(row):
+    name = row.get("name")
+    if isinstance(name, str) and name not in {"", "."}:
+        return name
+    return _build_run_label(row)
+
+
 def _load_contracting_events(summary_df):
     if summary_df is None or summary_df.empty:
         return {}
@@ -221,6 +228,56 @@ def _load_run_records(summary_df):
     return run_records
 
 
+def _load_resource_time_series(summary_df):
+    if summary_df is None or summary_df.empty:
+        return {}
+
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    grouped_frames = {}
+
+    for _, row in summary_df.iterrows():
+        run_path = os.path.join(base_path, row["group"], row["name"], "log_env.json")
+        if not os.path.exists(run_path):
+            continue
+
+        df = pd.read_json(run_path, orient="records")
+        harvest = df[df["action"] == "harvesting"].copy()
+        if harvest.empty:
+            continue
+
+        chart_key = _build_chart_key(row)
+        points = []
+        for round_num in sorted(harvest["round"].dropna().unique()):
+            round_rows = harvest[harvest["round"] == round_num]
+            if round_rows.empty:
+                continue
+            before = round_rows.iloc[0].get("resource_in_pool_before_harvesting")
+            after = round_rows.iloc[0].get("resource_in_pool_after_harvesting")
+            points.append({"x": float(round_num), "round": int(round_num), chart_key: before})
+            points.append(
+                {
+                    "x": float(round_num) + 0.8,
+                    "round": int(round_num),
+                    chart_key: after,
+                }
+            )
+
+        run_frame = pd.DataFrame(points).replace([np.nan, np.inf, -np.inf], None)
+        grouped_frames.setdefault(row["group"], []).append(run_frame)
+
+    resource_in_pool = {}
+    for group, frames in grouped_frames.items():
+        merged = None
+        for frame in frames:
+            if merged is None:
+                merged = frame
+            else:
+                merged = pd.merge(merged, frame, on=["x", "round"], how="outer")
+        if merged is not None:
+            resource_in_pool[group] = merged.sort_values(["x", "round"]).reset_index(drop=True)
+    return resource_in_pool
+
+
 @server.route("/api/results", methods=["GET"])
 def api_list_results():
     subsets = get_available_subsets()
@@ -243,7 +300,7 @@ def api_result_subset(subset_name):
     summary_group_df = data.get("summary_group_df")
     summary_df = data.get("summary_df")
     run_data = data.get("run_data", {})
-    resource_in_pool = data.get("resource_in_pool", {})
+    resource_in_pool = _load_resource_time_series(summary_df)
     contracting_data = _load_contracting_events(summary_df)
     run_records = _load_run_records(summary_df)
     summary_runs = []
@@ -252,7 +309,7 @@ def api_result_subset(subset_name):
         for row in cleaned_summary.to_dict(orient="records"):
             row["run_key"] = row.get("run_id")
             row["run_label"] = _build_run_label(row)
-            row["chart_key"] = row.get("name")
+            row["chart_key"] = _build_chart_key(row)
             summary_runs.append(row)
 
     return {

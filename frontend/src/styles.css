@@ -264,6 +264,31 @@ details summary {
   background: white;
 }
 
+.tabs-row {
+  display: flex;
+  gap: 0.5rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.tab {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tab--active {
+  background: #0f766e;
+  color: white;
+}
+
+.tab--inactive {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
 .html-panel {
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;

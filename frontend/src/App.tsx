@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Layout } from "./components/Layout";
 import { Sidebar } from "./components/Sidebar";
 import { ContractingEvent, RunView, RunRow } from "./components/RunView";
@@ -13,14 +13,44 @@ interface ApiSubsetDataResponse {
   summary_runs: {
     name: string;
     group: string;
-    run_key: string;
-    run_label: string;
-    chart_key: string;
+    run_id?: string;
+    run_key?: string;
+    run_label?: string;
+    chart_key?: string;
     [key: string]: unknown;
   }[];
   run_data: Record<string, RunRow[]>;
   resource_in_pool: Record<string, ResourceRow[]>;
   contracting_data: Record<string, ContractingEvent[]>;
+}
+
+interface RunOption {
+  key: string;
+  label: string;
+  chartKey: string;
+  group: string;
+}
+
+function getRunKey(run: ApiSubsetDataResponse["summary_runs"][number]): string {
+  return String(run.run_key ?? run.run_id ?? run.name ?? "");
+}
+
+function getRunLabel(run: ApiSubsetDataResponse["summary_runs"][number]): string {
+  if (typeof run.run_label === "string" && run.run_label.length > 0) {
+    return run.run_label;
+  }
+  if (typeof run.name === "string" && run.name.length > 0 && run.name !== ".") {
+    return run.name;
+  }
+  if (typeof run.group === "string" && run.group.length > 0) {
+    const parts = run.group.split("/");
+    return parts[parts.length - 1] || run.group;
+  }
+  return "run";
+}
+
+function getChartKey(run: ApiSubsetDataResponse["summary_runs"][number]): string {
+  return String(run.chart_key ?? run.name ?? "");
 }
 
 export const App: React.FC = () => {
@@ -46,6 +76,8 @@ export const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const activeGroupRef = useRef<string | null>(null);
+  const activeRunRef = useRef<string | null>(null);
 
   useEffect(() => {
     const loadSubsets = async () => {
@@ -66,6 +98,14 @@ export const App: React.FC = () => {
     };
     loadSubsets();
   }, [activeSubset]);
+
+  useEffect(() => {
+    activeGroupRef.current = activeGroup;
+  }, [activeGroup]);
+
+  useEffect(() => {
+    activeRunRef.current = activeRun;
+  }, [activeRun]);
 
   useEffect(() => {
     if (!activeSubset) return;
@@ -94,7 +134,9 @@ export const App: React.FC = () => {
           new Set((data.summary_runs ?? []).map((r) => r.group))
         ).sort();
         const preferredGroup =
-          activeGroup && nextGroups.includes(activeGroup) ? activeGroup : null;
+          activeGroupRef.current && nextGroups.includes(activeGroupRef.current)
+            ? activeGroupRef.current
+            : null;
         const nextActiveGroup = preferredGroup ?? nextGroups[0] ?? null;
         setActiveGroup(nextActiveGroup);
 
@@ -103,10 +145,12 @@ export const App: React.FC = () => {
             ? []
             : (data.summary_runs ?? [])
                 .filter((r) => r.group === nextActiveGroup)
-                .map((r) => r.run_key)
+                .map((r) => getRunKey(r))
                 .sort();
         const preferredRun =
-          activeRun && nextRuns.includes(activeRun) ? activeRun : null;
+          activeRunRef.current && nextRuns.includes(activeRunRef.current)
+            ? activeRunRef.current
+            : null;
         const nextActiveRun = preferredRun ?? nextRuns[0] ?? null;
         setActiveRun(nextActiveRun);
 
@@ -125,21 +169,22 @@ export const App: React.FC = () => {
     loadSubsetData();
     const interval = window.setInterval(loadSubsetData, 5000);
     return () => window.clearInterval(interval);
-  }, [activeSubset, activeGroup, activeRun]);
+  }, [activeSubset]);
 
   const groups = useMemo(
     () => Array.from(new Set(summaryRuns.map((r) => r.group))).sort(),
     [summaryRuns]
   );
 
-  const runsForActiveGroup = useMemo(() => {
+  const runsForActiveGroup = useMemo<RunOption[]>(() => {
     if (!activeGroup) return [];
     return summaryRuns
       .filter((r) => r.group === activeGroup)
       .map((r) => ({
-        key: r.run_key,
-        label: r.run_label,
-        chartKey: r.chart_key
+        key: getRunKey(r),
+        label: getRunLabel(r),
+        chartKey: getChartKey(r),
+        group: r.group
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [summaryRuns, activeGroup]);
@@ -147,7 +192,7 @@ export const App: React.FC = () => {
   const chartKeyByRun = useMemo(
     () =>
       Object.fromEntries(
-        summaryRuns.map((run) => [run.run_key, run.chart_key])
+        summaryRuns.map((run) => [getRunKey(run), getChartKey(run)])
       ) as Record<string, string>,
     [summaryRuns]
   );
@@ -155,7 +200,7 @@ export const App: React.FC = () => {
   const runLabelByKey = useMemo(
     () =>
       Object.fromEntries(
-        summaryRuns.map((run) => [run.run_key, run.run_label])
+        summaryRuns.map((run) => [getRunKey(run), getRunLabel(run)])
       ) as Record<string, string>,
     [summaryRuns]
   );
