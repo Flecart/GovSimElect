@@ -36,6 +36,28 @@ def _active_law_block(active_law_text: str = "") -> str:
   )
 
 
+def _coding_interface_limitations_block(mode: ContractMode) -> str:
+  if mode != ContractMode.CODE_LAW:
+    return ""
+  return (
+      "PYTHON-LAW INTERFACE LIMITS:\n"
+      "- Any approved agreement must be translated into a persistent Python law.\n"
+      "- The deployed law can control catches through `catch(name, amount, month)` and the provided primitives only.\n"
+      "- It may use persistent `contract_state`, but it cannot invent hidden world state beyond that interface.\n"
+      "- The framework, not the law, handles fish deduction and reproduction after catches are set.\n"
+      "- Prefer concrete, durable rules. Reject proposals that depend on vague future discretion or mechanics the interface cannot represent.\n"
+  )
+
+
+def _active_code_law_block(active_code_law: str = "") -> str:
+  if not active_code_law:
+    return "There is currently no deployed Python law.\n"
+  return (
+      "CURRENT DEPLOYED PYTHON LAW (remains active unless replaced):\n"
+      f"```python\n{active_code_law}\n```\n"
+  )
+
+
 def _persona_role_context(persona: PersonaAgent) -> str:
   svo_prompt, disinfo_prompt, leader_prompt = leaders_lib.get_leader_persona_prompts(
       persona
@@ -85,6 +107,7 @@ def negotiation_system_prompt(
       f"{list_to_comma_string(counterpart_names)}.\n"
       f"Your goal is to negotiate {contract_mode} for the next round.\n"
       f"{_active_law_block(active_law_text)}"
+      f"{_coding_interface_limitations_block(mode)}"
       f"{tool_instructions + chr(10) if tool_instructions else ''}"
       f"{_state_lines(state)}"
   )
@@ -94,6 +117,7 @@ def mayor_proposal_prompt(
     persona: PersonaAgent,
     state: FishingContractState,
     agent_resource_num: dict[str, int],
+    mode: ContractMode,
     tool_instructions: str = "",
     active_law_text: str = "",
 ) -> str:
@@ -101,6 +125,7 @@ def mayor_proposal_prompt(
       f"{_persona_harvest_context(persona, agent_resource_num)}"
       f"{_resource_report(agent_resource_num)}\n\n"
       f"{_active_law_block(active_law_text)}"
+      f"{_coding_interface_limitations_block(mode)}"
       f"{_state_lines(state)}\n"
       f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Propose one clear contract for the next round in plain English.\n"
@@ -121,22 +146,32 @@ def voter_prompt(
     state: FishingContractState,
     nl_contract: str,
     agent_resource_num: dict[str, int],
+    mode: ContractMode,
+    active_law_text: str = "",
 ) -> tuple[str, str]:
   role_context = _persona_role_context(persona)
+  interface_vote_guidance = ""
+  if mode == ContractMode.CODE_LAW:
+    interface_vote_guidance = (
+        "Vote NO if you would rather keep the current law than approve a proposal the Python-law interface cannot represent faithfully.\n"
+    )
   system_prompt = (
       f"{get_sytem_prompt(persona.identity)}\n"
       f"{role_context + chr(10) if role_context else ''}"
       "You are deciding whether to approve a proposed natural-language fishing contract.\n"
       "Judge whether it is a workable agreement for the next round, not whether it is perfect.\n"
+      f"{_coding_interface_limitations_block(mode)}"
       f"{_state_lines(state)}"
   )
   user_prompt = (
       f"{_persona_harvest_context(persona, agent_resource_num)}"
       f"{_resource_report(agent_resource_num)}\n\n"
+      f"{_active_law_block(active_law_text)}"
       "Evaluate the following proposed contract for the next round.\n"
       f"Contract:\n{nl_contract}\n\n"
       "Vote YES if you can accept this as the contract for the next round.\n"
-      "Vote NO only if you materially disagree with the rule or think it is too vague to follow.\n"
+      "Vote NO if you materially disagree with the rule or think it is too vague to follow.\n"
+      f"{interface_vote_guidance}"
       "If you approve it, start your response with <VOTE_YES>.\n"
       "If you reject it, start your response with <VOTE_NO> and briefly explain why."
   )
@@ -148,6 +183,7 @@ def round_robin_prompt(
     history: list[dict[str, str]],
     state: FishingContractState,
     agent_resource_num: dict[str, int],
+    mode: ContractMode,
     tool_instructions: str = "",
     active_law_text: str = "",
 ) -> str:
@@ -158,6 +194,7 @@ def round_robin_prompt(
       f"{_persona_harvest_context(persona, agent_resource_num)}"
       f"{_resource_report(agent_resource_num)}\n\n"
       f"{_active_law_block(active_law_text)}"
+      f"{_coding_interface_limitations_block(mode)}"
       f"{_state_lines(state)}\n"
       f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Conversation so far:\n"
@@ -194,6 +231,8 @@ def round_robin_tag_clarification_prompt(
 def coding_agent_prompt(
     nl_contract: str,
     state: FishingContractState,
+    active_nl_law: str = "",
+    active_code_law: str = "",
     feedback: str | None = None,
 ) -> tuple[str, str]:
 
@@ -220,6 +259,9 @@ def coding_agent_prompt(
         "Translate the natural-language contract below into a deployed-law style Python contract.\n"
         "The law should be stable across months and use persistent `contract_state` for memory.\n"
         "Once adopted, the law remains active until a later vote replaces it.\n"
+        "If the new agreement is an amendment to the current law rather than a full replacement,\n"
+        "preserve the current law's unchanged obligations in the new code.\n"
+        "If the new agreement clearly replaces the current law, you may discard the old logic.\n"
         "\n"
         "# AVAILABLE VARIABLES (pre-defined — do NOT redeclare them)\n"
         "  catches: dict[str, float]\n"
@@ -297,6 +339,10 @@ def coding_agent_prompt(
         "- You may call the named primitives and edit `catches` in place if needed.\n"
         "- No imports, no print(), no tests, no example usage.\n"
         "\n"
+        "# CURRENT ACTIVE LAW\n"
+        f"{_active_law_block(active_nl_law)}"
+        f"{_active_code_law_block(active_code_law)}"
+        "\n"
         f"{feedback_section}"
         "# NATURAL-LANGUAGE CONTRACT\n"
         f"{nl_contract}\n"
@@ -311,16 +357,25 @@ def coded_contract_vote_prompt(
     nl_contract: str,
     coded_contract: str,
     retry_attempt: int,
+    active_nl_law: str = "",
+    active_code_law: str = "",
 ) -> tuple[str, str]:
   return (
-      _coded_contract_vote_system_prompt(persona, state),
-      _coded_contract_vote_user_prompt(nl_contract, coded_contract, retry_attempt),
+      _coded_contract_vote_system_prompt(persona, state, active_nl_law, active_code_law),
+      _coded_contract_vote_user_prompt(
+          nl_contract,
+          coded_contract,
+          retry_attempt,
+          active_nl_law,
+      ),
   )
 
 
 def _coded_contract_vote_system_prompt(
     persona: PersonaAgent,
     state: FishingContractState,
+    active_nl_law: str = "",
+    active_code_law: str = "",
 ) -> str:
   role_context = _persona_role_context(persona)
   return (
@@ -329,9 +384,12 @@ def _coded_contract_vote_system_prompt(
       f"- Fish in the lake: {state.fish_population:.1f} tons\n"
       f"- Round: {state.round_number + 1} of {state.max_rounds}\n\n"
       f"{role_context + chr(10) if role_context else ''}"
+      f"{_active_law_block(active_nl_law)}"
+      f"{_active_code_law_block(active_code_law)}"
+      f"{_coding_interface_limitations_block(ContractMode.CODE_LAW)}"
       "A natural-language contract was agreed upon, and a coding agent has translated it into Python.\n"
-      "You must judge whether the Python faithfully represents the agreed contract.\n"
-      "Judge faithfulness to the agreement, not whether you personally prefer a different deal."
+      "You must judge whether the Python faithfully represents the agreed contract and whether the proposed replacement is preferable to keeping the current deployed law.\n"
+      "Judge faithfulness to the agreement and to the coding interface, not whether you personally prefer a different deal."
   )
 
 
@@ -339,6 +397,7 @@ def _coded_contract_vote_user_prompt(
     nl_contract: str,
     coded_contract: str,
     retry_attempt: int,
+    active_nl_law: str = "",
 ) -> str:
   retry_note = ""
   if retry_attempt:
@@ -353,7 +412,9 @@ def _coded_contract_vote_user_prompt(
       f"{retry_note}\n"
       "VOTING GUIDELINES:\n"
       "- Vote YES if the code captures the core intent of the agreement, even if formatting or implementation details differ.\n"
-      "- Vote NO only for substantive mismatches: missing rules, wrong calculations, or logic that changes the agreement's effect.\n"
+      "- Vote NO for substantive mismatches: missing rules, wrong calculations, logic that changes the agreement's effect, or an amendment that drops important parts of the current law without authorization.\n"
+      "- Vote NO if the proposal depends on mechanics this coding interface cannot faithfully implement.\n"
+      f"- A NO vote keeps the current law in force{': ' + active_nl_law if active_nl_law else '.'}\n"
       "- The goal is a workable faithful contract, not perfect style.\n\n"
       "If the Python code faithfully represents the agreement, start your response with <VOTE_YES>.\n"
       "Otherwise start with <VOTE_NO> and explain the substantive mismatch briefly."

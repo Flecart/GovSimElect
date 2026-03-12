@@ -24,6 +24,8 @@ class CodingAgent:
       nl_contract: str,
       mode: ContractMode,
       state: FishingContractState,
+      active_nl_law: str = "",
+      active_code_law: str = "",
       feedback: str | None = None,
   ) -> tuple[str | None, str, str]:
     if mode == ContractMode.CODE_NL:
@@ -34,6 +36,8 @@ class CodingAgent:
     system_prompt, user_prompt = coding_agent_prompt(
         nl_contract=nl_contract,
         state=state,
+        active_nl_law=active_nl_law,
+        active_code_law=active_code_law,
         feedback=feedback,
     )
     session = self.model.start_prompt(
@@ -65,6 +69,11 @@ class CodingAgent:
       matches = re.findall(pattern, response, re.DOTALL | re.IGNORECASE)
       if matches:
         code = matches[0].strip()
-        if "catches" in code or "modified_catches" in code:
+        if (
+            "catches" in code
+            or "modified_catches" in code
+            or "def catch(" in code
+            or "class " in code
+        ):
           return code
     return None

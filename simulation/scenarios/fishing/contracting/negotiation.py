@@ -135,6 +135,7 @@ class MayoralVotingNegotiationManager:
             mayor,
             state,
             agent_resource_num,
+            mode,
             tool_instructions=tool_instructions,
             active_law_text=active_law_text,
         ),
@@ -164,6 +165,8 @@ class MayoralVotingNegotiationManager:
           state,
           cleaned,
           agent_resource_num,
+          mode,
+          active_law_text=active_law_text,
       )
       vote_response, vote_html = await _aprompt_persona(
           agent,
@@ -255,6 +258,7 @@ class RoundRobinNegotiationManager:
               conversations[-5:],
               state,
               agent_resource_num,
+              mode,
               tool_instructions=tool_instructions,
               active_law_text=active_law_text,
           ),
@@ -434,6 +438,8 @@ class CodedContractVotingManager:
       nl_contract: str,
       state: FishingContractState,
       retry_attempt: int = 0,
+      active_nl_law: str = "",
+      active_code_law: str = "",
   ) -> tuple[bool, str | None, list[dict[str, str]], dict[str, bool]]:
     votes: dict[str, bool] = {}
     conversations: list[dict[str, str]] = []
@@ -444,6 +450,8 @@ class CodedContractVotingManager:
           nl_contract=nl_contract,
           coded_contract=coded_contract,
           retry_attempt=retry_attempt,
+          active_nl_law=active_nl_law,
+          active_code_law=active_code_law,
       )
       response, html = await _aprompt_persona(
           agent,

@@ -357,11 +357,22 @@ class ContractingOrchestrator:
     voting_manager = CodedContractVotingManager(personas)
     feedback = None
     last_response = None
+    active_contract = self._manager.get_contract()
+    active_nl_law = ""
+    active_code_law = ""
+    if active_contract is not None:
+      active_nl_law = str(
+          active_contract.metadata.get("nl_contract", active_contract.content)
+      )
+      if active_contract.contract_type == ContractType.PYTHON_LAW:
+        active_code_law = active_contract.content
     for retry_attempt in range(self.cfg.max_coding_retries + 1):
       coded_contract, response, html = await self._coding_agent.translate(
           nl_contract=nl_contract,
           mode=self.mode,
           state=state,
+          active_nl_law=active_nl_law,
+          active_code_law=active_code_law,
           feedback=feedback,
       )
       last_response = response
@@ -379,6 +390,8 @@ class ContractingOrchestrator:
           nl_contract=nl_contract,
           state=state,
           retry_attempt=retry_attempt,
+          active_nl_law=active_nl_law,
+          active_code_law=active_code_law,
       )
       for idx, turn in enumerate(vote_conversations, start=len(self._manager._conversation)):
         self._manager.add_conversation_turn(
