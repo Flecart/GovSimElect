@@ -11,6 +11,7 @@ from .prompts import (
     mayor_proposal_prompt,
     negotiation_system_prompt,
     round_robin_prompt,
+    round_robin_tag_clarification_prompt,
     voter_prompt,
 )
 
@@ -34,6 +35,11 @@ async def _aprompt_persona(
       default_value=default_value,
   )
   return response, session.html()
+
+
+def _parse_vote_tag(message: str) -> bool:
+  upper = message.upper()
+  return "<VOTE_YES>" in upper or "YES" in upper.split()[:5]
 
 
 class MayoralVotingNegotiationManager:
@@ -171,6 +177,12 @@ class RoundRobinNegotiationManager:
           round_robin_prompt(conversations[-5:], state, agent_resource_num),
           default_value="No proposal at this time.",
       )
+      response, clarification_html = await self._ensure_tagged_round_robin_response(
+          speaker,
+          response,
+      )
+      if clarification_html:
+        html = f"{html}{clarification_html}"
       speaker_name = speaker.identity.name
       conversations.append({
           "turn": turn,
@@ -180,12 +192,9 @@ class RoundRobinNegotiationManager:
           "html": html,
       })
 
-      has_agree, target_agent = self._parse_agreement_signal(
-          response,
-          [agent.identity.name for agent in self.agents],
-      )
+      has_agree, target_agent, has_disagree = self._parse_agreement_signal(response)
       nl_contract = self._clean_message(response)
-      if nl_contract and not self._looks_like_agreement_only(response):
+      if nl_contract and not has_agree and not has_disagree:
         proposals.append((turn, speaker_name, nl_contract))
         agreements[speaker_name] = nl_contract
       if has_agree and proposals:
@@ -212,35 +221,43 @@ class RoundRobinNegotiationManager:
         agreements=agreements,
     )
 
+  async def _ensure_tagged_round_robin_response(
+      self,
+      speaker: PersonaAgent,
+      response: str,
+  ) -> tuple[str, str]:
+    has_agree, _, has_disagree = self._parse_agreement_signal(response)
+    if has_agree or has_disagree or "<END_CONVERSATION>" in response.upper():
+      return response, ""
+    system_prompt, user_prompt = round_robin_tag_clarification_prompt(response)
+    clarified_response, clarified_html = await _aprompt_persona(
+        speaker,
+        "contracting",
+        "round_robin_tag_clarification",
+        system_prompt,
+        user_prompt,
+        default_value=f"<DISAGREE> {response.strip()}",
+    )
+    clarified_has_agree, _, clarified_has_disagree = self._parse_agreement_signal(
+        clarified_response
+    )
+    if clarified_has_agree or clarified_has_disagree:
+      return clarified_response, clarified_html
+    return f"<DISAGREE> {response.strip()}", clarified_html
+
   def _parse_agreement_signal(
       self,
       response: str,
-      agent_names: list[str],
-  ) -> tuple[bool, str | None]:
+  ) -> tuple[bool, str | None, bool]:
     match = re.search(r"<AGREE(?:\s+to\s*=\s*([^>]+))?>", response, re.IGNORECASE)
     if match:
       target = match.group(1)
       if target:
-        return True, target.strip().strip("\"'")
-      return True, None
-
-    lowered = response.lower()
-    semantic_agree_patterns = [
-        r"\bi agree with ([a-zA-Z]+)",
-        r"\bi support ([a-zA-Z]+)'?s proposal",
-        r"\bi back ([a-zA-Z]+)'?s proposal",
-        r"\bi accept ([a-zA-Z]+)'?s proposal",
-    ]
-    for pattern in semantic_agree_patterns:
-      semantic_match = re.search(pattern, lowered)
-      if semantic_match:
-        target = semantic_match.group(1)
-        for agent_name in agent_names:
-          if agent_name.lower() == target.lower():
-            return True, agent_name
-    if self._looks_like_agreement_only(response):
-      return True, None
-    return False, None
+        return True, target.strip().strip("\"'"), False
+      return True, None, False
+    if "<DISAGREE>" in response.upper():
+      return False, None, True
+    return False, None, False
 
   def _find_most_recent_proposal(
       self,
@@ -272,23 +289,11 @@ class RoundRobinNegotiationManager:
 
   def _clean_message(self, message: str) -> str | None:
     message = re.sub(r"<AGREE[^>]*>", "", message, flags=re.IGNORECASE)
+    message = re.sub(r"<DISAGREE>", "", message, flags=re.IGNORECASE)
     message = re.sub(r"```\w*\n?.*?```", "", message, flags=re.DOTALL)
     message = re.sub(r"<END_CONVERSATION>", "", message, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s+", " ", message).strip()
     return cleaned if len(cleaned) > 5 else None
-
-  def _looks_like_agreement_only(self, message: str) -> bool:
-    cleaned = re.sub(r"<[^>]+>", "", message).strip().lower()
-    patterns = [
-        r"^i agree\b",
-        r"^i support\b",
-        r"^i accept\b",
-        r"^yes,? i agree\b",
-        r"^i'm on board\b",
-        r"^i am on board\b",
-        r"^that sounds good\b",
-    ]
-    return any(re.search(pattern, cleaned) for pattern in patterns)
 
 
 class CodedContractVotingManager:
@@ -320,7 +325,7 @@ class CodedContractVotingManager:
           user_prompt,
           default_value="<VOTE_YES>",
       )
-      voted_yes = "<VOTE_YES>" in response.upper() or "YES" in response.upper().split()[:5]
+      voted_yes = _parse_vote_tag(response)
       votes[agent.identity.name] = voted_yes
       conversations.append({
           "agent": agent.identity.name,
@@ -358,5 +363,7 @@ class CodedContractVotingManager:
           user_prompt,
           default_value="The code does not faithfully encode the negotiated rule.",
       )
-      feedback.append(f"{agent.identity.name}: {response.strip()}")
+      sentences = [s.strip() for s in response.split(".") if s.strip()]
+      concise_response = ". ".join(sentences[:3]) if sentences else response.strip()
+      feedback.append(f"{agent.identity.name}: {concise_response}")
     return "\n".join(feedback) if feedback else "No specific feedback was provided."

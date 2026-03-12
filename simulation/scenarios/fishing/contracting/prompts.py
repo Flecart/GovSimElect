@@ -87,10 +87,30 @@ def round_robin_prompt(
       f"{history_text}\n"
       "Respond with your next message in the contract negotiation.\n"
       "If you propose a contract, state it plainly in English.\n"
+      "If you agree, you must include either <AGREE> or <AGREE to=Name>.\n"
+      "If you disagree or reject the current proposal, you must include <DISAGREE>.\n"
       "Use <AGREE> if you agree with the most recent acceptable proposal.\n"
       "Use <AGREE to=Name> if you are explicitly agreeing to a specific fisher's proposal.\n"
       "Use <END_CONVERSATION> only if further negotiation is pointless."
   )
+
+
+def round_robin_tag_clarification_prompt(
+    original_response: str,
+) -> tuple[str, str]:
+  system_prompt = (
+      "You are fixing a contract-negotiation response to follow a strict tag protocol."
+  )
+  user_prompt = (
+      "Your last response did not follow the required agreement protocol.\n"
+      "Rewrite it so that it includes exactly one of these tags:\n"
+      "- <AGREE>\n"
+      "- <AGREE to=Name>\n"
+      "- <DISAGREE>\n"
+      "Preserve your original meaning. Keep the response short.\n"
+      f"Original response:\n{original_response}\n"
+  )
+  return system_prompt, user_prompt
 
 
 def coding_agent_prompt(
