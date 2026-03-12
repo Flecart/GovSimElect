@@ -112,38 +112,81 @@ def round_robin_tag_clarification_prompt(
   )
   return system_prompt, user_prompt
 
+def _state_lines(state: FishingContractState) -> str:
+    return (
+        f"# CURRENT STATE\n"
+        f"# round:        {state.round_number} of {state.max_rounds}\n"
+        f"# fish_population: {state.fish_population} tons\n"
+        f"# num_agents:      {state.num_agents}\n"
+        f"# sustainability_threshold: {state.sustainability_threshold} tons\n"
+    )
+
 
 def coding_agent_prompt(
     nl_contract: str,
     state: FishingContractState,
     feedback: str | None = None,
 ) -> tuple[str, str]:
-  feedback_section = ""
-  if feedback:
-    feedback_section = (
-        "\nThe last draft was rejected. Address this feedback exactly:\n"
-        f"{feedback}\n"
+
+    feedback_section = ""
+    if feedback:
+        feedback_section = (
+            "# PREVIOUS REJECTION FEEDBACK\n"
+            "Your last draft was voted down. Fix EXACTLY what the voters asked for.\n"
+            "Do not re-introduce logic they already rejected.\n"
+            f"{feedback}\n\n"
+        )
+
+    system_prompt = (
+        "You are a contract-to-code translator for a fishing commons simulation.\n"
+        "Your ONLY job: convert an agreed natural-language fishing contract into\n"
+        "minimal Python code that sets each fisher's catch amount.\n"
+        "Be literal. Be minimal. Do not invent constraints the contract does not state."
     )
-  system_prompt = (
-      "You are a coding agent. Translate an agreed fishing contract from plain English"
-      " into short Python code that modifies the `catches` dictionary in place."
-  )
-  user_prompt = (
-      f"{_state_lines(state)}\n"
-      "Write Python code only inside a ```python fenced block.\n"
-      "Available variables:\n"
-      "- catches: dict[str, float]\n"
-      "- fish_population: float\n"
-      "- sustainability_threshold: float\n"
-      "- num_agents: int\n"
-      "Avoid using `sustainability_threshold` unless the natural-language contract explicitly refers to it.\n"
-      "The code may edit `catches` directly or assign `modified_catches`.\n"
-      "Do not include example usage or tests.\n"
-      f"{feedback_section}\n"
-      "Natural-language contract:\n"
-      f"{nl_contract}\n"
-  )
-  return system_prompt, user_prompt
+
+    user_prompt = (
+        f"{_state_lines(state)}\n"
+        "\n"
+        "# YOUR TASK\n"
+        "Translate the natural-language contract below into Python code.\n"
+        "\n"
+        "# AVAILABLE VARIABLES (pre-defined — do NOT redeclare them)\n"
+        "  catches: dict[str, float]\n"
+        "    Maps each fisher's name to their catch in tons.\n"
+        "    All values start at 0.0. YOUR CODE MUST SET THESE.\n"
+        "  fish_population: float\n"
+        "    Current tons of fish in the lake BEFORE catches are deducted.\n"
+        "  num_agents: int\n"
+        "    Number of fishers.\n"
+        "\n"
+        "# EXECUTION MODEL\n"
+        "Your code runs ONCE per round. After it executes, the framework will:\n"
+        "  1. Deduct each fisher's catch from fish_population.\n"
+        "  2. Apply the reproduction rule (remaining fish double).\n"
+        "Do NOT simulate deduction or reproduction — the framework handles both.\n"
+        "Your ONLY responsibility is setting values in `catches`.\n"
+        "\n"
+        "# TRANSLATION RULES\n"
+        "- Be LITERAL: encode only constraints the contract states.\n"
+        "- If the contract says 'each fisher catches at most X tons' → set each catch to X.\n"
+        "- If the contract says 'leave at least Y tons in the lake' →\n"
+        "    cap total catches at max(0, fish_population - Y), then divide fairly.\n"
+        "    But ONLY if the contract explicitly states this constraint.\n"
+        "- Do NOT add formulas, safety margins, or dynamic calculations the contract does not specify.\n"
+        "- Do NOT model reproduction or compute post-catch population.\n"
+        "- Do NOT use `sustainability_threshold` unless the contract names it.\n"
+        "\n"
+        "# OUTPUT FORMAT\n"
+        "Write a single ```python fenced block. Nothing else.\n"
+        "- Edit `catches` in place.\n"
+        "- No imports, no print(), no tests, no example usage.\n"
+        "\n"
+        f"{feedback_section}"
+        "# NATURAL-LANGUAGE CONTRACT\n"
+        f"{nl_contract}\n"
+    )
+
+    return system_prompt, user_prompt
 
 
 def coded_contract_vote_prompt(

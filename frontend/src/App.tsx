@@ -34,12 +34,13 @@ export const App: React.FC = () => {
   >({});
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
 
   useEffect(() => {
     const loadSubsets = async () => {
       try {
         setError(null);
-        const res = await fetch("/api/results");
+        const res = await fetch(`/api/results?ts=${Date.now()}`);
         if (!res.ok) {
           throw new Error(`Failed to load result subsets (status ${res.status})`);
         }
@@ -60,9 +61,10 @@ export const App: React.FC = () => {
 
     const loadSubsetData = async () => {
       try {
-        setLoading(true);
         setError(null);
-        const res = await fetch(`/api/results/${encodeURIComponent(activeSubset)}`);
+        const res = await fetch(
+          `/api/results/${encodeURIComponent(activeSubset)}?ts=${Date.now()}`
+        );
         if (!res.ok) {
           throw new Error(
             `Failed to load subset "${activeSubset}" (status ${res.status})`
@@ -73,18 +75,45 @@ export const App: React.FC = () => {
         setSummaryRuns(data.summary_runs ?? []);
         setRunDataByName(data.run_data ?? {});
         setResourceInPoolByGroup(data.resource_in_pool ?? {});
-        setActiveGroup(null);
-        setActiveRun(null);
-        setSelectedRuns([]);
+        setLastUpdatedAt(Date.now());
+
+        // Preserve current selections when possible.
+        const nextGroups = Array.from(
+          new Set((data.summary_runs ?? []).map((r) => r.group))
+        ).sort();
+        const preferredGroup =
+          activeGroup && nextGroups.includes(activeGroup) ? activeGroup : null;
+        const nextActiveGroup = preferredGroup ?? nextGroups[0] ?? null;
+        setActiveGroup(nextActiveGroup);
+
+        const nextRuns =
+          nextActiveGroup == null
+            ? []
+            : (data.summary_runs ?? [])
+                .filter((r) => r.group === nextActiveGroup)
+                .map((r) => r.name)
+                .sort();
+        const preferredRun =
+          activeRun && nextRuns.includes(activeRun) ? activeRun : null;
+        const nextActiveRun = preferredRun ?? nextRuns[0] ?? null;
+        setActiveRun(nextActiveRun);
+
+        setSelectedRuns((prev) => {
+          const keep = prev.filter((r) => nextRuns.includes(r));
+          if (nextActiveRun && !keep.includes(nextActiveRun)) {
+            keep.push(nextActiveRun);
+          }
+          return keep;
+        });
       } catch (e) {
         setError((e as Error).message);
-      } finally {
-        setLoading(false);
       }
     };
 
     loadSubsetData();
-  }, [activeSubset]);
+    const interval = window.setInterval(loadSubsetData, 5000);
+    return () => window.clearInterval(interval);
+  }, [activeSubset, activeGroup, activeRun]);
 
   const groups = useMemo(
     () => Array.from(new Set(summaryRuns.map((r) => r.group))).sort(),
@@ -156,10 +185,15 @@ export const App: React.FC = () => {
           Visualise simulation runs and inspect what each agent is thinking and doing
           across time.
         </p>
+        {lastUpdatedAt && (
+          <p className="main-subtle">
+            Live refresh every 5s. Last update:{" "}
+            {new Date(lastUpdatedAt).toLocaleTimeString()}
+          </p>
+        )}
       </header>
 
       {error && <div className="alert alert-error">{error}</div>}
-      {loading && <div className="alert alert-info">Loading subset data…</div>}
 
       <div className="tabs-row tabs-row-main">
         <button

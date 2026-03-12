@@ -78,8 +78,9 @@ cache.init_app(
 )
 
 
-@cache.memoize()
+@cache.memoize(timeout=5)
 def global_store(value):
+    # Used by the Dash UI; short TTL allows "live-ish" refreshes when new results land.
     return get_data(value)
 
 
@@ -175,7 +176,9 @@ def api_result_subset(subset_name):
     if subset_name not in get_available_subsets():
         return {"error": f"Unknown subset: {subset_name}"}, 404
 
-    data = global_store(subset_name)
+    # For the React frontend, prefer fresh reads so new runs appear quickly.
+    # (Dash callbacks still use `global_store` with a short TTL.)
+    data = get_data(subset_name)
 
     summary_group_df = data.get("summary_group_df")
     summary_df = data.get("summary_df")
