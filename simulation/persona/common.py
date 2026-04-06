@@ -8,7 +8,9 @@ PersonaEnvironment = collections.namedtuple(
     [
         "regen_min_range",
         "regen_max_range",
+        "regen_mode",
     ],
+    defaults=[None],  # regen_mode defaults to None
 )
 
 

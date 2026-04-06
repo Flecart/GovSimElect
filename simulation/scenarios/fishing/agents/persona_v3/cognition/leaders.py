@@ -76,6 +76,38 @@ class LeaderPopulationType(enum.Enum):
   NONE = "none"
 
 
+class FisherPopulationType(enum.Enum):
+  ALL_SELFISH = "all_selfish"
+  ALL_ALTRUISTIC = "all_altruistic"
+  MIXED_BALANCED = "mixed_balanced"
+  NONE = "none"
+
+
+SVO_FISHER_TASK = (
+    "\nYour personality, motivations, and actions in this fishing community are"
+    " defined by your Social Value Orientation (SVO). SVO is a psychological"
+    " concept that describes how individuals value their own outcomes relative"
+    " to the outcomes of others. Your SVO is measured as an angle, where the"
+    " angle represents the ratio of the value you place on your own outcomes"
+    " relative to the outcomes of others. SVO angles can be classified into"
+    " four categories:\n- Altruism (SVO angle > 57.15 degrees)\n- Prosocial"
+    " (SVO angle between 22.45 and 57.15 degrees)\n- Individualism (SVO angle"
+    " between -12.04 and 22.45 degrees)\n- Competitiveness (SVO angle < -12.04"
+    " degrees)\nAn ALTRUISTIC individual is motivated to help others and will"
+    " sacrifice their own outcomes to benefit someone else, showing low"
+    " self-interest.\nA COMPETITIVE individual strives to maximize their own"
+    " outcomes and, in addition, seeks to minimize the other person's outcomes,"
+    " finding satisfaction in doing better than others (winning).\nAn"
+    " INDIVIDUALISTIC person is concerned only with their own outcomes and is"
+    " largely indifferent to the outcomes of others (doing well for oneself)."
+    "\nA PROSOCIAL individual aims to maximize both their own and others'"
+    " outcomes (doing well together) or ensure fairness and equality in"
+    " outcomes.\nDo not reveal your SVO angle in your messages. This is"
+    " private knowledge about your own character. Your SVO should impact your"
+    " internal actions and decisions.\n"
+)
+
+
 def sample_svo_angle(
     svo_category: SVOPersonaType,
 ) -> float:
@@ -478,18 +510,63 @@ def sample_leader_svos(
   return svos, svo_categories
 
 
+def sample_fisher_svos(
+    population_type: FisherPopulationType,
+    num_fishers: int,
+) -> tuple[list[float], list[SVOPersonaType]]:
+  """Sample SVOs for all fishers based on population type.
+
+  Args:
+    population_type: The type of fisher population to sample.
+    num_fishers: Number of fishers to sample SVOs for.
+
+  Returns:
+    Tuple of (svo_angles, svo_categories).
+  """
+  if population_type == FisherPopulationType.NONE:
+    return [None] * num_fishers, [SVOPersonaType.NONE] * num_fishers
+
+  if population_type == FisherPopulationType.ALL_SELFISH:
+    svo_categories = [
+        np.random.choice([SVOPersonaType.INDIVIDUALISTIC, SVOPersonaType.COMPETITIVE])
+        for _ in range(num_fishers)
+    ]
+  elif population_type == FisherPopulationType.ALL_ALTRUISTIC:
+    svo_categories = [
+        np.random.choice([SVOPersonaType.PROSOCIAL, SVOPersonaType.ALTRUISTIC])
+        for _ in range(num_fishers)
+    ]
+  elif population_type == FisherPopulationType.MIXED_BALANCED:
+    half = num_fishers // 2
+    selfish = [
+        np.random.choice([SVOPersonaType.INDIVIDUALISTIC, SVOPersonaType.COMPETITIVE])
+        for _ in range(half)
+    ]
+    altruistic = [
+        np.random.choice([SVOPersonaType.PROSOCIAL, SVOPersonaType.ALTRUISTIC])
+        for _ in range(num_fishers - half)
+    ]
+    combined = selfish + altruistic
+    np.random.shuffle(combined)
+    svo_categories = list(combined)
+  else:
+    raise ValueError(f"Unknown fisher population type: {population_type}")
+
+  svo_angles = [sample_svo_angle(cat) for cat in svo_categories]
+  return svo_angles, svo_categories
+
+
 def get_leader_persona_prompts(
     persona: PersonaAgent,
 ) -> tuple[str, str, str]:
   """Get the leader persona prompts."""
 
-  # SVO Prompt.
+  # SVO Prompt — use fisher task when no leader role, leader task otherwise.
   svo_prompt = ""
   if persona.svo_type != SVOPersonaType.NONE:
-    svo_prompt = (
-        SVO_LEADER_TASK + svo_angle_prompt(
-            svo_angle=persona.svo_angle, svo_type=persona.svo_type)
-    )
+    svo_task = SVO_LEADER_TASK if persona.current_leader else SVO_FISHER_TASK
+    svo_prompt = svo_task + svo_angle_prompt(
+        svo_angle=persona.svo_angle, svo_type=persona.svo_type)
   # Disinformation Prompt.
   disinfo_prompt = (
       INSINCERE_AGENDA_PROMPT if persona.disinfo else HONEST_AGENDA_PROMPT

@@ -388,6 +388,8 @@ class LawEnforcer(ContractEnforcer):
     )
 
 
+
+# Legacy code, could be still used if we want to have LLM courts.
 class CodeNLJudge:
   """LLM judge for natural-language contracts."""
 

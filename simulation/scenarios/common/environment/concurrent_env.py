@@ -479,6 +479,21 @@ class ConcurrentEnv:
   def regen_factor(self) -> int:
     return self.internal_global_state["regen_factor"]
 
+  def _apply_regeneration(self):
+    """Apply regeneration to the pool. Override in subclasses for custom modes."""
+    self.internal_global_state["resource_in_pool"] = int(min(
+        self.cfg.initial_resource_in_pool,
+        self.internal_global_state["resource_in_pool"]
+        * self.internal_global_state["regen_factor"],
+    ))
+    self.internal_global_state["resource_before_harvesting"] = (
+        self.internal_global_state["resource_in_pool"]
+    )
+    # Sample the next regeneration factor.
+    self.internal_global_state["regen_factor"] = self.random.uniform(
+        self._regen_factor_range[0], self._regen_factor_range[1]
+    )
+
   def step(
       self, action: PersonaAction
   ) -> tuple[str, HarvestingObs, dict, dict]:
@@ -514,19 +529,7 @@ class ConcurrentEnv:
             )
             for agent in self.agents
         }
-        # Apply Regeneration to the pool.  Round of to int.
-        self.internal_global_state["resource_in_pool"] = int(min(
-            self.cfg.initial_resource_in_pool,
-            self.internal_global_state["resource_in_pool"]
-            * self.internal_global_state["regen_factor"],
-        ))
-        self.internal_global_state["resource_before_harvesting"] = (
-            self.internal_global_state["resource_in_pool"]
-        )
-        # Sample the next regeneration factor.
-        self.internal_global_state["regen_factor"] = self.random.uniform(
-            self._regen_factor_range[0], self._regen_factor_range[1]
-        )
+        self._apply_regeneration()
         self._set_sustainability_threshold()
         if self.cfg.harvesting_order == "random-sequential":
           agents = list(np.random.permutation(self.agents))
@@ -574,6 +577,10 @@ class ConcurrentEnv:
       tmp["sustainable_intention"] = [action.stats["sustainable_intention"]]
     df_log = pd.DataFrame(tmp, index=[len(self.df_acc)])
     self.df_acc.append(df_log)
+
+  def log_step_regen(self, regen_state):
+    """Log per-round regeneration state. Called from _apply_regeneration overrides."""
+    pass
 
   def log_step_conversation(self, chat: PersonaActionChat):
     for i, (p, u) in enumerate(chat.conversation):

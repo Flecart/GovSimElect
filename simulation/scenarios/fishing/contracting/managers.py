@@ -11,10 +11,8 @@ from .contract import (
     FishingContractState,
 )
 from .enforcers import (
-    CodeNLJudge,
     ContractEnforcer,
     LawEnforcer,
-    NLJudgeEnforcer,
     NoOpEnforcer,
 )
 
@@ -142,9 +140,8 @@ class ContractManager(ABC):
 
 
 class NLContractManager(ContractManager):
-  def __init__(self, judge: CodeNLJudge | None = None) -> None:
+  def __init__(self) -> None:
     super().__init__()
-    self.judge = judge
 
   def extract_from_message(
       self,
@@ -175,7 +172,7 @@ class NLContractManager(ContractManager):
     )
 
   def get_enforcer(self) -> ContractEnforcer:
-    return NLJudgeEnforcer(self.judge)
+    return NoOpEnforcer()
 
 
 class LawContractManager(ContractManager):

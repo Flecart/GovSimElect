@@ -13,11 +13,14 @@ from .contract import ContractMode, FishingContractState
 
 
 def _state_lines(state: FishingContractState) -> str:
-  return (
+  lines = (
       f"Round: {state.round_number + 1}/{state.max_rounds}\n"
       f"Fish currently in the lake: {state.fish_population:.1f}\n"
       f"Number of fishers: {state.num_agents}\n"
   )
+  if state.regime is not None:
+    lines += f"Lake condition: {state.regime}\n"
+  return lines
 
 
 def _resource_report(agent_resource_num: dict[str, int]) -> str:
@@ -159,8 +162,8 @@ def negotiation_system_prompt(
   counterpart_names = [p.identity.name for p in target_personas]
   contract_mode = {
       ContractMode.CODE_LAW: "a natural-language agreement that may later be translated into Python enforcement code",
-      ContractMode.CODE_NL: "a natural-language agreement that will be enforced directly in natural language",
-      ContractMode.GOVSIM: "an informal conversation with no binding contract",
+      ContractMode.CODE_NL: "a natural-language common constitution that outlines rules and guidelines for the community",
+      ContractMode.GOVSIM: "an informal conversation",
       ContractMode.NO_COMMUNICATION: "no communication",
   }[mode]
   role_context = _persona_role_context(persona)
@@ -194,8 +197,9 @@ def mayor_proposal_prompt(
       f"{_state_lines(state)}\n"
       f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Propose one clear contract for the next round in plain English.\n"
-      "If there is already an active law, either keep it, amend it, or propose to replace it.\n"
-      "Keep it concrete and enforceable. Do not write Python code.\n"
+      "If there is already an active law and you want to keep it exactly as it is without any changes,\n"
+      "you must output exactly the word <UNCHANGED> and nothing else.\n"
+      "Otherwise, if you want a new law or to change the current one, keep it concrete and enforceable. Do not write Python code.\n"
       "If helpful, specify numeric catch limits, sanctions, redistribution rules,"
       " or a required amount of fish to leave in the lake.\n"
       "Write the contract so that another system could translate it into explicit enforcement logic.\n"
@@ -235,6 +239,7 @@ def voter_prompt(
       f"{_active_law_block(active_law_text)}"
       f"{_coding_primitives_block(mode)}"
       "Evaluate the following proposed contract for the next round.\n"
+      "If the proposed Contract is <UNCHANGED>, it means keeping the current active law in force.\n"
       f"Contract:\n{nl_contract}\n\n"
       "Vote YES if you can accept this as the contract for the next round.\n"
       "Vote NO if you materially disagree with the rule or think it is too vague to follow.\n"
@@ -267,8 +272,8 @@ def round_robin_prompt(
       "Conversation so far:\n"
       f"{history_text}\n"
       "Respond with your next message in the contract negotiation.\n"
-      "If there is an active law, treat the discussion as keeping, amending, or replacing that law.\n"
-      "If you propose a contract, state it plainly in English.\n"
+      "If there is an active law and you propose to keep it exactly as it is, you can propose the exact word <UNCHANGED>.\n"
+      "Otherwise, if you propose a new contract, state it plainly in English.\n"
       "If you agree, you must include either <AGREE> or <AGREE to=Name>.\n"
       "If you disagree or reject the current proposal, you must include <DISAGREE>.\n"
       "Use <AGREE> if you agree with the most recent acceptable proposal.\n"
@@ -483,3 +488,5 @@ def nl_judge_prompt(
       "Use the submitted catches unchanged if the contract is too vague to alter them."
   )
   return system_prompt, user_prompt
+
+

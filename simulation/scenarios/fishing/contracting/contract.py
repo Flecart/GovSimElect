@@ -31,6 +31,7 @@ class FishingContractState:
   num_agents: int
   max_rounds: int
   speaker_idx: int = 0
+  regime: str | None = None  # "healthy", "degraded", or None for non-hysteresis
 
 
 @dataclass

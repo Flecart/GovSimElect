@@ -186,14 +186,31 @@ def get_sytem_prompt_v1(persona):
 def get_sytem_prompt_v3(persona):
   """System prompt for v3."""
 
+  regen_mode = None
   if persona.env:
     min_regen = persona.env.regen_min_range
     max_regen = persona.env.regen_max_range
+    regen_mode = persona.env.regen_mode
   else:
     min_regen = 2.0
     max_regen = 2.0
 
-  if min_regen != max_regen:
+  # Scenario-specific regen text overrides the generic range-based text.
+  if regen_mode == "iid_stochastic":
+    text_regen_rate = (
+        " Each month, the lake's regeneration rate is either 1.5 or 2.5 with"
+        " equal probability, and you will not be told which value was realized."
+        " The average regeneration rate is 2.0."
+    )
+  elif regen_mode == "endogenous_hysteresis":
+    text_regen_rate = (
+        " The lake can become polluted if you fish too much, and once polluted,"
+        " it regenerates more slowly. Recovery requires fishing well below the"
+        " normal sustainable level for some time. You will be told whether the"
+        " lake is currently healthy or polluted, but you must figure out the"
+        " dynamics from experience."
+    )
+  elif min_regen is not None and max_regen is not None and min_regen != max_regen:
     text_regen_rate = (
         " At the end of the month, the remaining fish will reproduce and the"
         " population will increase.  The regeneration factor of increase is"

@@ -7,7 +7,9 @@ from typing import List
 import numpy as np
 from omegaconf import DictConfig, OmegaConf
 
+from simulation.persona import SVOPersonaType
 from simulation.persona.common import PersonaActionHarvesting
+from simulation.persona.common import PersonaEnvironment
 from simulation.persona.common import PersonaIdentity
 from simulation.utils import ModelWandbWrapper
 
@@ -78,6 +80,20 @@ async def run(
         },
     )
     num_personas = cfg.personas.num
+
+    # SVO population sampling for fishers.
+    from .agents.persona_v3.cognition.leaders import FisherPopulationType, sample_fisher_svos
+    svo_population_str = OmegaConf.select(cfg, "personas.svo_population", default="none") or "none"
+    svo_population = FisherPopulationType(svo_population_str)
+    svo_angles, svo_types = sample_fisher_svos(svo_population, num_personas)
+    log_to_file("svo_assignments", {
+        f"persona_{i}": {
+            "svo_type": svo_types[i].value,
+            "svo_angle": svo_angles[i],
+        }
+        for i in range(num_personas)
+    })
+
     personas = {
         f"persona_{i}": FishingPersona(
             cfg.agent,
@@ -85,15 +101,25 @@ async def run(
             framework_wrapper,
             os.path.join(experiment_storage, f"persona_{i}"),
             experiment_storage=experiment_storage,
+            svo_angle=svo_angles[i],
+            svo_type=svo_types[i],
         )
         for i in range(num_personas)
     }
+
+    regen_mode_str = OmegaConf.select(cfg, "env.regen_mode", default="deterministic") or "deterministic"
 
     identities = {}
     for i in range(num_personas):
         persona_id = f"persona_{i}"
         identities[persona_id] = PersonaIdentity(
             agent_id=persona_id, **cfg.personas[persona_id]
+        )
+        # Set environment info so system prompts are scenario-aware.
+        identities[persona_id].env = PersonaEnvironment(
+            regen_min_range=2.0,
+            regen_max_range=2.0,
+            regen_mode=regen_mode_str,
         )
 
     # Standard setup

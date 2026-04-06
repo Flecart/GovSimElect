@@ -22,7 +22,6 @@ from .contract import (
     FishingContractState,
     NegotiationProtocol,
 )
-from .enforcers import CodeNLJudge
 from .managers import LawContractManager, NLContractManager, NoCommsManager
 from .negotiation import (
     CodedContractVotingManager,
@@ -74,12 +73,6 @@ class ContractingOrchestrator:
         coding_model,
         temperature=self.cfg.coding_temperature,
     )
-    self._judge = CodeNLJudge(
-        framework_model,
-        temperature=self.cfg.judge_temperature,
-    )
-    if isinstance(self._manager, NLContractManager):
-      self._manager.judge = self._judge
     self._install_default_contract()
 
   @classmethod
@@ -180,15 +173,19 @@ class ContractingOrchestrator:
 
     final_contract_text = None
     coding_response = None
+    agreed_to_keep_unchanged = False
     if result.nl_contract:
-      if self.mode == ContractMode.CODE_NL:
-        final_contract_text = result.nl_contract
-      elif self.mode == ContractMode.CODE_LAW:
-        final_contract_text, coding_response = await self._run_coding_phase(
-            personas=personas,
-            state=state,
-            nl_contract=result.nl_contract,
-        )
+      if "<UNCHANGED>" in result.nl_contract.upper() or result.nl_contract.strip().upper() == "UNCHANGED":
+        agreed_to_keep_unchanged = True
+      else:
+        if self.mode == ContractMode.CODE_NL:
+          final_contract_text = result.nl_contract
+        elif self.mode == ContractMode.CODE_LAW:
+          final_contract_text, coding_response = await self._run_coding_phase(
+              personas=personas,
+              state=state,
+              nl_contract=result.nl_contract,
+          )
 
     if final_contract_text:
       agent_names = [persona.identity.name for persona in personas]
@@ -225,7 +222,12 @@ class ContractingOrchestrator:
             active_contract.metadata.get("nl_contract", active_contract.content)
         )
         self._sync_persona_contract_state(personas, active_nl_contract)
-        if existing_contract is not None:
+        if agreed_to_keep_unchanged:
+          summary = (
+              "Fishers explicitly agreed to keep the active law unchanged. "
+              f"The existing law remains in force: {active_nl_contract}"
+          )
+        elif existing_contract is not None:
           summary = (
               "No new formal contract was adopted. "
               f"The existing law remains in force: {active_nl_contract}"
@@ -237,7 +239,10 @@ class ContractingOrchestrator:
           )
       else:
         self._sync_persona_contract_state(personas, "")
-        summary = "No formal contract was adopted for the next round."
+        if agreed_to_keep_unchanged:
+          summary = "Fishers explicitly agreed to remain without a formal contract."
+        else:
+          summary = "No formal contract was adopted for the next round."
 
     transcript = self._build_transcript(self._manager._conversation)
     html_interactions = [turn.get("html", "") for turn in self._manager._conversation]
