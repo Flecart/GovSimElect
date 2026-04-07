@@ -1,3 +1,4 @@
+import asyncio
 import collections
 import datetime
 import json
@@ -43,18 +44,9 @@ def _print_env_summary(env, agent_id, obs, stage: str) -> None:
     )
 
 
-async def run(
-    cfg: DictConfig,
-    logger: ModelWandbWrapper,
-    wrappers: List[ModelWandbWrapper],
-    framework_wrapper: ModelWandbWrapper,
-    coding_wrapper: ModelWandbWrapper,
-    experiment_storage: str,
-):
-    debug = bool(OmegaConf.select(cfg, "debug", default=False))
-
+def _configure_cognition(cfg) -> bool:
+    """Configure cognition module globals from cfg. Returns the debug flag."""
     if cfg.agent.agent_package == "persona_v3":
-        from .agents.persona_v3 import FishingPersona
         from .agents.persona_v3.cognition import utils as cognition_utils
 
         if cfg.agent.system_prompt == "v3":
@@ -75,40 +67,15 @@ async def run(
             cognition_utils.REASONING = "deep_breath"
     else:
         raise ValueError(f"Unknown agent package: {cfg.agent.agent_package}")
+    return bool(OmegaConf.select(cfg, "debug", default=False))
 
-    if not os.path.exists(experiment_storage):
-        os.makedirs(experiment_storage)
-    # Create a consolidated log file
-    consolidated_log_path = os.path.join(
-        experiment_storage, "consolidated_results.json"
-    )
 
-    # Helper function to append to the consolidated log
-    def log_to_file(log_type, data):
-        with open(consolidated_log_path, "a") as f:
-            entry = {
-                "timestamp": datetime.datetime.now().isoformat(),
-                "type": log_type,
-                "data": data,
-            }
-            f.write(json.dumps(entry) + "\n")
-
-    # Initialize the log file with a header
-    log_to_file(
-        "initialization",
-        {
-            "experiment_id": datetime.datetime.now().strftime("%Y%m%d_%H%M%S"),
-            "config": (
-                OmegaConf.to_container(cfg)
-                if hasattr(cfg, "to_container")
-                else str(cfg)
-            ),
-        },
-    )
-    num_personas = cfg.personas.num
-
-    # SVO population sampling for fishers.
+def _build_personas(cfg, wrappers, framework_wrapper, experiment_storage, log_to_file):
+    """Create and initialise all personas with identities, SVO assignments and cross-references."""
+    from .agents.persona_v3 import FishingPersona
     from .agents.persona_v3.cognition.leaders import FisherPopulationType, sample_fisher_svos
+
+    num_personas = cfg.personas.num
     svo_population_str = OmegaConf.select(cfg, "personas.svo_population", default="none") or "none"
     svo_population = FisherPopulationType(svo_population_str)
     svo_angles, svo_types = sample_fisher_svos(svo_population, num_personas)
@@ -134,14 +101,12 @@ async def run(
     }
 
     regen_mode_str = OmegaConf.select(cfg, "env.regen_mode", default="deterministic") or "deterministic"
-
     identities = {}
     for i in range(num_personas):
         persona_id = f"persona_{i}"
         identities[persona_id] = PersonaIdentity(
             agent_id=persona_id, **cfg.personas[persona_id]
         )
-        # Set environment info so system prompts are scenario-aware.
         identities[persona_id].env = PersonaEnvironment(
             regen_min_range=cfg.env.regen_factor_range[0],
             regen_max_range=cfg.env.regen_factor_range[1],
@@ -149,28 +114,27 @@ async def run(
             num_agents=num_personas,
         )
 
-    # Standard setup
     agent_name_to_id = {obj.name: k for k, obj in identities.items()}
     agent_name_to_id["framework"] = "framework"
     agent_id_to_name = {v: k for k, v in agent_name_to_id.items()}
 
     for persona in personas:
         personas[persona].init_persona(persona, identities[persona], social_graph=None)
-
     for persona in personas:
         for other_persona in personas:
-            # also add self reference, for conversation
             personas[persona].add_reference_to_other_persona(personas[other_persona])
-    env_class = ( 
+
+    return personas, agent_name_to_id, agent_id_to_name
+
+
+def _build_env(cfg, experiment_storage, agent_id_to_name, framework_wrapper, coding_wrapper):
+    """Instantiate the fishing environment and contracting runtime."""
+    env_class = (
         FishingPerturbationEnv
         if cfg.env.class_name == "fishing_perturbation_env"
         else FishingConcurrentEnv
     )
-    env = env_class(
-        cfg.env,
-        experiment_storage,
-        agent_id_to_name,
-    )
+    env = env_class(cfg.env, experiment_storage, agent_id_to_name)
     contracting_runtime = ContractingOrchestrator.from_cfg(
         OmegaConf.select(cfg, "contracting", default=None),
         framework_wrapper,
@@ -178,6 +142,146 @@ async def run(
         experiment_storage,
         cfg.env.max_num_rounds,
     )
+    return env, contracting_runtime
+
+
+async def _run_sim_loop(
+    env,
+    personas,
+    contracting_runtime,
+    agent_id,
+    obs,
+    curr_round,
+    logger,
+    debug,
+    agent_name_to_id,
+    num_personas,
+    experiment_storage,
+):
+    """Run the main simulation loop. Returns round harvest stats."""
+    round_harvest_stats = collections.defaultdict(lambda: collections.defaultdict(int))
+    STATS_KEYS = [
+        "conversation_resource_limit",
+        *[f"persona_{i}_collected_resource" for i in range(num_personas)],
+    ]
+
+    while True:
+        # CONCURRENT PHASES (lake / home): all agents act in parallel.
+        if obs.phase in ("lake", "home"):
+            agent_order = env._agent_selector.agent_order
+            phase_obs = {agent_order[0]: obs, **{
+                aid: env._observe(aid) for aid in agent_order[1:]
+            }}
+
+            async def _run_agent(aid):
+                a = personas[aid]
+                return aid, await a.aloop(phase_obs[aid], debug=debug)
+
+            phase_actions = dict(await asyncio.gather(
+                *(_run_agent(aid) for aid in agent_order)
+            ))
+
+            terminated = False
+            for aid in agent_order:
+                action = phase_actions[aid]
+                agent_id, obs, rewards, termination = env.step(action)
+                _print_env_summary(env, agent_id, obs, stage="step")
+                if isinstance(action, PersonaActionHarvesting):
+                    round_harvest_stats[curr_round][personas[aid].identity.name] = action.quantity
+                stats = {}
+                for s in STATS_KEYS:
+                    if s in action.stats:
+                        stats[s] = action.stats[s]
+                if np.any(list(termination.values())):
+                    logger.log_game(
+                        {"num_resource": obs.current_resource_num, **stats},
+                        last_log=True,
+                    )
+                    terminated = True
+                    break
+                else:
+                    logger.log_game({"num_resource": obs.current_resource_num, **stats})
+            if terminated:
+                break
+            if curr_round != env.num_round:
+                curr_round = env.num_round
+                if contracting_runtime is not None:
+                    contracting_runtime.set_round(curr_round)
+            logger.save(experiment_storage, agent_name_to_id)
+            continue
+
+        # SEQUENTIAL PHASES (contracting, pool_after_harvesting, restaurant).
+        agent = personas[agent_id]
+        action = await agent.aloop(obs, debug=debug)
+
+        agent_id, obs, rewards, termination = env.step(action)
+        _print_env_summary(env, agent_id, obs, stage="step")
+
+        if isinstance(action, PersonaActionHarvesting):
+            round_harvest_stats[curr_round][agent.identity.name] = action.quantity
+        stats = {}
+        for s in STATS_KEYS:
+            if s in action.stats:
+                stats[s] = action.stats[s]
+
+        if np.any(list(termination.values())):
+            logger.log_game(
+                {"num_resource": obs.current_resource_num, **stats},
+                last_log=True,
+            )
+            break
+        else:
+            logger.log_game({"num_resource": obs.current_resource_num, **stats})
+        if curr_round != env.num_round:
+            curr_round = env.num_round
+            if contracting_runtime is not None:
+                contracting_runtime.set_round(curr_round)
+        logger.save(experiment_storage, agent_name_to_id)
+
+    return round_harvest_stats
+
+
+async def run(
+    cfg: DictConfig,
+    logger: ModelWandbWrapper,
+    wrappers: List[ModelWandbWrapper],
+    framework_wrapper: ModelWandbWrapper,
+    coding_wrapper: ModelWandbWrapper,
+    experiment_storage: str,
+):
+    debug = _configure_cognition(cfg)
+
+    os.makedirs(experiment_storage, exist_ok=True)
+    consolidated_log_path = os.path.join(experiment_storage, "consolidated_results.json")
+
+    def log_to_file(log_type, data):
+        with open(consolidated_log_path, "a") as f:
+            entry = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "type": log_type,
+                "data": data,
+            }
+            f.write(json.dumps(entry) + "\n")
+
+    log_to_file(
+        "initialization",
+        {
+            "experiment_id": datetime.datetime.now().strftime("%Y%m%d_%H%M%S"),
+            "config": (
+                OmegaConf.to_container(cfg)
+                if hasattr(cfg, "to_container")
+                else str(cfg)
+            ),
+        },
+    )
+
+    personas, agent_name_to_id, agent_id_to_name = _build_personas(
+        cfg, wrappers, framework_wrapper, experiment_storage, log_to_file
+    )
+    env, contracting_runtime = _build_env(
+        cfg, experiment_storage, agent_id_to_name, framework_wrapper, coding_wrapper
+    )
+
     if contracting_runtime is not None:
         for persona in personas.values():
             persona.set_contracting_runtime(contracting_runtime)
@@ -185,59 +289,17 @@ async def run(
         env.set_contracting_enabled(True)
     else:
         env.set_contracting_enabled(False)
+
     agent_id, obs = env.reset()
     _print_env_summary(env, agent_id, obs, stage="reset")
-    round_harvest_stats = collections.defaultdict(
-          lambda: collections.defaultdict(int)
-    )
     curr_round = env.num_round
     if contracting_runtime is not None:
         contracting_runtime.set_round(curr_round)
-    while True:
-        agent = personas[agent_id]
-        action = await agent.aloop(obs, debug=debug)
 
-        (
-            agent_id,
-            obs,
-            rewards,
-            termination,
-        ) = env.step(action)
-        _print_env_summary(env, agent_id, obs, stage="step")
-
-        # Check for harvest actions.
-        if isinstance(action, PersonaActionHarvesting):
-            round_harvest_stats[curr_round][agent.identity.name] = action.quantity
-        stats = {}
-        STATS_KEYS = [
-            "conversation_resource_limit",
-            *[f"persona_{i}_collected_resource" for i in range(num_personas)],
-        ]
-        for s in STATS_KEYS:
-            if s in action.stats:
-                stats[s] = action.stats[s]
-
-        if np.any(list(termination.values())):
-            logger.log_game(
-                {
-                    "num_resource": obs.current_resource_num,
-                    **stats,
-                },
-                last_log=True,
-            )
-            break
-        else:
-            logger.log_game(
-                {
-                    "num_resource": obs.current_resource_num,
-                    **stats,
-                }
-            )
-        if curr_round != env.num_round:
-            curr_round = env.num_round
-            if contracting_runtime is not None:
-                contracting_runtime.set_round(curr_round)
-        logger.save(experiment_storage, agent_name_to_id)
+    round_harvest_stats = await _run_sim_loop(
+        env, personas, contracting_runtime, agent_id, obs, curr_round,
+        logger, debug, agent_name_to_id, cfg.personas.num, experiment_storage,
+    )
 
     log_to_file("harvest", round_harvest_stats)
     env.save_log()

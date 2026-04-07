@@ -395,18 +395,6 @@ async def run(
         harvest_report = leaders_lib.make_harvest_report(
             personas, round_harvest_stats[curr_round])
 
-    # Fetch the current agent.
-    agent = personas[agent_id]
-
-    # Set the current agenda and report.
-    agent.update_agenda(agenda)
-    agent.update_harvest_report(harvest_report)
-    if winner:
-      agent.update_current_leader(
-          leader_candidates[agent_name_to_id[winner]]
-      )
-    action = await agent.aloop(obs, debug=cfg.debug)
-
     # TRIGGER ELECTION?
     if len(leader_candidates) > 1 and curr_round != env.num_round:
       # First log stats for the previous round.
@@ -444,24 +432,71 @@ async def run(
     else:
       curr_round = env.num_round
 
+    STATS_KEYS = [
+        "conversation_resource_limit",
+        *[f"persona_{i}_collected_resource" for i in range(cfg.env.num_agents)],
+    ]
+
+    # CONCURRENT PHASES (lake / home): all agents act in parallel.
+    if obs.phase in ("lake", "home"):
+      agent_order = env._agent_selector.agent_order
+      phase_obs = {agent_order[0]: obs, **{
+          aid: env._observe(aid) for aid in agent_order[1:]
+      }}
+
+      async def _run_agent(aid, ob):
+        a = personas[aid]
+        a.update_agenda(agenda)
+        a.update_harvest_report(harvest_report)
+        if winner:
+          a.update_current_leader(leader_candidates[agent_name_to_id[winner]])
+        return aid, await a.aloop(ob, debug=cfg.debug)
+
+      phase_actions = dict(await asyncio.gather(
+          *(_run_agent(aid, phase_obs[aid]) for aid in agent_order)
+      ))
+
+      last_location = obs.current_location
+      terminated = False
+      for aid in agent_order:
+        action = phase_actions[aid]
+        agent_id, obs, _, termination = env.step(action)
+        if isinstance(action, PersonaActionHarvesting):
+          round_harvest_stats[curr_round][personas[aid].identity.name] = action.quantity
+        stats = {}
+        if hasattr(action, "stats"):
+          for s in STATS_KEYS:
+            if s in action.stats:
+              stats[s] = action.stats[s]
+        logger.log_game({"num_resource": obs.current_resource_num, **stats})
+        if np.any(list(termination.values())):
+          logger.log_game({"num_resource": obs.current_resource_num}, last_log=True)
+          terminated = True
+          break
+      if terminated:
+        break
+      continue
+
+    # SEQUENTIAL PHASES (contracting, pool_after_harvesting, restaurant).
+    agent = personas[agent_id]
+    agent.update_agenda(agenda)
+    agent.update_harvest_report(harvest_report)
+    if winner:
+      agent.update_current_leader(
+          leader_candidates[agent_name_to_id[winner]]
+      )
+    action = await agent.aloop(obs, debug=cfg.debug)
+
     last_location = obs.current_location
 
-    # Samaple a new action.
     agent_id, obs, _, termination = env.step(action)
 
-    # Check for harvest actions.
     if isinstance(action, PersonaActionHarvesting):
       round_harvest_stats[curr_round][agent.identity.name] = action.quantity
 
     stats = {}
     if hasattr(action, "stats"):
-      for s in [
-          "conversation_resource_limit",
-          *[
-              f"persona_{i}_collected_resource"
-              for i in range(cfg.env.num_agents)
-          ],
-      ]:
+      for s in STATS_KEYS:
         if s in action.stats:
           stats[s] = action.stats[s]
     logger.log_game({"num_resource": obs.current_resource_num, **stats})
