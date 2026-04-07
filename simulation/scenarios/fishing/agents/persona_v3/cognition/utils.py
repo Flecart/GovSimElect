@@ -227,12 +227,10 @@ def get_sytem_prompt_v3(persona):
 
   text_pre = (
       f"You are {persona.name}, a fisherman, and you fish every month in a lake"
-      f" along with other {num_agents} fishermen. The lake has a carrying capacity of 100"
+      f" along with other {num_agents - 1} fishermen catching at the same time with you. The lake has a carrying capacity of 100"
       " tons of fish. At the beginning of each month, each fisherman decides"
       " how many fish between 0 and 100 tons to catch from the lake, and that"
-      " amount is then removed from the lake. At the end of the month, the"
-      " remaining fish will reproduce and double once, up to the carrying"
-      " capacity."
+      " amount is then removed from the lake."
   )
 
   text_post = (
@@ -246,7 +244,7 @@ def get_sytem_prompt_v3(persona):
       " at the beginning of the month and the fishermen catch a total of 30"
       " fish, given a regeneration factor of 2.0, there will be 60 tons of fish"
       " left at the end of the month before reproduction, and 100 tons after"
-      " reproduction."
+      " reproduction. Note that if you collectively finish the lake, the lake won't be able to recover."
   )
 
   text = text_pre + text_regen_rate + text_post
