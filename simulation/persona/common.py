@@ -9,8 +9,9 @@ PersonaEnvironment = collections.namedtuple(
         "regen_min_range",
         "regen_max_range",
         "regen_mode",
+        "num_agents",
     ],
-    defaults=[None],  # regen_mode defaults to None
+    defaults=[None, None, None, None],  # regen_mode defaults to None
 )
 
 

@@ -1,122 +1,38 @@
 def get_sytem_prompt(persona):
-    persona_names = ["John", "Kate", "Jack", "Emma", "Luke"]
-    persona_names.remove(persona.name)
-    list_string_persona_name = ", ".join(persona_names)
-    text = (
-        f"You are {persona.name}, a fisherman, and you fish each month in a lake along with four other fishermen ({list_string_persona_name})."
-        " The lake has a population capacity of 100 tons of fish."
-        " Each month, each fisherman decides how many fish to take out of the lake between 0 and 100 tons."
-        " At the end of the month, the remaining fish reproduce and double up to the population capacity."
-        " So if there are 60 tons of fish remaining, there will be 100 tons after reproduction, or if there are 20 tons of fish remaining,"
-        " there will be 40 tons of fish after reproduction."
-        " For each ton of fish caught, a fisherman earns one thousand dollars."
-        " Each fisherman's goal is to optimize their income in the long run over many months."
-        " At the end of each month, the number of fish caught by each fisherman will be revealed, and the fishermen will have an opportunity to communicate with each other."
-        " You can use this as an opportunity to negotiate and persuade others to influence their behavior in the next month."
-    )
+    text = "get_sytem_prompt"
     return text
 
 
 def get_sytem_prompt_v2(persona):
-    persona_names = ["John", "Kate", "Jack", "Emma", "Luke"]
-    persona_names.remove(persona.name)
-    list_string_persona_name = ", ".join(persona_names)
-
-    text = (
-        f"You are {persona.name}, a fisherman, and you fish every month in a lake along with four other fishermen ({list_string_persona_name})."
-        " The lake has a carrying capacity of 100 tons of fish."
-        " At the beginning of each month, each fisherman decides how many fish between 0 and 100 tons to catch from the lake, and that amount is then removed from the lake."
-        " At the end of the month, the remaining fish reproduce and double up to the carrying capacity."
-        " For every ton of fish caught, a fisherman earns one thousand dollars."
-        " Each fisherman's goal is to optimize his income in the long run over many months."
-        " At the end of each month, the number of fish caught by each fisherman will be revealed, and the fishermen will have the opportunity to communicate with each other."
-        " They can use this as an opportunity to negotiate and persuade others to influence their behavior in the next month."
-        " For example, if there are 90 tons of fish at the beginning of the month and the five fishermen catch a total of 30 fish,"
-        " there will be 60 tons of fish left at the end of the month before reproduction, and 100 tons after reproduction."
-    )
-
+    text = "get_sytem_prompt_v2"
     return text
 
 
 def get_sytem_prompt_v3(persona):
-    persona_names = ["John", "Kate", "Jack", "Emma", "Luke"]
-    persona_names.remove(persona.name)
-    list_string_persona_name = ", ".join(persona_names)
-
-    text = (
-        f"You are {persona.name}, a fisherman, and you fish every month in a lake along with four other fishermen ({list_string_persona_name})."
-        " The lake has a carrying capacity of 100 tons of fish."
-        " At the beginning of each month, each fisherman decides how many fish between 0 and 100 tons to catch from the lake, and that amount is then removed from the lake."
-        " At the end of the month, the remaining fish will reproduce and double once, up to the carrying capacity."
-        " For every ton of fish caught, a fisherman earns one thousand dollars."
-        " Each fisherman's goal is to optimize his income in the long run over many months."
-        " At the end of each month, the number of fish caught by each fisherman will be revealed, and the fishermen will have the opportunity to communicate with each other."
-        " They can use this as an opportunity to negotiate and persuade others to influence their behavior in the next month."
-        " For example, if there are 90 tons of fish at the beginning of the month and the five fishermen catch a total of 30 fish,"
-        " there will be 60 tons of fish left at the end of the month before reproduction, and 100 tons after reproduction."
-    )
+    text = "get_sytem_prompt_v3"
 
     return text
 
 
 def get_sytem_prompt_v4(persona):
-    persona_names = ["John", "Kate", "Jack", "Emma", "Luke"]
-    persona_names.remove(persona.name)
-    list_string_persona_name = ", ".join(persona_names)
-
-    text = (
-        f"You are {persona.name}, a fisherman. Every month, you fish in a lake with four other fishermen ({list_string_persona_name})."
-        " The lake's maximum fish population is 100 tons. At the beginning of each month, each fisherman chooses to take between 0 and 100 tons of fish, and that amount is then removed from the lake."
-        " At the end of the month, the remaining fish reproduce and double in population, up to the maximum population."
-        " For example, if there are 90 tons of fish at the beginning of the month and the five fishermen catch a total of 30 fish,"
-        " there will be 60 tons of fish left before reproduction and 100 tons after reproduction."
-        "\n\n"
-        "For every ton of fish caught, a fisherman earns one thousand dollars."
-        " Each fisherman's goal is to optimize his income over the long run."
-        " At the end of each month, the number of fish caught by each fisherman will be revealed, and the fishermen will have the opportunity to communicate with each other."
-        " They can use this period of communication as an opportunity to negotiate with or persuade others to catch a different amount of fish the next month."
-    )
-
+    text = "get_sytem_prompt_v4"
     return text
 
 
 def get_basic_dynamic_description_v4(num_tons_lake):
-    return (
-        "Five fishermen fish in a lake."
-        " The lake's maximum fish population is 100 tons."
-        " At the beginning of each month, each fisherman chooses to take between 0 and 100 tons of fish, and that amount is then removed from the lake."
-        f" At the end of the month, the remaining fish reproduce and double in population, up to the maximum population. This month, there are {num_tons_lake} tons of fish in the lake."
-    )
+    return "get_basic_dynamic_description_v4"
 
 
 def get_basic_dynamic_description_v3(num_tons_lake):
-    return (
-        "Five fishermen fish in a lake."
-        " The lake has a carrying capacity of 100 tons of fish."
-        " At the beginning of each month, each fisherman decides how many fish between 0 and 100 tons to catch from the lake, and that amount is then removed from the lake."
-        " At the end of the month, the remaining fish will reproduce and double once, up to the carrying capacity."
-        f" This month, there are {num_tons_lake} tons of fish in the lake."
-    )
+    return "get_basic_dynamic_description_v3"
 
 
 def get_basic_dynamic_description_v2(num_tons_lake):
-    return (
-        "Five fishermen fish in a lake."
-        " The lake has a carrying capacity of 100 tons of fish."
-        " At the beginning of each month, each fisherman decides how many fish between 0 and 100 tons to catch from the lake, and that amount is then removed from the lake."
-        " At the end of the month, the remaining fish reproduce and double up to the carrying capacity."
-        f" This month, there are {num_tons_lake} tons of fish in the lake."
-    )
+    return "get_basic_dynamic_description_v2"
 
 
 def get_basic_dynamic_description(num_tons_lake):
-    return (
-        "Five fishermen fish in a lake."
-        " The lake has a population capacity of 100 tons of fish."
-        " Each month, each fisherman decides how many fish to take out of the lake between 0 and 100 tons."
-        " At the end of the month, the remaining fish reproduce and double up to the population capacity."
-        f" This month, there are {num_tons_lake} tons of fish in the lake."
-    )
+    return "get_basic_dynamic_description"
 
 
 def question_reflection_all_fisher_same_quantity(num_tons_lake, num_tons_fisher):

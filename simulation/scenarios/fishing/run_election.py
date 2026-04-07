@@ -163,6 +163,7 @@ async def run(
     framework_wrapper: ModelWandbWrapper,
     experiment_storage: str,
 ):
+  raise DeprecationWarning("Use ConcurrentEnv instead.")
   """Run the simulation."""
   if not os.path.exists(experiment_storage):
     os.makedirs(experiment_storage)
@@ -243,7 +244,8 @@ async def run(
           # Inject some environment knowledge into the persona.
           environment=PersonaEnvironment(
               regen_min_range=cfg.env.regen_factor_range[0],
-              regen_max_range=cfg.env.regen_factor_range[1]
+              regen_max_range=cfg.env.regen_factor_range[1],
+              num_agents=cfg.env.num_agents,
           )
       )
       for i in range(num_personas)

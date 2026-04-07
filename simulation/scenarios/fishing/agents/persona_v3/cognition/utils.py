@@ -187,6 +187,7 @@ def get_sytem_prompt_v3(persona):
   """System prompt for v3."""
 
   regen_mode = None
+  num_agents = persona.env.num_agents
   if persona.env:
     min_regen = persona.env.regen_min_range
     max_regen = persona.env.regen_max_range
@@ -226,7 +227,7 @@ def get_sytem_prompt_v3(persona):
 
   text_pre = (
       f"You are {persona.name}, a fisherman, and you fish every month in a lake"
-      " along with other fishermen. The lake has a carrying capacity of 100"
+      f" along with other {num_agents} fishermen. The lake has a carrying capacity of 100"
       " tons of fish. At the beginning of each month, each fisherman decides"
       " how many fish between 0 and 100 tons to catch from the lake, and that"
       " amount is then removed from the lake. At the end of the month, the"

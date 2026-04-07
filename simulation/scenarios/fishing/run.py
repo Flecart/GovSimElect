@@ -143,9 +143,10 @@ async def run(
         )
         # Set environment info so system prompts are scenario-aware.
         identities[persona_id].env = PersonaEnvironment(
-            regen_min_range=2.0,
-            regen_max_range=2.0,
+            regen_min_range=cfg.env.regen_factor_range[0],
+            regen_max_range=cfg.env.regen_factor_range[1],
             regen_mode=regen_mode_str,
+            num_agents=num_personas,
         )
 
     # Standard setup

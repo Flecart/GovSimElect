@@ -38,6 +38,7 @@ class PerturbationEnv(ConcurrentEnv):
     def __init__(
         self, cfg: DictConfig, experiment_storage: str, map_id_to_name: dict[str, str]
     ) -> None:
+        raise DeprecationWarning("Use ConcurrentEnv instead.")
         super().__init__(cfg, experiment_storage, map_id_to_name)
 
         assert len(cfg.perturbations) == 1
@@ -110,102 +111,7 @@ class PerturbationEnv(ConcurrentEnv):
         self.agent_selection = self._agent_selector.next()
 
     def step(self, action):
-        if self.terminations[self.agent_selection]:
-            return
-
-        assert action.agent_id == self.agent_selection
-
-        match self.phase:
-            case Phase.HARVEST:
-                assert action.location == self.POOL_LOCATION
-                assert type(action) == PersonaActionHarvesting
-                self._step_lake_bet(action)
-            case Phase.POOL_AFTER_HARVESTING:
-                assert action.location == self.POOL_LOCATION
-                self._step_pool_after_harvesting(action)
-            case Phase.RESTAURANT:
-                assert action.location == "restaurant"
-                self._step_restaurant(action)
-            case Phase.HOME:
-                assert action.location == "home"
-                self._step_home(action)
-                if self._agent_selector.is_last():
-                    self.save_log()
-                    self.num_round += 1
-
-                    ## Apply perturbations, now we assume we have only 1
-
-                    if self.num_round == self.perturbation.round:
-                        if self.perturbation.type == "change_language_nature" and (
-                            self.perturbation.language_nature == "none"
-                            or self.perturbation.language_nature == "none_and_no_obs"
-                        ):
-                            self.cfg.language_nature = "none"
-                            self._phase_selector = agent_selector(
-                                [
-                                    Phase.HARVEST,
-                                    Phase.POOL_AFTER_HARVESTING,
-                                    Phase.HOME,
-                                ]
-                            )
-                        elif self.perturbation.type == "insert_outsider":
-                            self.agents = self.possible_agents
-                            self._agent_selector = agent_selector(self.agents)
-                            self._init_agent(self.agents[-1])
-
-                    self.phase = self._phase_selector.next()
-
-                    # We want to see also the discussion in case no fish remain
-                    self.terminations = {
-                        agent: (
-                            self.internal_global_state["resource_in_pool"] < 5
-                            or self.num_round >= self.cfg.max_num_rounds
-                        )
-                        for agent in self.agents
-                    }
-
-                    self.internal_global_state["resource_in_pool"] = min(
-                        self.cfg.initial_resource_in_pool,
-                        self.internal_global_state["resource_in_pool"] * 2,
-                    )  # Double the fish in the lake, but cap at 100
-                    self.internal_global_state["resource_before_harvesting"] = (
-                        self.internal_global_state["resource_in_pool"]
-                    )
-                    self.internal_global_state["sustainability_threshold"] = int(
-                        (self.internal_global_state["resource_in_pool"] // 2)
-                        // self.internal_global_state["num_agents"]
-                    )
-                    if self.cfg.harvesting_order == "random-sequential":
-                        agents = list(np.random.permutation(self.agents))
-                        self._agent_selector = agent_selector(agents)
-                self.agent_selection = self._agent_selector.next()
-            case _:
-                raise ValueError(f"Unknown phase: {self.phase!r}")
-
-        return (
-            self.agent_selection,
-            self._observe(self.agent_selection),
-            self.rewards,
-            self.terminations,
-        )
+        raise DeprecationWarning("Use ConcurrentEnv instead.")
 
     def reset(self):
-        super().reset()
-
-        if self.num_round == self.perturbation.round:
-            if self.perturbation.type == "change_language_nature" and (
-                self.perturbation.language_nature == "none"
-                or self.perturbation.language_nature == "none_and_no_obs"
-            ):
-                self.cfg.language_nature = self.perturbation.language_nature
-                self._phase_selector = agent_selector(
-                    [Phase.HARVEST, Phase.POOL_AFTER_HARVESTING, Phase.HOME]
-                )
-                self.phase = self._phase_selector.next()
-            elif self.perturbation.type == "insert_outsider":
-                self.agents = self.possible_agents
-                self._agent_selector = agent_selector(self.agents)
-                self._init_agent(self.agents[-1])
-                self.agent_selection = self._agent_selector.next()
-
-        return self.agent_selection, self._observe(self.agent_selection)
+        raise DeprecationWarning("Use ConcurrentEnv instead.")
