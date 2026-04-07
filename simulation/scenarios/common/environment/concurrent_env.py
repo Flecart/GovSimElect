@@ -1,6 +1,7 @@
 """Concurrent environment."""
 
 from datetime import datetime, timedelta
+from enum import Enum, auto
 
 import numpy as np
 import omegaconf
@@ -31,6 +32,13 @@ def get_discussion_day(current_date):
 
 def get_expiration_next_month(current_date):
   return get_reflection_day(current_date)
+
+
+class Phase(Enum):
+  HARVEST = auto()
+  POOL_AFTER_HARVESTING = auto()
+  RESTAURANT = auto()
+  HOME = auto()
 
 
 class ConcurrentEnv:
@@ -95,7 +103,7 @@ class ConcurrentEnv:
           )
       )
     obs = HarvestingObs(
-        phase=self.phase,
+        phase=self._phase_to_label(self.phase),
         current_location=self.internal_global_state["next_location"][agent],
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
@@ -110,7 +118,7 @@ class ConcurrentEnv:
 
   def _observe_pool_after_harvesting(self, agent) -> HarvestingObs:
     obs = HarvestingObs(
-        phase=self.phase,
+        phase=self._phase_to_label(self.phase),
         current_location=self.internal_global_state["next_location"][agent],
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
@@ -140,7 +148,7 @@ class ConcurrentEnv:
   def _observe_restaurant(self, agent) -> HarvestingObs:
     events = []
     state = HarvestingObs(
-        phase=self.phase,
+        phase=self._phase_to_label(self.phase),
         current_location=self.internal_global_state["next_location"][agent],
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
@@ -159,7 +167,7 @@ class ConcurrentEnv:
 
   def _observe_home(self, agent) -> HarvestingObs:
     state = HarvestingObs(
-        phase=self.phase,
+        phase=self._phase_to_label(self.phase),
         current_location=self.internal_global_state["next_location"][agent],
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
@@ -180,15 +188,31 @@ class ConcurrentEnv:
     Depending on the current phase, the observation will be different
     """
 
-    if self.phase == self.POOL_LOCATION:
-      state = self._observe_pool(agent)
-    elif self.phase == "pool_after_harvesting":
-      state = self._observe_pool_after_harvesting(agent)
-    elif self.phase == "restaurant":
-      state = self._observe_restaurant(agent)
-    elif self.phase == "home":
-      state = self._observe_home(agent)
+    match self.phase:
+      case Phase.HARVEST:
+        state = self._observe_pool(agent)
+      case Phase.POOL_AFTER_HARVESTING:
+        state = self._observe_pool_after_harvesting(agent)
+      case Phase.RESTAURANT:
+        state = self._observe_restaurant(agent)
+      case Phase.HOME:
+        state = self._observe_home(agent)
+      case _:
+        raise ValueError(f"Unknown phase: {self.phase!r}")
     return state
+
+  def _phase_to_label(self, phase: Phase) -> str:
+    match phase:
+      case Phase.HARVEST:
+        return self.POOL_LOCATION
+      case Phase.POOL_AFTER_HARVESTING:
+        return "pool_after_harvesting"
+      case Phase.RESTAURANT:
+        return "restaurant"
+      case Phase.HOME:
+        return "home"
+      case _:
+        raise ValueError(f"Unknown phase: {phase!r}")
 
   def close(self):
     """Close should release any graphical displays, subprocesses, network connections
@@ -272,7 +296,12 @@ class ConcurrentEnv:
     self._agent_selector = agent_selector(self.agents)
     self.agent_selection = self._agent_selector.next()
     self._phase_selector = agent_selector(
-        [self.POOL_LOCATION, "pool_after_harvesting", "restaurant", "home"]
+        [
+            Phase.HARVEST,
+            Phase.POOL_AFTER_HARVESTING,
+            Phase.RESTAURANT,
+            Phase.HOME,
+        ]
     )
     self.phase = self._phase_selector.next()
 
@@ -502,39 +531,42 @@ class ConcurrentEnv:
 
     assert action.agent_id == self.agent_selection
 
-    if self.phase == self.POOL_LOCATION:
-      assert action.location == self.POOL_LOCATION
-      assert type(action) == PersonaActionHarvesting
-      self._step_lake_bet(action)
-    elif self.phase == "pool_after_harvesting":
-      assert action.location == self.POOL_LOCATION
-      self._step_pool_after_harvesting(action)
-    elif self.phase == "restaurant":
-      assert action.location == "restaurant"
-      self._step_restaurant(action)
-    elif self.phase == "home":
-      assert action.location == "home"
-      self._step_home(action)
-      if self._agent_selector.is_last():
-        self.save_log()
-        self.num_round += 1
-        self.phase = self._phase_selector.next()
+    match self.phase:
+      case Phase.HARVEST:
+        assert action.location == self.POOL_LOCATION
+        assert type(action) == PersonaActionHarvesting
+        self._step_lake_bet(action)
+      case Phase.POOL_AFTER_HARVESTING:
+        assert action.location == self.POOL_LOCATION
+        self._step_pool_after_harvesting(action)
+      case Phase.RESTAURANT:
+        assert action.location == "restaurant"
+        self._step_restaurant(action)
+      case Phase.HOME:
+        assert action.location == "home"
+        self._step_home(action)
+        if self._agent_selector.is_last():
+          self.save_log()
+          self.num_round += 1
+          self.phase = self._phase_selector.next()
 
-        # We want to see also the discussion in case no fish remain
-        self.terminations = {
-            agent: (
-                self.internal_global_state["resource_in_pool"]
-                < 5  # less than 5 fish remain, so we collapse
-                or self.num_round >= self.cfg.max_num_rounds
-            )
-            for agent in self.agents
-        }
-        self._apply_regeneration()
-        self._set_sustainability_threshold()
-        if self.cfg.harvesting_order == "random-sequential":
-          agents = list(np.random.permutation(self.agents))
-          self._agent_selector = agent_selector(agents)
-      self.agent_selection = self._agent_selector.next()
+          # We want to see also the discussion in case no fish remain
+          self.terminations = {
+              agent: (
+                  self.internal_global_state["resource_in_pool"]
+                  < 5  # less than 5 fish remain, so we collapse
+                  or self.num_round >= self.cfg.max_num_rounds
+              )
+              for agent in self.agents
+          }
+          self._apply_regeneration()
+          self._set_sustainability_threshold()
+          if self.cfg.harvesting_order == "random-sequential":
+            agents = list(np.random.permutation(self.agents))
+            self._agent_selector = agent_selector(agents)
+        self.agent_selection = self._agent_selector.next()
+      case _:
+        raise ValueError(f"Unknown phase: {self.phase!r}")
 
     return (
         self.agent_selection,

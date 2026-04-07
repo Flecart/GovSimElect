@@ -17,6 +17,7 @@ from simulation.persona.common import (
 from .common import HarvestingObs
 from .concurrent_env import (
     ConcurrentEnv,
+    Phase,
     get_discussion_day,
     get_expiration_next_month,
     get_reflection_day,
@@ -65,7 +66,7 @@ class PerturbationEnv(ConcurrentEnv):
                     )
 
             state = HarvestingObs(
-                phase=self.phase,
+                phase=self._phase_to_label(self.phase),
                 current_location=self.internal_global_state["next_location"][agent],
                 current_location_agents=self.internal_global_state["next_location"],
                 current_time=self.internal_global_state["next_time"][agent],
@@ -114,65 +115,72 @@ class PerturbationEnv(ConcurrentEnv):
 
         assert action.agent_id == self.agent_selection
 
-        if self.phase == self.POOL_LOCATION:
-            assert action.location == self.POOL_LOCATION
-            assert type(action) == PersonaActionHarvesting
-            self._step_lake_bet(action)
-        elif self.phase == "pool_after_harvesting":
-            assert action.location == self.POOL_LOCATION
-            self._step_pool_after_harvesting(action)
-        elif self.phase == "restaurant":
-            assert action.location == "restaurant"
-            self._step_restaurant(action)
-        elif self.phase == "home":
-            assert action.location == "home"
-            self._step_home(action)
-            if self._agent_selector.is_last():
-                self.save_log()
-                self.num_round += 1
+        match self.phase:
+            case Phase.HARVEST:
+                assert action.location == self.POOL_LOCATION
+                assert type(action) == PersonaActionHarvesting
+                self._step_lake_bet(action)
+            case Phase.POOL_AFTER_HARVESTING:
+                assert action.location == self.POOL_LOCATION
+                self._step_pool_after_harvesting(action)
+            case Phase.RESTAURANT:
+                assert action.location == "restaurant"
+                self._step_restaurant(action)
+            case Phase.HOME:
+                assert action.location == "home"
+                self._step_home(action)
+                if self._agent_selector.is_last():
+                    self.save_log()
+                    self.num_round += 1
 
-                ## Apply perturbations, now we assume we have only 1
+                    ## Apply perturbations, now we assume we have only 1
 
-                if self.num_round == self.perturbation.round:
-                    if self.perturbation.type == "change_language_nature" and (
-                        self.perturbation.language_nature == "none"
-                        or self.perturbation.language_nature == "none_and_no_obs"
-                    ):
-                        self.cfg.language_nature = "none"
-                        self._phase_selector = agent_selector(
-                            [self.POOL_LOCATION, "pool_after_harvesting", "home"]
+                    if self.num_round == self.perturbation.round:
+                        if self.perturbation.type == "change_language_nature" and (
+                            self.perturbation.language_nature == "none"
+                            or self.perturbation.language_nature == "none_and_no_obs"
+                        ):
+                            self.cfg.language_nature = "none"
+                            self._phase_selector = agent_selector(
+                                [
+                                    Phase.HARVEST,
+                                    Phase.POOL_AFTER_HARVESTING,
+                                    Phase.HOME,
+                                ]
+                            )
+                        elif self.perturbation.type == "insert_outsider":
+                            self.agents = self.possible_agents
+                            self._agent_selector = agent_selector(self.agents)
+                            self._init_agent(self.agents[-1])
+
+                    self.phase = self._phase_selector.next()
+
+                    # We want to see also the discussion in case no fish remain
+                    self.terminations = {
+                        agent: (
+                            self.internal_global_state["resource_in_pool"] < 5
+                            or self.num_round >= self.cfg.max_num_rounds
                         )
-                    elif self.perturbation.type == "insert_outsider":
-                        self.agents = self.possible_agents
-                        self._agent_selector = agent_selector(self.agents)
-                        self._init_agent(self.agents[-1])
+                        for agent in self.agents
+                    }
 
-                self.phase = self._phase_selector.next()
-
-                # We want to see also the discussion in case no fish remain
-                self.terminations = {
-                    agent: (
-                        self.internal_global_state["resource_in_pool"] < 5
-                        or self.num_round >= self.cfg.max_num_rounds
+                    self.internal_global_state["resource_in_pool"] = min(
+                        self.cfg.initial_resource_in_pool,
+                        self.internal_global_state["resource_in_pool"] * 2,
+                    )  # Double the fish in the lake, but cap at 100
+                    self.internal_global_state["resource_before_harvesting"] = (
+                        self.internal_global_state["resource_in_pool"]
                     )
-                    for agent in self.agents
-                }
-
-                self.internal_global_state["resource_in_pool"] = min(
-                    self.cfg.initial_resource_in_pool,
-                    self.internal_global_state["resource_in_pool"] * 2,
-                )  # Double the fish in the lake, but cap at 100
-                self.internal_global_state["resource_before_harvesting"] = (
-                    self.internal_global_state["resource_in_pool"]
-                )
-                self.internal_global_state["sustainability_threshold"] = int(
-                    (self.internal_global_state["resource_in_pool"] // 2)
-                    // self.internal_global_state["num_agents"]
-                )
-                if self.cfg.harvesting_order == "random-sequential":
-                    agents = list(np.random.permutation(self.agents))
-                    self._agent_selector = agent_selector(agents)
-            self.agent_selection = self._agent_selector.next()
+                    self.internal_global_state["sustainability_threshold"] = int(
+                        (self.internal_global_state["resource_in_pool"] // 2)
+                        // self.internal_global_state["num_agents"]
+                    )
+                    if self.cfg.harvesting_order == "random-sequential":
+                        agents = list(np.random.permutation(self.agents))
+                        self._agent_selector = agent_selector(agents)
+                self.agent_selection = self._agent_selector.next()
+            case _:
+                raise ValueError(f"Unknown phase: {self.phase!r}")
 
         return (
             self.agent_selection,
@@ -191,7 +199,7 @@ class PerturbationEnv(ConcurrentEnv):
             ):
                 self.cfg.language_nature = self.perturbation.language_nature
                 self._phase_selector = agent_selector(
-                    [self.POOL_LOCATION, "pool_after_harvesting", "home"]
+                    [Phase.HARVEST, Phase.POOL_AFTER_HARVESTING, Phase.HOME]
                 )
                 self.phase = self._phase_selector.next()
             elif self.perturbation.type == "insert_outsider":
