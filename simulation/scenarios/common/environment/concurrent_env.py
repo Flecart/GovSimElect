@@ -1,7 +1,7 @@
 """Concurrent environment."""
 
 from datetime import datetime, timedelta
-from enum import Enum, auto
+from enum import StrEnum, auto
 
 import numpy as np
 import omegaconf
@@ -34,11 +34,12 @@ def get_expiration_next_month(current_date):
   return get_reflection_day(current_date)
 
 
-class Phase(Enum):
-  HARVEST = auto()
-  POOL_AFTER_HARVESTING = auto()
-  RESTAURANT = auto()
-  HOME = auto()
+class Phase(StrEnum):
+  CONTRACTING = "contracting"
+  HARVEST = "lake"
+  POOL_AFTER_HARVESTING = "pool_after_harvesting"
+  RESTAURANT = "restaurant"
+  HOME = "home"
 
 
 class ConcurrentEnv:
@@ -65,6 +66,7 @@ class ConcurrentEnv:
     self._regen_factor_range = regen_factor_range
     self._harvest_enforcer = None
     self._post_harvest_observer = None
+    self._contracting_enabled = False
 
   ### Prompt text
 
@@ -115,6 +117,23 @@ class ConcurrentEnv:
         before_harvesting_sustainability_threshold=sustainability_threshold,
     )
     return obs
+
+  def _observe_contracting(self, agent) -> HarvestingObs:
+    state = HarvestingObs(
+        phase=self._phase_to_label(self.phase),
+        current_location="restaurant",
+        current_location_agents=self.internal_global_state["next_location"],
+        current_time=self.internal_global_state["next_time"][agent],
+        events=[],
+        context="",
+        chat=None,
+        current_resource_num=self.internal_global_state["resource_in_pool"],
+        agent_resource_num={agent: 0 for agent in self.agents},
+        before_harvesting_sustainability_threshold=self.internal_global_state[
+            "sustainability_threshold"
+        ],
+    )
+    return state
 
   def _observe_pool_after_harvesting(self, agent) -> HarvestingObs:
     obs = HarvestingObs(
@@ -189,6 +208,8 @@ class ConcurrentEnv:
     """
 
     match self.phase:
+      case Phase.CONTRACTING:
+        state = self._observe_contracting(agent)
       case Phase.HARVEST:
         state = self._observe_pool(agent)
       case Phase.POOL_AFTER_HARVESTING:
@@ -203,6 +224,8 @@ class ConcurrentEnv:
 
   def _phase_to_label(self, phase: Phase) -> str:
     match phase:
+      case Phase.CONTRACTING:
+        return "contracting"
       case Phase.HARVEST:
         return self.POOL_LOCATION
       case Phase.POOL_AFTER_HARVESTING:
@@ -228,11 +251,16 @@ class ConcurrentEnv:
   def set_post_harvest_observer(self, callback):
     self._post_harvest_observer = callback
 
+  def set_contracting_enabled(self, enabled: bool):
+    self._contracting_enabled = bool(enabled)
+
   def _init_agent(self, agent):
     self.internal_global_state["collected_resource"][agent] = 0
     self.internal_global_state["wanted_resource"][agent] = 0
     self.internal_global_state["last_collected_resource"][agent] = 0
-    self.internal_global_state["next_location"][agent] = self.POOL_LOCATION
+    self.internal_global_state["next_location"][agent] = (
+        "restaurant" if self._contracting_enabled else self.POOL_LOCATION
+    )
     self.internal_global_state["next_time"][agent] = datetime(
         2024, 1, 1, 1, 0, 0
     )
@@ -295,14 +323,15 @@ class ConcurrentEnv:
 
     self._agent_selector = agent_selector(self.agents)
     self.agent_selection = self._agent_selector.next()
-    self._phase_selector = agent_selector(
-        [
-            Phase.HARVEST,
-            Phase.POOL_AFTER_HARVESTING,
-            Phase.RESTAURANT,
-            Phase.HOME,
-        ]
-    )
+    phases = [
+        Phase.HARVEST,
+        Phase.POOL_AFTER_HARVESTING,
+        Phase.RESTAURANT,
+        Phase.HOME,
+    ]
+    if self._contracting_enabled:
+      phases = [Phase.CONTRACTING, *phases]
+    self._phase_selector = agent_selector(phases)
     self.phase = self._phase_selector.next()
 
     return self.agent_selection, self._observe(self.agent_selection)
@@ -466,6 +495,15 @@ class ConcurrentEnv:
       self.phase = self._phase_selector.next()
     self.agent_selection = self._agent_selector.next()
 
+  def _step_contracting(self, action: PersonaActionChat):
+    # Group constitutional discussion before harvesting.
+    if type(action) == PersonaActionChat:
+      self.log_step_conversation(action)
+      for a in self.agents:
+        self.internal_global_state["next_location"][a] = self.POOL_LOCATION
+      self.phase = self._phase_selector.next()
+      self.agent_selection = self._agent_selector.reset()
+
   def _step_pool_after_harvesting(self, action: PersonaActionHarvesting):
     # We have no interaction with other agents at the lake
     self.internal_global_state["next_location"][
@@ -497,7 +535,7 @@ class ConcurrentEnv:
   def _step_home(self, action: PersonaAction):
     self.internal_global_state["next_location"][
         self.agent_selection
-    ] = self.POOL_LOCATION
+    ] = "restaurant" if self._contracting_enabled else self.POOL_LOCATION
     self.internal_global_state["next_time"][self.agent_selection] += timedelta(
         days=1
     )
@@ -532,6 +570,9 @@ class ConcurrentEnv:
     assert action.agent_id == self.agent_selection
 
     match self.phase:
+      case Phase.CONTRACTING:
+        assert action.location == "restaurant"
+        self._step_contracting(action)
       case Phase.HARVEST:
         assert action.location == self.POOL_LOCATION
         assert type(action) == PersonaActionHarvesting

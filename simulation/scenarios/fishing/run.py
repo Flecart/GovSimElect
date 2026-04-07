@@ -17,6 +17,32 @@ from .contracting import ContractingOrchestrator
 from .environment import FishingConcurrentEnv, FishingPerturbationEnv
 
 
+def _print_env_summary(env, agent_id, obs, stage: str) -> None:
+    """Print a compact environment state snapshot for debugging."""
+    state = getattr(env, "internal_global_state", {})
+    stock_now = state.get("resource_in_pool")
+    stock_before = state.get("resource_before_harvesting")
+    catches = state.get("last_collected_resource", {}) or {}
+    catches_by_name = {
+        env.agent_id_to_name.get(pid, pid): amount for pid, amount in catches.items()
+    }
+    ordered_catches = ", ".join(
+        f"{name}:{catches_by_name[name]}" for name in sorted(catches_by_name)
+    ) or "none"
+    next_agent_name = env.agent_id_to_name.get(agent_id, agent_id)
+    print(
+        "[env-summary]"
+        f" stage={stage}"
+        f" round={env.num_round}"
+        f" phase={env.phase}"
+        f" next_agent={next_agent_name}"
+        f" observed_stock={obs.current_resource_num}"
+        f" stock_now={stock_now}"
+        f" stock_before_harvest={stock_before}"
+        f" last_catches={ordered_catches}"
+    )
+
+
 async def run(
     cfg: DictConfig,
     logger: ModelWandbWrapper,
@@ -155,7 +181,11 @@ async def run(
         for persona in personas.values():
             persona.set_contracting_runtime(contracting_runtime)
         env.set_harvest_enforcer(contracting_runtime.enforce_catches)
+        env.set_contracting_enabled(True)
+    else:
+        env.set_contracting_enabled(False)
     agent_id, obs = env.reset()
+    _print_env_summary(env, agent_id, obs, stage="reset")
     round_harvest_stats = collections.defaultdict(
           lambda: collections.defaultdict(int)
     )
@@ -172,6 +202,7 @@ async def run(
             rewards,
             termination,
         ) = env.step(action)
+        _print_env_summary(env, agent_id, obs, stage="step")
 
         # Check for harvest actions.
         if isinstance(action, PersonaActionHarvesting):

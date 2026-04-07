@@ -25,6 +25,27 @@ from .reflect_prompts import prompt_find_harvesting_limit_from_conversation
 class FishingConverseComponent(ConverseComponent):
   """Fishing converse component."""
 
+  def conduct_contracting_phase(
+      self,
+      target_personas: list[PersonaAgent],
+      current_time: datetime,
+      current_resource_num: int,
+      agent_resource_num: dict[str, int],
+      sustainability_threshold: int,
+  ) -> tuple[list[tuple[str, str]], str]:
+    contract_runtime = getattr(self.persona, "contracting_runtime", None)
+    if contract_runtime is None or not contract_runtime.enabled:
+      raise RuntimeError("Contracting phase called without enabled contracting runtime.")
+    return asyncio.run(
+        contract_runtime.aconduct_negotiation(
+            personas=target_personas,
+            current_time=current_time,
+            current_resource_num=current_resource_num,
+            sustainability_threshold=sustainability_threshold,
+            agent_resource_num=agent_resource_num,
+        )
+    )
+
   def converse_group(
       self,
       target_personas: list[PersonaAgent],
@@ -39,18 +60,6 @@ class FishingConverseComponent(ConverseComponent):
       leader_persona: PersonaAgent | None = None,
       debug: bool = False,
   ) -> tuple[list[tuple[str, str]], str]:
-    contract_runtime = getattr(self.persona, "contracting_runtime", None)
-    if contract_runtime is not None and contract_runtime.enabled:
-      return asyncio.run(
-          contract_runtime.aconduct_negotiation(
-              personas=target_personas,
-              current_time=current_time,
-              current_resource_num=current_resource_num,
-              sustainability_threshold=sustainability_threshold,
-              agent_resource_num=agent_resource_num,
-          )
-      )
-
     current_conversation: list[tuple[PersonaIdentity, str]] = []
 
     html_interactions = []
@@ -210,6 +219,25 @@ class FishingConverseComponent(ConverseComponent):
         html_interactions,
     )
 
+  async def aconduct_contracting_phase(
+      self,
+      target_personas: list[PersonaAgent],
+      current_time: datetime,
+      current_resource_num: int,
+      agent_resource_num: dict[str, int],
+      sustainability_threshold: int,
+  ) -> tuple[list[tuple[str, str]], str]:
+    contract_runtime = getattr(self.persona, "contracting_runtime", None)
+    if contract_runtime is None or not contract_runtime.enabled:
+      raise RuntimeError("Contracting phase called without enabled contracting runtime.")
+    return await contract_runtime.aconduct_negotiation(
+        personas=target_personas,
+        current_time=current_time,
+        current_resource_num=current_resource_num,
+        sustainability_threshold=sustainability_threshold,
+        agent_resource_num=agent_resource_num,
+    )
+
   async def aconverse_group(
       self,
       target_personas: list[PersonaAgent],
@@ -224,16 +252,6 @@ class FishingConverseComponent(ConverseComponent):
       leader_persona: PersonaAgent | None = None,
       debug: bool = False,
   ) -> tuple[list[tuple[str, str]], str]:
-    contract_runtime = getattr(self.persona, "contracting_runtime", None)
-    if contract_runtime is not None and contract_runtime.enabled:
-      return await contract_runtime.aconduct_negotiation(
-          personas=target_personas,
-          current_time=current_time,
-          current_resource_num=current_resource_num,
-          sustainability_threshold=sustainability_threshold,
-          agent_resource_num=agent_resource_num,
-      )
-
     current_conversation: list[tuple[PersonaIdentity, str]] = []
 
     html_interactions = []

@@ -199,24 +199,38 @@ class FishingPersona(PersonaAgent):
               self.other_personas_from_id[agent_id]
           )
 
-      (
-          conversation,
-          _,
-          resource_limit,
-          html_interactions,
-      ) = self.converse.converse_group(
-          other_personas,
-          obs.current_location,
-          obs.current_time,
-          obs.context,
-          obs.current_resource_num,
-          obs.agent_resource_num,
-          obs.before_harvesting_sustainability_threshold,
-          mayoral_agenda=self._agenda,
-          harvest_report=self._harvest_report,
-          leader_persona=self._current_leader,
-          debug=debug,
-      )
+      if obs.phase == "contracting":
+        (
+            conversation,
+            _,
+            resource_limit,
+            html_interactions,
+        ) = self.converse.conduct_contracting_phase(
+            other_personas,
+            obs.current_time,
+            obs.current_resource_num,
+            obs.agent_resource_num,
+            obs.before_harvesting_sustainability_threshold,
+        )
+      else:
+        (
+            conversation,
+            _,
+            resource_limit,
+            html_interactions,
+        ) = self.converse.converse_group(
+            other_personas,
+            obs.current_location,
+            obs.current_time,
+            obs.context,
+            obs.current_resource_num,
+            obs.agent_resource_num,
+            obs.before_harvesting_sustainability_threshold,
+            mayoral_agenda=self._agenda,
+            harvest_report=self._harvest_report,
+            leader_persona=self._current_leader,
+            debug=debug,
+        )
       action = PersonaActionChat(
           self.agent_id,
           "restaurant",
@@ -295,24 +309,38 @@ class FishingPersona(PersonaAgent):
               self.other_personas_from_id[agent_id]
           )
 
-      (
-          conversation,
-          _,
-          resource_limit,
-          html_interactions,
-      ) = await self.converse.aconverse_group(
-          other_personas,
-          obs.current_location,
-          obs.current_time,
-          obs.context,
-          obs.current_resource_num,
-          obs.agent_resource_num,
-          obs.before_harvesting_sustainability_threshold,
-          mayoral_agenda=self._agenda,
-          harvest_report=self._harvest_report,
-          leader_persona=self._current_leader,
-          debug=debug,
-      )
+      if obs.phase == "contracting":
+        (
+            conversation,
+            _,
+            resource_limit,
+            html_interactions,
+        ) = await self.converse.aconduct_contracting_phase(
+            other_personas,
+            obs.current_time,
+            obs.current_resource_num,
+            obs.agent_resource_num,
+            obs.before_harvesting_sustainability_threshold,
+        )
+      else:
+        (
+            conversation,
+            _,
+            resource_limit,
+            html_interactions,
+        ) = await self.converse.aconverse_group(
+            other_personas,
+            obs.current_location,
+            obs.current_time,
+            obs.context,
+            obs.current_resource_num,
+            obs.agent_resource_num,
+            obs.before_harvesting_sustainability_threshold,
+            mayoral_agenda=self._agenda,
+            harvest_report=self._harvest_report,
+            leader_persona=self._current_leader,
+            debug=debug,
+        )
       action = PersonaActionChat(
           self.agent_id,
           "restaurant",
