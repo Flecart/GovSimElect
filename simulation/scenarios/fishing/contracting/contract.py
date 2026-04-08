@@ -8,6 +8,7 @@ from typing import Any
 class ContractMode(str, Enum):
   CODE_LAW = "code_law"
   CODE_NL = "code_nl"
+  FREE_CHAT = "free_chat"
   GOVSIM = "govsim"
   NO_COMMUNICATION = "no_communication"
 

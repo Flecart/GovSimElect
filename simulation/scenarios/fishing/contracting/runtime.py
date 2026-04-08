@@ -25,6 +25,7 @@ from .contract import (
 from .managers import LawContractManager, NLContractManager, NoCommsManager
 from .negotiation import (
     CodedContractVotingManager,
+    FreeChatNegotiationManager,
     MayoralVotingNegotiationManager,
     RoundRobinNegotiationManager,
 )
@@ -102,6 +103,7 @@ class ContractingOrchestrator:
     return self.cfg.enabled and self.mode in {
         ContractMode.CODE_LAW,
         ContractMode.CODE_NL,
+        ContractMode.FREE_CHAT,
     }
 
   @property
@@ -140,7 +142,12 @@ class ContractingOrchestrator:
     )
     self._manager.clear_conversation()
 
-    if self.cfg.negotiation_protocol == NegotiationProtocol.MAYORAL_VOTING.value:
+    if self.mode == ContractMode.FREE_CHAT:
+      negotiation_manager = FreeChatNegotiationManager(
+          personas,
+          max_turns=self.cfg.max_turns,
+      )
+    elif self.cfg.negotiation_protocol == NegotiationProtocol.MAYORAL_VOTING.value:
       negotiation_manager = MayoralVotingNegotiationManager(
           personas,
           max_turns=self.cfg.max_turns,
@@ -171,10 +178,13 @@ class ContractingOrchestrator:
           html=turn.get("html", ""),
       )
 
+    summary = ""
     final_contract_text = None
     coding_response = None
     agreed_to_keep_unchanged = False
-    if result.nl_contract:
+    if self.mode == ContractMode.FREE_CHAT:
+      summary = "Fishers had an open pre-harvest chat. No formal contract objective was applied."
+    elif result.nl_contract:
       if "<UNCHANGED>" in result.nl_contract.upper() or result.nl_contract.strip().upper() == "UNCHANGED":
         agreed_to_keep_unchanged = True
       else:
@@ -187,7 +197,9 @@ class ContractingOrchestrator:
               nl_contract=result.nl_contract,
           )
 
-    if final_contract_text:
+    if self.mode == ContractMode.FREE_CHAT:
+      self._sync_persona_contract_state(personas, "")
+    elif final_contract_text:
       agent_names = [persona.identity.name for persona in personas]
       self._manager.set_contract(
           content=final_contract_text,
@@ -249,15 +261,18 @@ class ContractingOrchestrator:
     transcript.append((self.framework_identity, summary))
     html_interactions.append(f"<div><strong>FRAMEWORK</strong>: {summary}</div>")
 
-    limit_source = result.nl_contract
-    if limit_source is None and self._manager.get_contract() is not None:
-      limit_source = str(
-          self._manager.get_contract().metadata.get(
-              "nl_contract",
-              self._manager.get_contract().content,
-          )
-      )
-    resource_limit = self._extract_resource_limit(limit_source)
+    if self.mode == ContractMode.FREE_CHAT:
+      resource_limit = None
+    else:
+      limit_source = result.nl_contract
+      if limit_source is None and self._manager.get_contract() is not None:
+        limit_source = str(
+            self._manager.get_contract().metadata.get(
+                "nl_contract",
+                self._manager.get_contract().content,
+            )
+        )
+      resource_limit = self._extract_resource_limit(limit_source)
     limit_text = (
         f"Detected negotiated resource limit: {resource_limit}"
         if resource_limit is not None
@@ -520,7 +535,7 @@ class ContractingOrchestrator:
     )
 
   def _install_default_contract(self) -> None:
-    if self.mode == ContractMode.NO_COMMUNICATION:
+    if self.mode in {ContractMode.NO_COMMUNICATION, ContractMode.FREE_CHAT}:
       return
     default_nl_law = self._default_nl_law()
     if self.mode == ContractMode.CODE_LAW:

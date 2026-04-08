@@ -163,6 +163,7 @@ def negotiation_system_prompt(
   contract_mode = {
       ContractMode.CODE_LAW: "a natural-language agreement that may later be translated into Python enforcement code",
       ContractMode.CODE_NL: "a natural-language common constitution that outlines rules and guidelines for the community",
+      ContractMode.FREE_CHAT: "an informal free chat",
       ContractMode.GOVSIM: "an informal conversation",
       ContractMode.NO_COMMUNICATION: "no communication",
   }[mode]
@@ -178,6 +179,25 @@ def negotiation_system_prompt(
       f"{_coding_interface_limitations_block(mode)}"
       f"{tool_instructions + chr(10) if tool_instructions else ''}"
       f"{_state_lines(state)}"
+  )
+
+
+def free_chat_turn_prompt(
+    history: list[dict[str, str]],
+    state: FishingContractState,
+    agent_resource_num: dict[str, int],
+) -> str:
+  history_text = conversation_to_string_with_dash(
+      [(turn["agent"], turn["message"]) for turn in history]
+  ) if history else "-No previous messages.\n"
+  return (
+      f"{_resource_report(agent_resource_num)}\n\n"
+      f"{_state_lines(state)}\n"
+      "This is an open chat opportunity before starting to fish, you can discuss anything you want.\n"
+      "Conversation so far:\n"
+      f"{history_text}\n"
+      "Respond with one short, natural message.\n"
+      "Use <END_CONVERSATION> only if there is clearly nothing else to add."
   )
 
 

@@ -8,6 +8,7 @@ from .contract import ContractMode, FishingContractState, NLNegotiationResult
 from .prompts import (
     coded_contract_feedback_prompt,
     coded_contract_vote_prompt,
+    free_chat_turn_prompt,
     mayor_proposal_prompt,
     negotiation_system_prompt,
     round_robin_prompt,
@@ -506,3 +507,60 @@ class CodedContractVotingManager:
       concise_response = ". ".join(sentences[:3]) if sentences else response.strip()
       feedback.append(f"{agent.identity.name}: {concise_response}")
     return "\n".join(feedback) if feedback else "No specific feedback was provided."
+
+
+class FreeChatNegotiationManager:
+  def __init__(
+      self,
+      agents: list[PersonaAgent],
+      max_turns: int = 10,
+  ) -> None:
+    self.agents = agents
+    self.max_turns = max_turns
+
+  async def run_nl_negotiation(
+      self,
+      state: FishingContractState,
+      mode: ContractMode,
+      agent_resource_num: dict[str, int],
+      active_law_text: str = "",
+  ) -> NLNegotiationResult:
+    del active_law_text
+    conversations: list[dict[str, str]] = []
+    for turn in range(self.max_turns):
+      speaker_idx = (state.speaker_idx + turn) % len(self.agents)
+      speaker = self.agents[speaker_idx]
+      retrieved = speaker.retrieve.retrieve(["chat", "community", "lake"], 8)
+      system_prompt = negotiation_system_prompt(
+          speaker,
+          self.agents,
+          retrieved,
+          state,
+          mode,
+      )
+      response, html = await _aprompt_persona(
+          speaker,
+          "contracting",
+          "free_chat_turn",
+          system_prompt,
+          free_chat_turn_prompt(
+              conversations[-5:],
+              state,
+              agent_resource_num,
+          ),
+          default_value="I am glad we can talk openly this month.",
+      )
+      conversations.append({
+          "turn": turn,
+          "agent": speaker.identity.name,
+          "message": response,
+          "phase": "free_chat",
+          "html": html,
+      })
+      if "<END_CONVERSATION>" in response.upper():
+        break
+    return NLNegotiationResult(
+        nl_contract=None,
+        conversations=conversations,
+        agreements={},
+    )
