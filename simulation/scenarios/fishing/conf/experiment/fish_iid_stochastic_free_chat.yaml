@@ -62,6 +62,7 @@ agent:
 contracting:
   enabled: true
   mode: free_chat
+  setting_context: "Monthly regeneration factor is sampled uniformly in the range ${experiment.env.regen_factor_range}."
   negotiation_protocol: round_robin
   max_turns: 6
   min_agree_agents: 3

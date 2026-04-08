@@ -26,6 +26,7 @@ env:
   perturbations: []
   regen_mode: iid_stochastic
   regen_seed: 42
+  regen_factor_range: [1.5, 2.5]
 
 personas:
   num: 5
@@ -61,6 +62,7 @@ agent:
 contracting:
   enabled: true
   mode: code_nl
+  setting_context: "Monthly regeneration factor is sampled uniformly in the range ${experiment.env.regen_factor_range}."
   negotiation_protocol: round_robin
   max_turns: 6
   min_agree_agents: 3

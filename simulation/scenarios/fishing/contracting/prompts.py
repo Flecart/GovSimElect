@@ -20,6 +20,8 @@ def _state_lines(state: FishingContractState) -> str:
   )
   if state.regime is not None:
     lines += f"Lake condition: {state.regime}\n"
+  if state.setting_context.strip():
+    lines += f"Environment details: {state.setting_context.strip()}\n"
   return lines
 
 
@@ -220,13 +222,16 @@ def mayor_proposal_prompt(
       "If there is already an active law and you want to keep it exactly as it is without any changes,\n"
       "you must output exactly the word <UNCHANGED> and nothing else.\n"
       "Otherwise, if you want a new law or to change the current one, keep it concrete and enforceable. Do not write Python code.\n"
+      "When proposing a new law, include exactly one <constitution>...</constitution> block.\n"
+      "Only the text inside that block will be voted on and adopted.\n"
+      "Put only the final rule text inside <constitution>...</constitution>.\n"
       "If helpful, specify numeric catch limits, sanctions, redistribution rules,"
       " or a required amount of fish to leave in the lake.\n"
       "Write the contract so that another system could translate it into explicit enforcement logic.\n"
       "Avoid vague phrases like 'be sustainable' unless you also state the concrete rule.\n"
       "If you want a numeric cap, state the exact tons per fisher.\n"
       "If you want the rule to depend on fish left in the lake, state that dependency explicitly.\n"
-      "Return only the proposal text."
+      "Return only your proposal text (or <UNCHANGED>), following the tagging rule above."
   )
 
 
@@ -293,7 +298,8 @@ def round_robin_prompt(
       f"{history_text}\n"
       "Respond with your next message in the contract negotiation.\n"
       "If there is an active law and you propose to keep it exactly as it is, you can propose the exact word <UNCHANGED>.\n"
-      "Otherwise, if you propose a new contract, state it plainly in English.\n"
+      "Otherwise, if you propose a new contract, include exactly one <constitution>...</constitution> block.\n"
+      "Only the text inside <constitution>...</constitution> will be voted on as the contract.\n"
       "If you agree, you must include either <AGREE> or <AGREE to=Name>.\n"
       "If you disagree or reject the current proposal, you must include <DISAGREE>.\n"
       "Use <AGREE> if you agree with the most recent acceptable proposal.\n"
@@ -490,6 +496,8 @@ def nl_judge_prompt(
     state: FishingContractState,
     conversation_summary: str,
 ) -> tuple[str, str]:
+  # deprecated
+  raise NotImplementedError("nl_judge_prompt is deprecated")
   system_prompt = (
       "You are a strict contract judge for a fishing commons simulation."
       " Decide what each fisher's enforced catch should be under the negotiated"

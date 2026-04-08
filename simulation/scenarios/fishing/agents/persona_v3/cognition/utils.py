@@ -230,7 +230,7 @@ def get_sytem_prompt_v3(persona):
       f" along with other {num_agents - 1} fishermen catching at the same time with you. The lake has a carrying capacity of 100"
       " tons of fish. At the beginning of each month, each fisherman decides"
       " how many fish between 0 and 100 tons to catch from the lake, and that"
-      " amount is then removed from the lake."
+      " amount is then removed from the lake. If the lake is empty, it will not be able to recover and you won't be able to fish anymore."
   )
 
   text_post = (

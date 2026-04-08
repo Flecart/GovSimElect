@@ -43,6 +43,7 @@ class ContractingConfig:
   mode: str = ContractMode.NO_COMMUNICATION.value
   negotiation_protocol: str = NegotiationProtocol.ROUND_ROBIN.value
   max_turns: int = 6
+  setting_context: str = ""
   min_agree_agents: int | None = None
   max_coding_retries: int = 2
   coding_temperature: float = 0.3
@@ -139,6 +140,7 @@ class ContractingOrchestrator:
         num_agents=len(personas),
         max_rounds=self.max_rounds,
         speaker_idx=self.current_round,
+        setting_context=self.cfg.setting_context,
     )
     self._manager.clear_conversation()
 

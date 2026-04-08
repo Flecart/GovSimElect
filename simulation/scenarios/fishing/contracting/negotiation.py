@@ -91,6 +91,26 @@ def _parse_vote_tag(message: str) -> bool:
   return "<VOTE_YES>" in upper or "YES" in upper.split()[:5]
 
 
+def _extract_constitution_text(message: str) -> str | None:
+  tagged_block = re.search(
+      r"<constitution>\s*(.*?)\s*</constitution>",
+      message,
+      flags=re.IGNORECASE | re.DOTALL,
+  )
+  if tagged_block:
+    content = re.sub(r"\s+", " ", tagged_block.group(1)).strip()
+    return content if len(content) > 5 else None
+  open_only_block = re.search(
+      r"<constitution>\s*(.*)",
+      message,
+      flags=re.IGNORECASE | re.DOTALL,
+  )
+  if open_only_block:
+    content = re.sub(r"\s+", " ", open_only_block.group(1)).strip()
+    return content if len(content) > 5 else None
+  return None
+
+
 class MayoralVotingNegotiationManager:
   def __init__(
       self,
@@ -199,6 +219,9 @@ class MayoralVotingNegotiationManager:
 
   def _clean_message(self, message: str) -> str | None:
     message = re.sub(r"```\w*\n?.*?```", "", message, flags=re.DOTALL)
+    constitution = _extract_constitution_text(message)
+    if constitution:
+      return constitution
     message = re.sub(r"\s+", " ", message).strip()
     return message if len(message) > 5 else None
 
@@ -390,6 +413,9 @@ class RoundRobinNegotiationManager:
     message = re.sub(r"<DISAGREE>", "", message, flags=re.IGNORECASE)
     message = re.sub(r"```\w*\n?.*?```", "", message, flags=re.DOTALL)
     message = re.sub(r"<END_CONVERSATION>", "", message, flags=re.IGNORECASE)
+    constitution = _extract_constitution_text(message)
+    if constitution:
+      return constitution
     cleaned = re.sub(r"\s+", " ", message).strip()
     return cleaned if len(cleaned) > 5 else None
 
@@ -414,14 +440,15 @@ class RoundRobinNegotiationManager:
   def _looks_like_counterproposal(self, message: str) -> bool:
     lowered = message.lower()
     proposal_markers = [
-        "i propose",
-        "my proposal",
-        "counterproposal",
-        "instead,",
-        "rather,",
-        "no more than",
-        "at most",
-        "each of us should",
+        "<constitution>",
+        # "i propose",
+        # "my proposal",
+        # "counterproposal",
+        # "instead,",
+        # "rather,",
+        # "no more than",
+        # "at most",
+        # "each of us should",
     ]
     return any(marker in lowered for marker in proposal_markers)
 
