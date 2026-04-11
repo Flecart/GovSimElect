@@ -16,6 +16,7 @@ export interface ContractingEvent {
 export interface RunViewProps {
   runName: string | null;
   runData: RunRow[] | null;
+  fishingSummary: Record<string, unknown> | null;
   contractingEvents: ContractingEvent[];
   activeGroup: string | null;
   resourceInPoolByGroup: Record<string, ResourceRow[]>;
@@ -142,6 +143,7 @@ function contractMarkdown(contract: ContractSnapshot | null | undefined): string
 export const RunView: React.FC<RunViewProps> = ({
   runName,
   runData,
+  fishingSummary,
   contractingEvents,
   activeGroup,
   resourceInPoolByGroup,
@@ -380,6 +382,15 @@ export const RunView: React.FC<RunViewProps> = ({
     );
   }
 
+  const summaryError =
+    fishingSummary && typeof fishingSummary.error === "string"
+      ? fishingSummary.error
+      : null;
+  const paperMetrics = asRecord(fishingSummary?.paper_metrics);
+  const agentGains = asRecord(fishingSummary?.agent_total_gain);
+  const consistency = asRecord(fishingSummary?.consistency_checks);
+  const regenSummary = asRecord(fishingSummary?.regen_summary);
+
   const latestNlLaw = latestContract
     ? asString(asRecord(latestContract.metadata).nl_contract, latestContract.content ?? "")
     : "";
@@ -438,6 +449,147 @@ export const RunView: React.FC<RunViewProps> = ({
               )}
             </div>
           </div>
+        </Card.Body>
+      </Card>
+
+      <Card className="run-view-section">
+        <Card.Header>
+          <h2>Run report</h2>
+          <p className="main-subtle">
+            GovSim metrics from{" "}
+            <code>scripts/summarize_fishing_log.py</code> (cached as{" "}
+            <code>fishing_run_summary.json</code> next to <code>log_env.json</code>
+            ).
+          </p>
+        </Card.Header>
+        <Card.Body>
+          {fishingSummary == null ? (
+            <p>
+              No environment log for this run; cannot build a summary. Expected{" "}
+              <code>log_env.json</code> under the run directory.
+            </p>
+          ) : summaryError ? (
+            <div>
+              <p className="alert alert-error">
+                Summary generation failed: {summaryError}
+              </p>
+              {typeof fishingSummary.traceback === "string" &&
+                fishingSummary.traceback.trim().length > 0 && (
+                  <pre className="summary-raw-json">{fishingSummary.traceback}</pre>
+                )}
+            </div>
+          ) : (
+            <div className="run-report-grid">
+              <div>
+                <div className="section-kicker">Core run facts</div>
+                <ul className="summary-facts">
+                  <li>
+                    <span>Records</span>{" "}
+                    <strong>{asNumber(fishingSummary.num_records, 0)}</strong>
+                  </li>
+                  <li>
+                    <span>Agents</span>{" "}
+                    <strong>{asNumber(fishingSummary.num_agents, 0)}</strong>
+                  </li>
+                  <li>
+                    <span>Rounds played</span>{" "}
+                    <strong>{asNumber(fishingSummary.rounds_played, 0)}</strong>
+                  </li>
+                  <li>
+                    <span>Actions</span>{" "}
+                    <code className="summary-actions-inline">
+                      {JSON.stringify(fishingSummary.actions ?? {})}
+                    </code>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <div className="section-kicker">Paper metrics (Section 2.4)</div>
+                <div className="execution-table summary-metrics-table">
+                  <div className="execution-table-header">
+                    <span>Metric</span>
+                    <span>Value</span>
+                  </div>
+                  <div className="execution-table-row">
+                    <span>survival_time_m</span>
+                    <span>{asNumber(paperMetrics.survival_time_m, 0)}</span>
+                  </div>
+                  <div className="execution-table-row">
+                    <span>total_gain_R</span>
+                    <span>{asNumber(paperMetrics.total_gain_R, 0).toFixed(2)}</span>
+                  </div>
+                  <div className="execution-table-row">
+                    <span>efficiency_u</span>
+                    <span>{asNumber(paperMetrics.efficiency_u, 0).toFixed(4)}</span>
+                  </div>
+                  <div className="execution-table-row">
+                    <span>equality_e</span>
+                    <span>{asNumber(paperMetrics.equality_e, 0).toFixed(4)}</span>
+                  </div>
+                  <div className="execution-table-row">
+                    <span>over_usage_o</span>
+                    <span>{asNumber(paperMetrics.over_usage_o, 0).toFixed(4)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="run-report-span-2">
+                <div className="section-kicker">Per-agent total gain</div>
+                {Object.keys(agentGains).length ? (
+                  <div className="execution-table">
+                    <div className="execution-table-header">
+                      <span>Agent</span>
+                      <span>Total gain</span>
+                    </div>
+                    {Object.entries(agentGains).map(([agent, gain]) => (
+                      <div key={agent} className="execution-table-row">
+                        <span>{agent}</span>
+                        <span>{asNumber(gain, 0).toFixed(2)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>No per-agent gains in summary.</p>
+                )}
+              </div>
+              <div>
+                <div className="section-kicker">Consistency checks</div>
+                <ul className="summary-facts">
+                  <li>
+                    <span>Rounds with limit + harvest</span>{" "}
+                    <strong>
+                      {asNumber(consistency.rounds_with_detected_limit_and_harvest, 0)}
+                    </strong>
+                  </li>
+                  <li>
+                    <span>Negotiated-limit violations</span>{" "}
+                    <strong>{asNumber(consistency.negotiated_limit_violations, 0)}</strong>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <div className="section-kicker">Regeneration</div>
+                <ul className="summary-facts">
+                  <li>
+                    <span>Regen events</span>{" "}
+                    <strong>{asNumber(regenSummary.num_regen_events, 0)}</strong>
+                  </li>
+                  <li>
+                    <span>realized_r_t min / max</span>{" "}
+                    <strong>
+                      {String(regenSummary.realized_r_t_min ?? "—")} /{" "}
+                      {String(regenSummary.realized_r_t_max ?? "—")}
+                    </strong>
+                  </li>
+                </ul>
+              </div>
+              <details className="run-report-span-2 summary-raw-details">
+                <summary>Raw summary JSON</summary>
+                <pre className="summary-raw-json">
+                  {JSON.stringify(fishingSummary, null, 2)}
+                </pre>
+              </details>
+            </div>
+          )}
         </Card.Body>
       </Card>
 

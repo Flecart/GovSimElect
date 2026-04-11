@@ -1,5 +1,9 @@
+import importlib.util
 import json
 import os
+import traceback
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 import dash
 import dash_mantine_components as dmc
@@ -228,6 +232,74 @@ def _load_run_records(summary_df):
     return run_records
 
 
+_SUMMARIZE_FISHING_MOD = None
+
+
+def _get_summarize_fishing_module():
+    """Load scripts/summarize_fishing_log.py once (same logic as CLI --json-out)."""
+    global _SUMMARIZE_FISHING_MOD
+    if _SUMMARIZE_FISHING_MOD is not None:
+        return _SUMMARIZE_FISHING_MOD
+    repo_root = Path(__file__).resolve().parents[2]
+    script_path = repo_root / "scripts" / "summarize_fishing_log.py"
+    spec = importlib.util.spec_from_file_location(
+        "govsim_summarize_fishing_log", script_path
+    )
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load summarizer from {script_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    _SUMMARIZE_FISHING_MOD = mod
+    return mod
+
+
+def _ensure_fishing_run_summary_json(
+    base_path: str, group: str, name: str
+) -> Optional[Dict[str, Any]]:
+    """Return fishing run summary dict; create fishing_run_summary.json from log_env if missing."""
+    run_dir = os.path.join(base_path, group, name)
+    log_path = os.path.join(run_dir, "log_env.json")
+    summary_path = os.path.join(run_dir, "fishing_run_summary.json")
+    if not os.path.isfile(log_path):
+        return None
+    if os.path.isfile(summary_path):
+        try:
+            with open(summary_path, "r", encoding="utf-8") as handle:
+                return json.load(handle)
+        except (json.JSONDecodeError, OSError):
+            pass
+    try:
+        mod = _get_summarize_fishing_module()
+        records = mod.parse_log(Path(log_path))
+        report = mod.summarize(
+            records,
+            capacity=100.0,
+            expected_regen=2.0,
+            collapse_threshold=0.0,
+        )
+        os.makedirs(run_dir, exist_ok=True)
+        with open(summary_path, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(report, indent=2))
+        return report
+    except Exception as exc:  # noqa: BLE001 — surface to UI
+        return {
+            "error": str(exc),
+            "traceback": traceback.format_exc(),
+        }
+
+
+def _load_fishing_summaries(summary_df):
+    if summary_df is None or summary_df.empty:
+        return {}
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    out = {}
+    for _, row in summary_df.iterrows():
+        rid = str(row["run_id"])
+        summary = _ensure_fishing_run_summary_json(base_path, row["group"], row["name"])
+        out[rid] = summary
+    return out
+
+
 def _load_resource_time_series(summary_df):
     if summary_df is None or summary_df.empty:
         return {}
@@ -303,6 +375,7 @@ def api_result_subset(subset_name):
     resource_in_pool = _load_resource_time_series(summary_df)
     contracting_data = _load_contracting_events(summary_df)
     run_records = _load_run_records(summary_df)
+    fishing_summaries = _load_fishing_summaries(summary_df)
     summary_runs = []
     if summary_df is not None:
         cleaned_summary = summary_df.reset_index().replace([np.nan, np.inf, -np.inf], None)
@@ -316,6 +389,7 @@ def api_result_subset(subset_name):
         "summary_groups": _serialize_dataframe(summary_group_df),
         "summary_runs": summary_runs,
         "run_data": run_records,
+        "fishing_summaries": fishing_summaries,
         "resource_in_pool": {
             group_name: df.replace([np.nan, np.inf, -np.inf], None).to_dict(
                 orient="records"

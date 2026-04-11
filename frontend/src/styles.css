@@ -120,6 +120,14 @@
   margin-bottom: 0.75rem;
 }
 
+.card-header h2 {
+  margin-bottom: 0.35rem;
+}
+
+.card-header .main-subtle {
+  margin-top: 0;
+}
+
 .card-body {
   font-size: 0.9rem;
 }
@@ -510,6 +518,58 @@ details summary {
 .contract-block p,
 .tab-panel p {
   margin-top: 0.2rem;
+}
+
+.run-report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.run-report-span-2 {
+  grid-column: 1 / -1;
+}
+
+.summary-facts {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.summary-facts li span:first-child {
+  color: #6b7280;
+  margin-right: 0.35rem;
+}
+
+.summary-metrics-table {
+  margin-top: 0;
+}
+
+.summary-raw-json {
+  font-size: 0.75rem;
+  overflow: auto;
+  max-height: 320px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+.summary-raw-details summary {
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}
+
+.summary-actions-inline {
+  font-size: 0.75rem;
+  word-break: break-word;
 }
 
 @media (max-width: 800px) {

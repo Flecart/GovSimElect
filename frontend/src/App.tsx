@@ -20,6 +20,7 @@ interface ApiSubsetDataResponse {
     [key: string]: unknown;
   }[];
   run_data: Record<string, RunRow[]>;
+  fishing_summaries?: Record<string, Record<string, unknown> | null>;
   resource_in_pool: Record<string, ResourceRow[]>;
   contracting_data: Record<string, ContractingEvent[]>;
 }
@@ -73,6 +74,9 @@ export const App: React.FC = () => {
   const [contractingDataByRun, setContractingDataByRun] = useState<
     Record<string, ContractingEvent[]>
   >({});
+  const [fishingSummariesByRun, setFishingSummariesByRun] = useState<
+    Record<string, Record<string, unknown> | null>
+  >({});
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
@@ -125,6 +129,7 @@ export const App: React.FC = () => {
         setSummaryGroups(data.summary_groups ?? []);
         setSummaryRuns(data.summary_runs ?? []);
         setRunDataByName(data.run_data ?? {});
+        setFishingSummariesByRun(data.fishing_summaries ?? {});
         setResourceInPoolByGroup(data.resource_in_pool ?? {});
         setContractingDataByRun(data.contracting_data ?? {});
         setLastUpdatedAt(Date.now());
@@ -295,6 +300,9 @@ export const App: React.FC = () => {
         <RunView
           runName={activeRun ? runLabelByKey[activeRun] ?? activeRun : null}
           runData={activeRun ? runDataByName[activeRun] ?? null : null}
+          fishingSummary={
+            activeRun ? fishingSummariesByRun[activeRun] ?? null : null
+          }
           contractingEvents={activeRun ? contractingDataByRun[activeRun] ?? [] : []}
           activeGroup={activeGroup}
           resourceInPoolByGroup={resourceInPoolByGroup}
