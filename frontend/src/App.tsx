@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Layout } from "./components/Layout";
 import { Sidebar } from "./components/Sidebar";
 import { ContractingEvent, RunView, RunRow } from "./components/RunView";
@@ -83,6 +83,28 @@ export const App: React.FC = () => {
   const activeGroupRef = useRef<string | null>(null);
   const activeRunRef = useRef<string | null>(null);
 
+  const refreshFishingSummary = useCallback(async () => {
+    if (!activeSubset || !activeRun) {
+      throw new Error("No subset or run selected.");
+    }
+    const res = await fetch("/api/fishing-summary/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ subset: activeSubset, run_id: activeRun })
+    });
+    const data = (await res.json()) as {
+      error?: string;
+      fishing_summary?: Record<string, unknown> | null;
+    };
+    if (!res.ok) {
+      throw new Error(data.error ?? `Request failed (${res.status})`);
+    }
+    setFishingSummariesByRun((prev) => ({
+      ...prev,
+      [activeRun]: data.fishing_summary ?? null
+    }));
+  }, [activeSubset, activeRun]);
+
   useEffect(() => {
     const loadSubsets = async () => {
       try {
@@ -161,10 +183,13 @@ export const App: React.FC = () => {
 
         setSelectedRuns((prev) => {
           const keep = prev.filter((r) => nextRuns.includes(r));
-          if (nextActiveRun && !keep.includes(nextActiveRun)) {
-            keep.push(nextActiveRun);
+          if (keep.length > 0) {
+            if (nextActiveRun && !keep.includes(nextActiveRun)) {
+              keep.push(nextActiveRun);
+            }
+            return keep;
           }
-          return keep;
+          return [...nextRuns];
         });
       } catch (e) {
         setError((e as Error).message);
@@ -225,10 +250,7 @@ export const App: React.FC = () => {
     if (!activeRun) {
       setActiveRun(runsForActiveGroup[0].key);
     }
-    if (!selectedRuns.length) {
-      setSelectedRuns([runsForActiveGroup[0].key]);
-    }
-  }, [runsForActiveGroup, activeRun, selectedRuns.length]);
+  }, [runsForActiveGroup, activeRun]);
 
   const sidebar = (
     <Sidebar
@@ -240,7 +262,11 @@ export const App: React.FC = () => {
       onGroupChange={(group) => {
         setActiveGroup(group);
         setActiveRun(null);
-        setSelectedRuns([]);
+        const keys = summaryRuns
+          .filter((r) => r.group === group)
+          .map((r) => getRunKey(r))
+          .sort();
+        setSelectedRuns(keys);
       }}
       runs={runsForActiveGroup.map((run) => ({ key: run.key, label: run.label }))}
       activeRun={activeRun}
@@ -303,6 +329,7 @@ export const App: React.FC = () => {
           fishingSummary={
             activeRun ? fishingSummariesByRun[activeRun] ?? null : null
           }
+          onRegenerateFishingSummary={refreshFishingSummary}
           contractingEvents={activeRun ? contractingDataByRun[activeRun] ?? [] : []}
           activeGroup={activeGroup}
           resourceInPoolByGroup={resourceInPoolByGroup}

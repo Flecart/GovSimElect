@@ -106,10 +106,10 @@ def summarize(
             # Use realized regen for this specific harvest round when available.
             r_t = regen_by_harvest_round.get(round_id, expected_regen)
             threshold = max(0.0, stock_before - stock_before / r_t) if r_t > 0 else 0.0
-            for c in catches:
-                action_count += 1
-                if c > threshold:
-                    over_usage_count += 1
+            print(f"Round {round_id}: stock_before = {stock_before}, r_t = {r_t}, threshold = {threshold}, catches = {catches}")
+            total_catches = sum(catches)
+            if total_catches > threshold:
+                over_usage_count += len(catches)
 
         # If framework extracted a numeric resource_limit in this round,
         # keep the latest detected one.

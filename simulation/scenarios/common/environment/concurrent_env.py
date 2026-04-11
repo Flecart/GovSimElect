@@ -254,13 +254,15 @@ class ConcurrentEnv:
   def set_contracting_enabled(self, enabled: bool):
     self._contracting_enabled = bool(enabled)
 
+  def _first_location(self) -> str:
+    """First location in the harvest cycle: contracting at restaurant, otherwise the pool."""
+    return "restaurant" if self._contracting_enabled else self.POOL_LOCATION
+
   def _init_agent(self, agent):
     self.internal_global_state["collected_resource"][agent] = 0
     self.internal_global_state["wanted_resource"][agent] = 0
     self.internal_global_state["last_collected_resource"][agent] = 0
-    self.internal_global_state["next_location"][agent] = (
-        "restaurant" if self._contracting_enabled else self.POOL_LOCATION
-    )
+    self.internal_global_state["next_location"][agent] = self._first_location()
     self.internal_global_state["next_time"][agent] = datetime(
         2024, 1, 1, 1, 0, 0
     )
@@ -535,7 +537,7 @@ class ConcurrentEnv:
   def _step_home(self, action: PersonaAction):
     self.internal_global_state["next_location"][
         self.agent_selection
-    ] = "restaurant" if self._contracting_enabled else self.POOL_LOCATION
+    ] = self._first_location()
     self.internal_global_state["next_time"][self.agent_selection] += timedelta(
         days=1
     )

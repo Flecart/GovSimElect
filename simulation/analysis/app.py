@@ -13,6 +13,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 import statsmodels.stats.api as sms
 from dash import Input, Output, State, dcc, html
+from flask import jsonify, request
 from flask_caching import Cache
 from plotly.subplots import make_subplots
 
@@ -253,16 +254,24 @@ def _get_summarize_fishing_module():
     return mod
 
 
-def _ensure_fishing_run_summary_json(
-    base_path: str, group: str, name: str
+def _write_fishing_run_summary_json(
+    base_path: str,
+    group: str,
+    name: str,
+    *,
+    force: bool = False,
 ) -> Optional[Dict[str, Any]]:
-    """Return fishing run summary dict; create fishing_run_summary.json from log_env if missing."""
+    """Return fishing run summary dict; write fishing_run_summary.json from log_env.
+
+    If ``force`` is False, an existing valid JSON file is returned as-is. If True,
+    the summary is always recomputed (same logic as ``summarize_fishing_log.py``).
+    """
     run_dir = os.path.join(base_path, group, name)
     log_path = os.path.join(run_dir, "log_env.json")
     summary_path = os.path.join(run_dir, "fishing_run_summary.json")
     if not os.path.isfile(log_path):
         return None
-    if os.path.isfile(summary_path):
+    if not force and os.path.isfile(summary_path):
         try:
             with open(summary_path, "r", encoding="utf-8") as handle:
                 return json.load(handle)
@@ -295,7 +304,7 @@ def _load_fishing_summaries(summary_df):
     out = {}
     for _, row in summary_df.iterrows():
         rid = str(row["run_id"])
-        summary = _ensure_fishing_run_summary_json(base_path, row["group"], row["name"])
+        summary = _write_fishing_run_summary_json(base_path, row["group"], row["name"])
         out[rid] = summary
     return out
 
@@ -401,6 +410,63 @@ def api_result_subset(subset_name):
             for _, row in summary_df.iterrows()
         },
     }
+
+
+def api_refresh_fishing_summary():
+    """Recompute and persist fishing_run_summary.json for one run (same as CLI).
+
+    Invoked via :func:`_intercept_fishing_summary_refresh` in ``before_request`` so POST
+    is handled before Dash's catch-all static route (which only allows GET/HEAD/OPTIONS
+    and would otherwise return 405).
+    """
+    payload = request.get_json(silent=True) or {}
+    subset_name = payload.get("subset") or payload.get("subset_name")
+    run_id = payload.get("run_id")
+    if not subset_name:
+        return {"error": "Missing subset (or subset_name) in JSON body"}, 400
+    if run_id is None:
+        return {"error": "Missing run_id in JSON body"}, 400
+    subset_name = str(subset_name)
+    run_id = str(run_id)
+
+    if subset_name not in get_available_subsets():
+        return {"error": f"Unknown subset: {subset_name}"}, 404
+
+    data = get_data(subset_name)
+    summary_df = data.get("summary_df")
+    if summary_df is None or summary_df.empty:
+        return {"error": "No runs in subset"}, 404
+
+    match = summary_df[summary_df["run_id"].astype(str) == run_id]
+    if match.empty:
+        return {"error": f"Unknown run_id: {run_id}"}, 404
+
+    row = match.iloc[0]
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    report = _write_fishing_run_summary_json(
+        base_path, row["group"], row["name"], force=True
+    )
+    if report is None:
+        return {
+            "error": "log_env.json not found for this run; cannot summarize.",
+        }, 400
+
+    return {"fishing_summary": report}
+
+
+@server.before_request
+def _intercept_fishing_summary_refresh():
+    """Run POST /api/fishing-summary/refresh before routing (avoids Dash 405 on POST)."""
+    path = request.path.rstrip("/") or "/"
+    if path != "/api/fishing-summary/refresh":
+        return None
+    if request.method != "POST":
+        return None
+    rv = api_refresh_fishing_summary()
+    if isinstance(rv, tuple) and len(rv) == 2:
+        body, status = rv
+        return jsonify(body), status
+    return jsonify(rv)
 
 
 if __name__ == "__main__":

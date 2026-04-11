@@ -17,6 +17,8 @@ export interface RunViewProps {
   runName: string | null;
   runData: RunRow[] | null;
   fishingSummary: Record<string, unknown> | null;
+  /** Runs the same summarizer as the CLI and refreshes the Run report. */
+  onRegenerateFishingSummary?: () => Promise<void>;
   contractingEvents: ContractingEvent[];
   activeGroup: string | null;
   resourceInPoolByGroup: Record<string, ResourceRow[]>;
@@ -144,6 +146,7 @@ export const RunView: React.FC<RunViewProps> = ({
   runName,
   runData,
   fishingSummary,
+  onRegenerateFishingSummary,
   contractingEvents,
   activeGroup,
   resourceInPoolByGroup,
@@ -151,6 +154,13 @@ export const RunView: React.FC<RunViewProps> = ({
 }) => {
   const [activeRound, setActiveRound] = useState<number | null>(null);
   const [activePersona, setActivePersona] = useState<string | null>(null);
+  const [summaryRegenBusy, setSummaryRegenBusy] = useState(false);
+  const [summaryRegenError, setSummaryRegenError] = useState<string | null>(null);
+  const [showGroupAverage, setShowGroupAverage] = useState(false);
+
+  useEffect(() => {
+    setSummaryRegenError(null);
+  }, [runName]);
 
   const resourceRows = useMemo(
     () => (activeGroup ? resourceInPoolByGroup[activeGroup] ?? [] : []),
@@ -369,6 +379,22 @@ export const RunView: React.FC<RunViewProps> = ({
     [harvestRows]
   );
 
+  const canRegenerateSummary =
+    Boolean(onRegenerateFishingSummary) && Boolean(runData?.length);
+
+  const handleRegenerateSummary = async () => {
+    if (!onRegenerateFishingSummary || !canRegenerateSummary) return;
+    setSummaryRegenError(null);
+    setSummaryRegenBusy(true);
+    try {
+      await onRegenerateFishingSummary();
+    } catch (e) {
+      setSummaryRegenError((e as Error).message);
+    } finally {
+      setSummaryRegenBusy(false);
+    }
+  };
+
   if (!runName || !runData) {
     return (
       <Card>
@@ -454,13 +480,35 @@ export const RunView: React.FC<RunViewProps> = ({
 
       <Card className="run-view-section">
         <Card.Header>
-          <h2>Run report</h2>
-          <p className="main-subtle">
-            GovSim metrics from{" "}
-            <code>scripts/summarize_fishing_log.py</code> (cached as{" "}
-            <code>fishing_run_summary.json</code> next to <code>log_env.json</code>
-            ).
-          </p>
+          <div className="run-report-header">
+            <div>
+              <h2>Run report</h2>
+              <p className="main-subtle">
+                GovSim metrics from{" "}
+                <code>scripts/summarize_fishing_log.py</code> (cached as{" "}
+                <code>fishing_run_summary.json</code> next to <code>log_env.json</code>
+                ).
+              </p>
+            </div>
+            <div className="run-report-actions">
+              <button
+                type="button"
+                className="button-secondary"
+                disabled={!canRegenerateSummary || summaryRegenBusy}
+                title={
+                  canRegenerateSummary
+                    ? "Re-run summarize_fishing_log.py and overwrite fishing_run_summary.json"
+                    : "Requires log_env.json for this run"
+                }
+                onClick={() => void handleRegenerateSummary()}
+              >
+                {summaryRegenBusy ? "Regenerating…" : "Regenerate summary"}
+              </button>
+            </div>
+          </div>
+          {summaryRegenError && (
+            <p className="alert alert-error run-report-regen-error">{summaryRegenError}</p>
+          )}
         </Card.Header>
         <Card.Body>
           {fishingSummary == null ? (
@@ -595,7 +643,17 @@ export const RunView: React.FC<RunViewProps> = ({
 
       <Card className="run-view-section">
         <Card.Header>
-          <h2>Shared resource and collapse statistics</h2>
+          <div className="run-chart-header">
+            <h2>Shared resource and collapse statistics</h2>
+            <label className="run-chart-toggle">
+              <input
+                type="checkbox"
+                checked={showGroupAverage}
+                onChange={(e) => setShowGroupAverage(e.target.checked)}
+              />
+              <span>Group average</span>
+            </label>
+          </div>
         </Card.Header>
         <Card.Body>
           {resourceChartData.length ? (
@@ -607,13 +665,15 @@ export const RunView: React.FC<RunViewProps> = ({
                 />
                 <YAxis />
                 <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="mean"
-                  stroke="#d97706"
-                  dot={false}
-                  name="Mean resource"
-                />
+                {showGroupAverage ? (
+                  <Line
+                    type="monotone"
+                    dataKey="mean"
+                    stroke="#d97706"
+                    dot={false}
+                    name="Group average"
+                  />
+                ) : null}
                 {selectedRuns.map((run, index) => (
                   <Line
                     key={run}
