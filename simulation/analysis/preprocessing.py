@@ -154,7 +154,9 @@ def get_summary_runs(subset_name, WANDB=False):
                     flat_data = flatten_yaml(yaml_data)
                     flat_data = {k: [v] for k, v in flat_data.items()}
                 else:
-                    continue  # no wandb access!
+                    # Still list the run (e.g. live run, or Hydra output dir elsewhere) so
+                    # the analysis UI groups/runs sidebars and APIs can see partial logs.
+                    flat_data = {"llm.path": ["(no .hydra/config.yaml in run directory)"]}
 
                 acc.append(
                     pd.DataFrame(
@@ -249,8 +251,16 @@ def load_runs_data(summary_df, summary_group_df):
         run_path = os.path.join(
             base_path, "../results", row["group"], row["name"], "log_env.json"
         )
-        tmp = pd.read_json(run_path, orient="records")
-        if "resource_in_pool_after_harvesting" not in tmp.columns:
+        try:
+            tmp = pd.read_json(run_path, orient="records")
+        except (ValueError, OSError):
+            tmp = pd.DataFrame()
+        if (
+            not tmp.empty
+            and "resource_in_pool_after_harvesting" not in tmp.columns
+            and "resource_in_pool_before_harvesting" in tmp.columns
+            and "resource_collected" in tmp.columns
+        ):
             tmp["resource_in_pool_after_harvesting"] = (
                 tmp["resource_in_pool_before_harvesting"] - tmp["resource_collected"]
             )

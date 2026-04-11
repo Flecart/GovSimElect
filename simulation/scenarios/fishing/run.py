@@ -210,7 +210,6 @@ async def _run_sim_loop(
             logger.save(experiment_storage, agent_name_to_id)
             continue
 
-        # SEQUENTIAL PHASES (contracting, pool_after_harvesting, restaurant).
         agent = personas[agent_id]
         action = await agent.aloop(obs, debug=debug)
 

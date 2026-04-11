@@ -133,122 +133,7 @@ class FishingPersona(PersonaAgent):
     self._formal_contract_mode = contract_mode
 
   def loop(self, obs: HarvestingObs, debug: bool = False) -> PersonaAction:
-    self.current_time = obs.current_time  # update current time
-
-    self.perceive.perceive(obs)
-    # phase based game
-
-    action = PersonaAction(self.agent_id, "lake")
-    if obs.current_location == "lake" and obs.phase == "lake":
-      # Stage 1. Pond situation / Stage 2. Fishermen’s decisions
-      retrieved_memory = self.retrieve.retrieve([obs.current_location], 10)
-      str_memory = [
-          str(memory) for memory in retrieved_memory
-      ]
-      str_memory = "\n".join(str_memory)
-      if debug:
-        print(f"MEMORIES {self.identity.name}:\n{str_memory}")
-      if obs.current_resource_num > 0:
-        num_resource, html_interactions = (
-            self.act.choose_how_many_fish_to_catch(
-                retrieved_memory,
-                obs.current_location,
-                obs.current_time,
-                obs.context,
-                range(0, obs.current_resource_num + 1),
-                obs.before_harvesting_sustainability_threshold,
-                self._agenda,
-                formal_contract=self._formal_contract,
-                contract_mode=self._formal_contract_mode,
-                debug=debug,
-            )
-        )
-        action = PersonaActionHarvesting(
-            self.agent_id,
-            "lake",
-            num_resource,
-            commands=[f"fish({self.identity.name}, {num_resource})"],
-            stats={f"{self.agent_id}_collected_resource": num_resource},
-            html_interactions=html_interactions,
-        )
-      else:
-        num_resource = 0
-        action = PersonaActionHarvesting(
-            self.agent_id,
-            "lake",
-            num_resource,
-            commands=[f"fish({self.identity.name}, {num_resource})"],
-            stats={},
-            html_interactions="<strong>Framework<strong/>: no fish to catch",
-        )
-      if debug:
-        print(f"HARVEST: {self.identity.name} {num_resource}.")
-    elif (
-        obs.current_location == "lake" and obs.phase == "pool_after_harvesting"
-    ):
-      # dummy action to register observation
-      action = PersonaAction(self.agent_id, "lake")
-    elif obs.current_location == "restaurant":
-      # Stage 3. Social Interaction a)
-      # Need to first get the identities of the other personas that are in the
-      # restaurant
-      other_personas = []
-      for agent_id, location in obs.current_location_agents.items():
-        if location == "restaurant":
-          other_personas.append(
-              self.other_personas_from_id[agent_id]
-          )
-
-      if obs.phase == "contracting":
-        (
-            conversation,
-            _,
-            resource_limit,
-            html_interactions,
-        ) = self.converse.conduct_contracting_phase(
-            other_personas,
-            obs.current_time,
-            obs.current_resource_num,
-            obs.agent_resource_num,
-            obs.before_harvesting_sustainability_threshold,
-        )
-      else:
-        (
-            conversation,
-            _,
-            resource_limit,
-            html_interactions,
-        ) = self.converse.converse_group(
-            other_personas,
-            obs.current_location,
-            obs.current_time,
-            obs.context,
-            obs.current_resource_num,
-            obs.agent_resource_num,
-            obs.before_harvesting_sustainability_threshold,
-            mayoral_agenda=self._agenda,
-            harvest_report=self._harvest_report,
-            leader_persona=self._current_leader,
-            debug=debug,
-        )
-      action = PersonaActionChat(
-          self.agent_id,
-          "restaurant",
-          conversation,
-          conversation_resource_limit=resource_limit,
-          stats={"conversation_resource_limit": resource_limit},
-          html_interactions=html_interactions,
-      )
-    elif obs.current_location == "home":
-      # Stage 3. Social Interaction b)
-      # TODO How what should we reflect, what is the initial focal points?
-      self.reflect.run(["harvesting"])
-      action = PersonaAction(self.agent_id, "home")
-      if debug:
-        print(f"REFLECT: {self.identity.name}.")
-
-    self.memory.save()  # periodically save memory
-    return action
+    raise DeprecationWarning("FishingPersona.loop is deprecated. Use aloop instead.")
 
   async def aloop(self, obs: HarvestingObs, debug: bool = False) -> PersonaAction:
     self.current_time = obs.current_time
@@ -260,8 +145,6 @@ class FishingPersona(PersonaAgent):
       retrieved_memory = self.retrieve.retrieve([obs.current_location], 10)
       str_memory = [str(memory) for memory in retrieved_memory]
       str_memory = "\n".join(str_memory)
-      if debug:
-        print(f"MEMORIES {self.identity.name}:\n{str_memory}")
       if obs.current_resource_num > 0:
         num_resource, html_interactions = (
             await self.act.achoose_how_many_fish_to_catch(
@@ -295,8 +178,6 @@ class FishingPersona(PersonaAgent):
             stats={},
             html_interactions="<strong>Framework<strong/>: no fish to catch",
         )
-      if debug:
-        print(f"HARVEST: {self.identity.name} {num_resource}.")
     elif (
         obs.current_location == "lake" and obs.phase == "pool_after_harvesting"
     ):
@@ -309,38 +190,24 @@ class FishingPersona(PersonaAgent):
               self.other_personas_from_id[agent_id]
           )
 
-      if obs.phase == "contracting":
-        (
-            conversation,
-            _,
-            resource_limit,
-            html_interactions,
-        ) = await self.converse.aconduct_contracting_phase(
-            other_personas,
-            obs.current_time,
-            obs.current_resource_num,
-            obs.agent_resource_num,
-            obs.before_harvesting_sustainability_threshold,
-        )
-      else:
-        (
-            conversation,
-            _,
-            resource_limit,
-            html_interactions,
-        ) = await self.converse.aconverse_group(
-            other_personas,
-            obs.current_location,
-            obs.current_time,
-            obs.context,
-            obs.current_resource_num,
-            obs.agent_resource_num,
-            obs.before_harvesting_sustainability_threshold,
-            mayoral_agenda=self._agenda,
-            harvest_report=self._harvest_report,
-            leader_persona=self._current_leader,
-            debug=debug,
-        )
+      (
+          conversation,
+          _,
+          resource_limit,
+          html_interactions,
+      ) = await self.converse.aconduct_restaurant_phase(
+          other_personas,
+          obs.current_location,
+          obs.current_time,
+          obs.context,
+          obs.current_resource_num,
+          obs.agent_resource_num,
+          obs.before_harvesting_sustainability_threshold,
+          mayoral_agenda=self._agenda,
+          harvest_report=self._harvest_report,
+          leader_persona=self._current_leader,
+          debug=debug,
+      )
       action = PersonaActionChat(
           self.agent_id,
           "restaurant",

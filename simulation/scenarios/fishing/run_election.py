@@ -477,7 +477,7 @@ async def run(
         break
       continue
 
-    # SEQUENTIAL PHASES (contracting, pool_after_harvesting, restaurant).
+    # SEQUENTIAL PHASES (pool_after_harvesting, restaurant; restaurant may be labeled contracting).
     agent = personas[agent_id]
     agent.update_agenda(agenda)
     agent.update_harvest_report(harvest_report)

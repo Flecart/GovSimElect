@@ -227,7 +227,12 @@ def _load_run_records(summary_df):
         if not os.path.exists(run_path):
             run_records[row["run_id"]] = []
             continue
-        df = pd.read_json(run_path, orient="records")
+        try:
+            df = pd.read_json(run_path, orient="records")
+        except (ValueError, OSError):
+            # e.g. read while another process replaces the file; next poll usually succeeds
+            run_records[row["run_id"]] = []
+            continue
         df = df.replace([np.nan, np.inf, -np.inf], None)
         run_records[row["run_id"]] = df.to_dict(orient="records")
     return run_records
@@ -263,8 +268,10 @@ def _write_fishing_run_summary_json(
 ) -> Optional[Dict[str, Any]]:
     """Return fishing run summary dict; write fishing_run_summary.json from log_env.
 
-    If ``force`` is False, an existing valid JSON file is returned as-is. If True,
-    the summary is always recomputed (same logic as ``summarize_fishing_log.py``).
+    If ``force`` is False, a cached ``fishing_run_summary.json`` is returned only when
+    it is at least as new as ``log_env.json`` (mtime). Otherwise the summary is
+    recomputed so live runs stay in sync with partial logs. If ``force`` is True,
+    the summary is always recomputed.
     """
     run_dir = os.path.join(base_path, group, name)
     log_path = os.path.join(run_dir, "log_env.json")
@@ -273,8 +280,11 @@ def _write_fishing_run_summary_json(
         return None
     if not force and os.path.isfile(summary_path):
         try:
-            with open(summary_path, "r", encoding="utf-8") as handle:
-                return json.load(handle)
+            log_mtime = os.path.getmtime(log_path)
+            summary_mtime = os.path.getmtime(summary_path)
+            if summary_mtime >= log_mtime:
+                with open(summary_path, "r", encoding="utf-8") as handle:
+                    return json.load(handle)
         except (json.JSONDecodeError, OSError):
             pass
     try:
@@ -321,7 +331,10 @@ def _load_resource_time_series(summary_df):
         if not os.path.exists(run_path):
             continue
 
-        df = pd.read_json(run_path, orient="records")
+        try:
+            df = pd.read_json(run_path, orient="records")
+        except (ValueError, OSError):
+            continue
         harvest = df[df["action"] == "harvesting"].copy()
         if harvest.empty:
             continue
@@ -381,7 +394,18 @@ def api_result_subset(subset_name):
     summary_group_df = data.get("summary_group_df")
     summary_df = data.get("summary_df")
     run_data = data.get("run_data", {})
-    resource_in_pool = _load_resource_time_series(summary_df)
+    ts_resource = _load_resource_time_series(summary_df)
+    legacy_resource = data.get("resource_in_pool") or {}
+    # Prefer the API time-series builder when it has rows; otherwise use preprocessing
+    # (handles partial logs / concurrent harvest layout) so the group dashboard updates.
+    resource_in_pool = {}
+    for g in set(ts_resource.keys()) | set(legacy_resource.keys()):
+        ts_df = ts_resource.get(g)
+        leg_df = legacy_resource.get(g)
+        if ts_df is not None and not ts_df.empty:
+            resource_in_pool[g] = ts_df
+        elif leg_df is not None and not leg_df.empty:
+            resource_in_pool[g] = leg_df
     contracting_data = _load_contracting_events(summary_df)
     run_records = _load_run_records(summary_df)
     fishing_summaries = _load_fishing_summaries(summary_df)
