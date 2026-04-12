@@ -93,7 +93,6 @@ class PersonaOberservation:
   current_time: datetime.datetime
 
   events: list[str]
-  context: str
   chat: ChatObservation
 
   def __init__(
@@ -103,7 +102,6 @@ class PersonaOberservation:
       current_location_agents: dict[str, str],
       current_time: datetime.datetime,
       events: list[str],
-      context: str,
       chat: ChatObservation,
   ) -> None:
     self.phase = phase
@@ -111,7 +109,6 @@ class PersonaOberservation:
     self.current_location_agents = current_location_agents
     self.current_time = current_time
     self.events = events
-    self.context = context
     self.chat = chat
 
 

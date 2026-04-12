@@ -32,7 +32,7 @@ class FishingConverseComponent(ConverseComponent):
       current_resource_num: int,
       agent_resource_num: dict[str, int],
       sustainability_threshold: int,
-  ) -> tuple[list[tuple[str, str]], str]:
+  ) -> tuple[list[tuple[PersonaIdentity, str]], str, int | None, list[str]]:
     contract_runtime = getattr(self.persona, "contracting_runtime", None)
     if contract_runtime is None or not contract_runtime.enabled:
       raise RuntimeError("Contracting phase called without enabled contracting runtime.")
@@ -51,7 +51,6 @@ class FishingConverseComponent(ConverseComponent):
       target_personas: list[PersonaAgent],
       current_location: str,
       current_time: datetime,
-      current_context: str,
       current_resource_num: int,
       agent_resource_num: dict[str, int],
       sustainability_threshold: int,
@@ -67,7 +66,6 @@ class FishingConverseComponent(ConverseComponent):
       target_personas: list[PersonaAgent],
       current_location: str,
       current_time: datetime,
-      current_context: str,
       current_resource_num: int,
       agent_resource_num: dict[str, int],
       sustainability_threshold: int,
@@ -85,7 +83,7 @@ class FishingConverseComponent(ConverseComponent):
       current_resource_num: int,
       agent_resource_num: dict[str, int],
       sustainability_threshold: int,
-  ) -> tuple[list[tuple[str, str]], str]:
+  ) -> tuple[list[tuple[PersonaIdentity, str]], str, int | None, list[str]]:
     contract_runtime = getattr(self.persona, "contracting_runtime", None)
     if contract_runtime is None or not contract_runtime.enabled:
       raise RuntimeError("Contracting phase called without enabled contracting runtime.")
@@ -102,7 +100,6 @@ class FishingConverseComponent(ConverseComponent):
       target_personas: list[PersonaAgent],
       current_location: str,
       current_time: datetime,
-      current_context: str,
       current_resource_num: int,
       agent_resource_num: dict[str, int],
       sustainability_threshold: int,
@@ -111,22 +108,11 @@ class FishingConverseComponent(ConverseComponent):
       leader_persona: PersonaAgent | None = None,
       debug: bool = False,
   ):
-    """Async restaurant step: contracting if runtime enabled, else group chat."""
-    rt = getattr(self.persona, "contracting_runtime", None)
-    if rt is not None and rt.enabled:
-      print(f"CONTRACTING: {self.persona.identity.name}")
-      return await self.aconduct_contracting_phase(
-          target_personas,
-          current_time,
-          current_resource_num,
-          agent_resource_num,
-          sustainability_threshold,
-      )
+    """Async restaurant step; contracting vs free chat is decided inside aconverse_group."""
     return await self.aconverse_group(
         target_personas,
         current_location,
         current_time,
-        current_context,
         current_resource_num,
         agent_resource_num,
         sustainability_threshold,
@@ -136,27 +122,18 @@ class FishingConverseComponent(ConverseComponent):
         debug=debug,
     )
 
-  async def aconverse_group(
+  def _build_restaurant_preamble(
       self,
       target_personas: list[PersonaAgent],
-      current_location: str,
-      current_time: datetime,
-      current_context: str,
-      current_resource_num: int,
+      current_leader_id: PersonaIdentity,
+      mayoral_agenda: str | None,
+      harvest_report: str | None,
+      leader_persona: PersonaAgent | None,
       agent_resource_num: dict[str, int],
-      sustainability_threshold: int,
-      mayoral_agenda: str | None = None,
-      harvest_report: str | None = None,
-      leader_persona: PersonaAgent | None = None,
-      debug: bool = False,
-  ) -> tuple[list[tuple[str, str]], str]:
+  ) -> tuple[list[tuple[PersonaIdentity, str]], list[str]]:
+    """Inject harvest / leader context before the main exchange (contracting or chat)."""
     current_conversation: list[tuple[PersonaIdentity, str]] = []
-
-    html_interactions = []
-    if leader_persona:
-      current_leader_id = leader_persona.identity
-    else:
-      current_leader_id = PersonaIdentity("framework", "Anonymous Leader")
+    html_interactions: list[str] = []
 
     if (
         self.cfg.inject_resource_observation
@@ -183,45 +160,80 @@ class FishingConverseComponent(ConverseComponent):
     ):
       current_conversation.append(
           (
-              current_leader_id,
+              current_leader_id,  # always anonymous leader for my experiemnts, so changed the prompt
               (
-                  f"I, {current_leader_id.name}, will lead the group this"
-                  " cycle. Fellow citizens, let me give you the monthly"
-                  f" fishing report:\n{harvest_report}"
+                  f"The monthly fishing report:\n{harvest_report}"
               ),
           ),
       )
       if mayoral_agenda and leader_persona:
-        current_conversation.append(
-            (
-                current_leader_id,
-                (
-                    "I'd also like to share my policy agenda to help guide our "
-                    f"collective action: {mayoral_agenda}"
-                ),
-            ),
-        )
+        raise ValueError("Mayoral agenda is not supported for prosociality experiments.")
+        # current_conversation.append(
+        #     (
+        #         current_leader_id,
+        #         (
+        #             "I'd also like to share my policy agenda to help guide our "
+        #             f"collective action: {mayoral_agenda}"
+        #         ),
+        #     ),
+        # )
+
+    return current_conversation, html_interactions
+
+  async def _phase_main_restaurant_exchange(
+      self,
+      current_conversation: list[tuple[PersonaIdentity, str]],
+      html_interactions: list[str],
+      target_personas: list[PersonaAgent],
+      current_location: str,
+      current_time: datetime,
+      current_resource_num: int,
+      agent_resource_num: dict[str, int],
+      sustainability_threshold: int,
+      leader_persona: PersonaAgent | None,
+      debug: bool,
+  ) -> None:
+    """Contracting negotiation or free-form turn-taking. Mutates conversation and html lists."""
+    rt = getattr(self.persona, "contracting_runtime", None)
+    if rt is not None and rt.enabled:
+      print(f"CONTRACTING: {self.persona.identity.name}")
+      neg_transcript, _, _, html_neg = (
+          await rt.aconduct_negotiation(
+              personas=target_personas,
+              current_time=current_time,
+              current_resource_num=current_resource_num,
+              sustainability_threshold=sustainability_threshold,
+              agent_resource_num=agent_resource_num,
+          )
+      )
+      current_conversation.extend(neg_transcript)
+      html_interactions.extend(html_neg)
+      return
 
     max_conversation_steps = self.cfg.max_conversation_steps
-
-    if leader_persona:
-      current_persona = leader_persona
-    else:
-      current_persona = random.choice(target_personas)
+    # ANG: we don't have a leader persona in this version.
+    # if leader_persona:
+    #   current_persona = leader_persona
+    # else:
+    current_persona = random.choice(target_personas)
 
     while True:
-      focal_points = [current_context]
-      if current_conversation:
-        for _, utterance in current_conversation[-4:]:
-          focal_points.append(utterance)
+    # ANG: we never have in the new version so many memories that we need to search
+    # next versions can use fancier memory systems
+    
+    #   focal_points: list[str] = []
+    #   if current_conversation:
+    #     for _, utterance in current_conversation[-4:]:
+    #       focal_points.append(utterance)
 
-        if len(current_conversation) == 4:
-          focal_points += current_conversation[0:1]
-        elif len(current_conversation) > 5:
-          focal_points += current_conversation[0:2]
+    #     if len(current_conversation) == 4:
+    #       focal_points += current_conversation[0:1]
+    #     elif len(current_conversation) > 5:
+    #       focal_points += current_conversation[0:2]
+      focal_points = []
       focal_points = self.other_personas[
           current_persona.identity.name
-      ].retrieve.retrieve(focal_points, top_k=5)
+      ].retrieve.retrieve(focal_points, top_k=8)
 
       if self.cfg.prompt_utterance != "one_shot":
         raise NotImplementedError(
@@ -236,7 +248,6 @@ class FishingConverseComponent(ConverseComponent):
               focal_points,
               current_location,
               current_time,
-              current_context,
               self.conversation_render(current_conversation),
               debug,
           )
@@ -250,10 +261,58 @@ class FishingConverseComponent(ConverseComponent):
           or len(current_conversation) >= max_conversation_steps
       ):
         break
-      current_persona = self.other_personas[next_name]
+      current_persona = self.other_personas[next_name.capitalize()]
 
-    summary_conversation, h = await aprompt_summarize_conversation_in_one_sentence(
-        self.model_framework, self.conversation_render(current_conversation)
+  async def aconverse_group(
+      self,
+      target_personas: list[PersonaAgent],
+      current_location: str,
+      current_time: datetime,
+      current_resource_num: int,
+      agent_resource_num: dict[str, int],
+      sustainability_threshold: int,
+      mayoral_agenda: str | None = None,
+      harvest_report: str | None = None,
+      leader_persona: PersonaAgent | None = None,
+      debug: bool = False,
+  ) -> tuple[
+      list[tuple[PersonaIdentity, str]],
+      str,
+      int | None,
+      list[str],
+  ]:
+    if leader_persona:
+      current_leader_id = leader_persona.identity
+    else:
+      current_leader_id = PersonaIdentity("framework", "Anonymous Leader")
+
+    current_conversation, html_interactions = self._build_restaurant_preamble(
+        target_personas=target_personas,
+        current_leader_id=current_leader_id,
+        mayoral_agenda=mayoral_agenda,
+        harvest_report=harvest_report,
+        leader_persona=leader_persona,
+        agent_resource_num=agent_resource_num,
+    )
+
+    await self._phase_main_restaurant_exchange(
+        current_conversation,
+        html_interactions,
+        target_personas,
+        current_location,
+        current_time,
+        current_resource_num,
+        agent_resource_num,
+        sustainability_threshold,
+        leader_persona,
+        debug,
+    )
+
+    summary_conversation, h = (
+        await aprompt_summarize_conversation_in_one_sentence(
+            self.model_framework,
+            self.conversation_render(current_conversation),
+        )
     )
     html_interactions.append(h)
 

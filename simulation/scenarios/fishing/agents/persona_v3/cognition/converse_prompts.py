@@ -26,7 +26,6 @@ async def aprompt_converse_utterance_in_group(
     init_retrieved_memory: list[str],
     current_location: str,
     current_time: datetime,
-    current_context: str,
     current_conversation: list[tuple[str, str]],
     debug: bool = False,
 ) -> tuple[str, bool, str]:
@@ -36,11 +35,10 @@ async def aprompt_converse_utterance_in_group(
   svo_prompt, disinfo_prompt, leader_prompt = leaders_lib.get_leader_persona_prompts(
       init_persona
   )
+  session.add_message("system", get_sytem_prompt(init_persona.identity))
   session.add_user(
-      f"{get_sytem_prompt(init_persona.identity)}\n"
       f"{location_time_info(current_location, current_time)}"
       f"{memory_prompt(init_persona.identity, init_retrieved_memory)}\n"
-      f"Current context: {current_context}\n\n"
       "Scenario:"
       f" {list_to_comma_string([t.identity.name for t in target_personas])}"
       " are engaged in a group chat.\n"

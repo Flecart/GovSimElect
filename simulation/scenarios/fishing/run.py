@@ -12,6 +12,7 @@ from simulation.persona import SVOPersonaType
 from simulation.persona.common import PersonaActionHarvesting
 from simulation.persona.common import PersonaEnvironment
 from simulation.persona.common import PersonaIdentity
+from simulation.persona.persona import PersonaAgent
 from simulation.utils import ModelWandbWrapper
 
 from .contracting import ContractingOrchestrator
@@ -42,6 +43,19 @@ def _print_env_summary(env, agent_id, obs, stage: str) -> None:
         f" stock_before_harvest={stock_before}"
         f" last_catches={ordered_catches}"
     )
+
+
+def make_harvest_report(
+    personas: dict[str, PersonaAgent],
+    last_rounds_harvest_stats: dict[str, int],
+) -> str:
+  """Factual per-agent catch summary for harvest_report / leader context."""
+  report = ""
+  for _, persona in personas.items():
+    name = persona.identity.name
+    tons = last_rounds_harvest_stats.get(name, 0)
+    report += f"\t{name} caught {tons} tons of fish\n"
+  return report
 
 
 def _configure_cognition(cfg) -> bool:
@@ -209,6 +223,16 @@ async def _run_sim_loop(
                     contracting_runtime.set_round(curr_round)
             logger.save(experiment_storage, agent_name_to_id)
             continue
+
+        if (
+            obs.current_location == "restaurant"
+        ):
+            report_text = make_harvest_report(
+                personas,
+                round_harvest_stats[curr_round],
+            )
+            for p in personas.values():
+                p.update_harvest_report(report_text)
 
         agent = personas[agent_id]
         action = await agent.aloop(obs, debug=debug)

@@ -151,7 +151,6 @@ class FishingPersona(PersonaAgent):
                 retrieved_memory,
                 obs.current_location,
                 obs.current_time,
-                obs.context,
                 range(0, obs.current_resource_num + 1),
                 obs.before_harvesting_sustainability_threshold,
                 self._agenda,
@@ -199,7 +198,6 @@ class FishingPersona(PersonaAgent):
           other_personas,
           obs.current_location,
           obs.current_time,
-          obs.context,
           obs.current_resource_num,
           obs.agent_resource_num,
           obs.before_harvesting_sustainability_threshold,
@@ -217,7 +215,7 @@ class FishingPersona(PersonaAgent):
           html_interactions=html_interactions,
       )
     elif obs.current_location == "home":
-      await self.reflect.arun(["harvesting"])
+      await self.reflect.arun([""])
       action = PersonaAction(self.agent_id, "home")
       if debug:
         print(f"REFLECT: {self.identity.name}.")

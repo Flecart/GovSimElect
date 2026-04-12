@@ -18,6 +18,14 @@ from .utils import memory_prompt
 from .utils import reasoning_steps_prompt
 
 
+def get_contract_possibilities(contract_mode: str) -> str:
+    if contract_mode == "code_law":
+        return "The contract is a natural language contract with an enforcement mechanism in Python code smart contracts."
+    elif contract_mode == "code_nl":
+        return "The contract is a natural language contract with no enforcement mechanism."
+    else:
+        raise ValueError(f"Invalid contract mode: {contract_mode}")
+
 async def aprompt_action_choose_amount_of_fish_to_catch(
     model: ModelWandbWrapper,
     agent: PersonaAgent,
@@ -38,19 +46,20 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
   )
   svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
   contract_context = (
-      "\nThe current formal contract for this round is the following:"
+      "\nThe current contract for this round is the following:"
       f" {formal_contract}\n"
       f"This contract is enforced in mode: {contract_mode}.\n"
-      "You should account for this formal contract when choosing your catch.\n"
       if formal_contract else
-      "\nThere is no active formal contract for this round.\n"
+      ""
   )
+  leader_prompt = ""
+  if leader_agenda == "":
+    leader_prompt = f"\nThe current policy following the mayor's agenda is the following: \n {leader_agenda}\n"
+    
+  session.add_message("system", get_sytem_prompt(agent.identity))
   session.add_user(
-      f"{get_sytem_prompt(agent.identity)}\n"
       f"{location_time_info(current_location, current_time)}"
       f"Current context: {context}\n"
-      "\nThe current policy following the mayor's agenda is the following:"
-      f" {leader_agenda}\n"
       f"{contract_context}"
       f"{memory_prompt(agent.identity, memories)}\n"
       f"{svo_prompt + chr(10) if svo_prompt else ''}"

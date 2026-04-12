@@ -28,7 +28,6 @@ class FishingActComponent(ActComponent):
       retrieved_memories: list[str],
       current_location: str,
       current_time: datetime,
-      context: str,
       interval: list[int],
       overusage_threshold: int,
       leader_agenda: str,
@@ -36,31 +35,13 @@ class FishingActComponent(ActComponent):
       contract_mode: str = "",
       debug: bool = False,
   ):
-    if self.cfg.universalization_prompt:
-      context += get_universalization_prompt(overusage_threshold)
-    res, html = prompt_action_choose_amount_of_fish_to_catch(
-        self.model,
-        self.persona,
-        retrieved_memories,
-        current_location,
-        current_time,
-        context,
-        interval,
-        consider_identity_persona=self.cfg.consider_identity_persona,
-        leader_agenda=leader_agenda,
-        formal_contract=formal_contract,
-        contract_mode=contract_mode,
-        debug=debug,
-    )
-    res = int(res)
-    return res, [html]
+    raise DeprecationWarning("FishingActComponent.choose_how_many_fish_to_catch is deprecated. Use achoose_how_many_fish_to_catch instead.")
 
   async def achoose_how_many_fish_to_catch(
       self,
       retrieved_memories: list[str],
       current_location: str,
       current_time: datetime,
-      context: str,
       interval: list[int],
       overusage_threshold: int,
       leader_agenda: str,
@@ -68,6 +49,7 @@ class FishingActComponent(ActComponent):
       contract_mode: str = "",
       debug: bool = False,
   ):
+    context = ""
     if self.cfg.universalization_prompt:
       context += get_universalization_prompt(overusage_threshold)
     res, html = await aprompt_action_choose_amount_of_fish_to_catch(

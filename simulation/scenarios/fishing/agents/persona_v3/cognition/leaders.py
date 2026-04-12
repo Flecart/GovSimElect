@@ -279,14 +279,12 @@ def make_harvest_report(
     personas: dict[str, PersonaAgent],
     last_rounds_harvest_stats: dict[str, int],
 ) -> str:
-  """Factual Leader newsletter prompt."""
-  report = "Last round's fishing stats:\n\n"
+  """Factual per-agent catch summary for harvest_report / leader context."""
+  report = ""
   for _, persona in personas.items():
-    report += (
-        f"\t{persona.identity.name} caught"
-        f" {last_rounds_harvest_stats[persona.identity.name]} tons of"
-        " fish\n"
-    )
+    name = persona.identity.name
+    tons = last_rounds_harvest_stats.get(name, 0)
+    report += f"\t{name} caught {tons} tons of fish\n"
   return report
 
 

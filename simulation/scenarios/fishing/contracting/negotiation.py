@@ -557,7 +557,7 @@ class FreeChatNegotiationManager:
     for turn in range(self.max_turns):
       speaker_idx = (state.speaker_idx + turn) % len(self.agents)
       speaker = self.agents[speaker_idx]
-      retrieved = speaker.retrieve.retrieve(["chat", "community", "lake"], 8)
+      retrieved = speaker.retrieve.retrieve([], 8)
       system_prompt = negotiation_system_prompt(
           speaker,
           self.agents,

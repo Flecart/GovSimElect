@@ -90,6 +90,9 @@ class RetrieveComponent(Component):
                 each focal point to a list of top-k nodes.
 
         """
+        if len(focal_points) == 0:
+            focal_points = ["default"]
+
         nodes = self.associative_memory.read_memory_md(
             self.persona.current_time
         )

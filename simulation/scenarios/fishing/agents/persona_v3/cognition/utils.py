@@ -214,15 +214,14 @@ def get_sytem_prompt_v3(persona):
   elif min_regen is not None and max_regen is not None and min_regen != max_regen:
     text_regen_rate = (
         " At the end of the month, the remaining fish will reproduce and the"
-        " population will increase.  The regeneration factor of increase is"
-        f" sampled uniformly between {min_regen} and {max_regen} for each"
-        " month, up to the carrying capacity.."
+        " population will increase. The regeneration factor of increase is"
+        f" sampled uniformly between one of {{{min_regen}, {max_regen}}} for each"
+        " month."
     )
   else:
     text_regen_rate = (
         " At the end of the month, the remaining fish will reproduce and"
-        f" increase by a regeneration factor of {min_regen}, up to the carrying"
-        " capacity."
+        f" increase by a regeneration factor of {min_regen}"
     )
 
   text_pre = (
@@ -230,21 +229,21 @@ def get_sytem_prompt_v3(persona):
       f" along with other {num_agents - 1} fishermen catching at the same time with you. The lake has a carrying capacity of 100"
       " tons of fish. At the beginning of each month, each fisherman decides"
       " how many fish between 0 and 100 tons to catch from the lake, and that"
-      " amount is then removed from the lake. If the lake is empty, it will not be able to recover and you won't be able to fish anymore."
+      " amount is then removed from the lake."
   )
 
   text_post = (
-      " For every ton of fish caught, a fisherman earns one thousand dollars."
-      " Each fisherman's goal is to optimize his income in the long run over"
-      " many months. At the end of each month, the number of fish caught by"
+      " At the end of each month, the number of fish caught by"
       " each fisherman will be revealed, and the fishermen will have the"
       " opportunity to communicate with each other. They can use this as an"
       " opportunity to negotiate and persuade others to influence their"
       " behavior in the next month. For example, if there are 90 tons of fish"
       " at the beginning of the month and the fishermen catch a total of 30"
-      " fish, given a regeneration factor of 2.0, there will be 60 tons of fish"
-      " left at the end of the month before reproduction, and 100 tons after"
-      " reproduction. Note that if you collectively finish the lake, the lake won't be able to recover."
+      " fish (some more some less), given a regeneration factor of 2.0, there will be 30*2=60 tons of fish"
+      " left at the end of the month before reproduction, if next round there"
+      " and are 60 tons of fish left, there will be 60*2=min(100, 120)=100 tons after reproduction. The month proceeds as follows: lake (you decide how many fish to catch), restaurant (you negotiate with other fishermen), home (you reflect on the month and decide how many fish to catch next month)."
+      " Note that if you collectively finish the lake, the lake won't be able to recover and you won't be able to fish anymore."
+      " Note that if many of you fish more, the number of fish will be randomly assigned to the overfishers, so you might not get all the fish you want."
   )
 
   text = text_pre + text_regen_rate + text_post

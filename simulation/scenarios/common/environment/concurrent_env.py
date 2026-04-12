@@ -110,7 +110,6 @@ class ConcurrentEnv:
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
         events=events,
-        context="",
         chat=None,
         current_resource_num=self.internal_global_state["resource_in_pool"],
         agent_resource_num={agent: 0 for agent in self.agents},
@@ -137,7 +136,6 @@ class ConcurrentEnv:
                 always_include=True,
             )
         ],
-        context="",
         chat=None,
         current_resource_num=self.internal_global_state["resource_in_pool"],
         agent_resource_num={agent: 0 for agent in self.agents},
@@ -155,7 +153,6 @@ class ConcurrentEnv:
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
         events=events,
-        context="",
         chat=None,
         current_resource_num=self.internal_global_state["resource_in_pool"],
         agent_resource_num=self.internal_global_state[
@@ -174,7 +171,6 @@ class ConcurrentEnv:
         current_location_agents=self.internal_global_state["next_location"],
         current_time=self.internal_global_state["next_time"][agent],
         events=[],
-        context="",
         chat=None,
         current_resource_num=self.internal_global_state["resource_in_pool"],
         agent_resource_num={agent: 0 for agent in self.agents},
@@ -243,7 +239,7 @@ class ConcurrentEnv:
     self.internal_global_state["last_collected_resource"][agent] = 0
     self.internal_global_state["next_location"][agent] = self._first_location()
     self.internal_global_state["next_time"][agent] = datetime(
-        2026, 1, 1, 1, 0, 0
+        2025, 1, 1, 1, 0, 0
     )
 
     self.rewards[agent] = 0.0
@@ -321,7 +317,10 @@ class ConcurrentEnv:
     if not self.df_acc:
       df = pd.DataFrame()
     else:
-      df = pd.concat(self.df_acc)
+      # Exclude empty frames: pd.concat warns (and future dtypes may differ) when
+      # mixing empty / all-NA pieces; empty frames add no rows anyway.
+      frames = [d for d in self.df_acc if not d.empty]
+      df = pd.concat(frames, sort=False) if frames else pd.DataFrame()
     df.to_json(tmp_path, orient="records")
     os.replace(tmp_path, path)
 
@@ -416,6 +415,7 @@ class ConcurrentEnv:
     if self.cfg.assign_resource_strategy == "stochastic":
       resource_per_agent = self._assign_stochastic()
     elif self.cfg.assign_resource_strategy == "proportional":
+      raise DeprecationWarning("ConcurrentEnv._assign_proportional is deprecated. Use aassign_resource instead.")
       resource_per_agent = self._assign_proportional()
     else:
       raise ValueError(

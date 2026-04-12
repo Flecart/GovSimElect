@@ -15,7 +15,6 @@ class HarvestingObs(PersonaOberservation):
         current_location_agents: dict[str, str],
         current_time: datetime,
         events: list,
-        context: str,
         chat: ChatObservation,
         current_resource_num: int,
         agent_resource_num: dict[str, int],
@@ -27,7 +26,6 @@ class HarvestingObs(PersonaOberservation):
             current_location_agents,
             current_time,
             events,
-            context,
             chat,
         )
         self.current_resource_num = current_resource_num

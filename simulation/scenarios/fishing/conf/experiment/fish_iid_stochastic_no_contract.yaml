@@ -2,13 +2,13 @@ name: fishing_${code_version}/${group_name}
 run_name: ""
 storage_name: ""
 scenario: fishing
-
+debug: false
 defaults:
-  - persona@personas.persona_0: baseline_fisherman
-  - persona@personas.persona_1: baseline_fisherman
-  - persona@personas.persona_2: baseline_fisherman
-  - persona@personas.persona_3: baseline_fisherman
-  - persona@personas.persona_4: baseline_fisherman
+  - persona@personas.persona_0: selfish_fisherman
+  - persona@personas.persona_1: selfish_fisherman
+  - persona@personas.persona_2: selfish_fisherman
+  - persona@personas.persona_3: selfish_fisherman
+  - persona@personas.persona_4: selfish_fisherman
 
 env:
   name: fish_iid_stochastic_no_contract

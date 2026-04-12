@@ -72,7 +72,6 @@ class PerturbationEnv(ConcurrentEnv):
                 current_location_agents=self.internal_global_state["next_location"],
                 current_time=self.internal_global_state["next_time"][agent],
                 events=events,
-                context="",
                 chat=None,
                 current_resource_num=self.internal_global_state["resource_in_pool"],
                 agent_resource_num={agent: 0 for agent in self.agents},

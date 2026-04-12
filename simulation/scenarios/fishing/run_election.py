@@ -163,7 +163,6 @@ async def run(
     framework_wrapper: ModelWandbWrapper,
     experiment_storage: str,
 ):
-  raise DeprecationWarning("Use ConcurrentEnv instead.")
   """Run the simulation."""
   if not os.path.exists(experiment_storage):
     os.makedirs(experiment_storage)
@@ -366,34 +365,12 @@ async def run(
           f"ROUND {curr_round} ROUND STATS: "
           f"{round_stats}"
       )
-      if leader_candidates:
-        assert winner is not None
-        harvest_report = await leaders_lib.amake_leader_report(
-            personas=personas,
-            leader_candidates=leader_candidates,
-            current_time=obs.current_time,
-            wrapper=wrapper,
-            disinformation=disinformation,
-            agenda=agenda,
-            curr_round=curr_round,
-            winner_id=agent_name_to_id[winner],
-            round_harvest_stats=round_harvest_stats[curr_round],
-            regen_factor=env.internal_global_state["regen_factor"],
-            debug=cfg.debug,
-        )
-        # Store in the public memories.
-        announcement = (
-            f"{winner}'s ROUND {curr_round} REPORT: {harvest_report}"
-        )
-        leaders_lib.make_public_leader_memories(
-            all_personas=personas,
-            leader_announcement=announcement,
-            current_time=obs.current_time,
-        )
-      else:
-        print("NO LEADER CANDIDATES - MAKING FACTUAL REPORT ...")
-        harvest_report = leaders_lib.make_harvest_report(
-            personas, round_harvest_stats[curr_round])
+      harvest_report = leaders_lib.make_harvest_report(
+          personas,
+          dict(round_harvest_stats[curr_round]),
+      )
+      if cfg.debug:
+        print(f"ROUND {curr_round} HARVEST REPORT:\n{harvest_report}")
 
     # TRIGGER ELECTION?
     if len(leader_candidates) > 1 and curr_round != env.num_round:
@@ -477,7 +454,6 @@ async def run(
         break
       continue
 
-    # SEQUENTIAL PHASES (pool_after_harvesting, restaurant; restaurant may be labeled contracting).
     agent = personas[agent_id]
     agent.update_agenda(agenda)
     agent.update_harvest_report(harvest_report)
