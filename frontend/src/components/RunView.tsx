@@ -692,197 +692,7 @@ export const RunView: React.FC<RunViewProps> = ({
         </Card.Body>
       </Card>
 
-      <div className="run-view-grid">
-        <Card className="run-view-section">
-          <Card.Header>
-            <h2>Contract timeline</h2>
-          </Card.Header>
-          <Card.Body>
-            {contractRounds.length ? (
-              <div className="contract-timeline">
-                {contractRounds.map((bundle) => {
-                  const negotiationData = asRecord(bundle.negotiation?.data);
-                  const enforcementData = asRecord(bundle.enforcement?.data);
-                  const codedVoteData = asRecord(bundle.codedVote?.data);
-                  const negotiatedContract = bundle.negotiatedContract ?? null;
-                  const enforcedContract = bundle.enforcedContract ?? null;
-                  const result = asRecord(enforcementData.result);
-                  const votes = asRecord(codedVoteData.votes);
-                  const executionLog = asArray<string>(result.execution_log);
-                  return (
-                    <details
-                      key={bundle.round}
-                      className="contract-round"
-                      open={activeRound === bundle.round}
-                      onClick={() =>
-                        setActiveRound((prev) => (prev === bundle.round ? null : bundle.round))
-                      }
-                    >
-                      <summary>
-                        <span>Round {bundle.round}</span>
-                        <span className="contract-summary-chip">
-                          {asString(negotiationData.summary, "Contract activity")}
-                        </span>
-                      </summary>
-
-                      {bundle.toolCalls.length > 0 && (
-                        <div className="contract-block">
-                          <div className="section-kicker">Tool calls</div>
-                          <div className="tool-grid">
-                            {bundle.toolCalls.map((toolCall, index) => (
-                              <div key={`${bundle.round}-${index}`} className="tool-card">
-                                <strong>
-                                  {asString(toolCall.parsed?.tool, "tool_call")}
-                                </strong>
-                                <MarkdownView
-                                  content={
-                                    toolCall.parsed
-                                      ? codeFence(
-                                          JSON.stringify(toolCall.parsed, null, 2),
-                                          "json"
-                                        )
-                                      : codeFence(toolCall.raw, "json")
-                                  }
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {enforcedContract && (
-                        <div className="contract-block">
-                          <div className="section-kicker">Law used for enforcement this round</div>
-                          <div className="badge-row">
-                            <span className="status-badge">
-                              {enforcedContract.contract_type ?? "unknown"}
-                            </span>
-                            <span className="status-badge">
-                              proposer: {enforcedContract.proposer ?? "n/a"}
-                            </span>
-                            <span className="status-badge">
-                              created: {enforcedContract.round_created ?? "n/a"}
-                            </span>
-                          </div>
-                          <div className="contract-law-grid">
-                            <div>
-                              <div className="section-kicker">Natural-language law</div>
-                              <MarkdownView
-                                content={
-                                  asString(asRecord(enforcedContract.metadata).nl_contract) ||
-                                  "No natural-language law recorded."
-                                }
-                              />
-                            </div>
-                            <div>
-                              <div className="section-kicker">Rendered contract code</div>
-                              {contractMarkdown(enforcedContract) ? (
-                                <MarkdownView content={contractMarkdown(enforcedContract) ?? ""} />
-                              ) : (
-                                <p>No code attached to this contract.</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {negotiatedContract && (
-                        <div className="contract-block">
-                          <div className="section-kicker">Law adopted at end of round</div>
-                          <div className="badge-row">
-                            <span className="status-badge">
-                              {negotiatedContract.contract_type ?? "unknown"}
-                            </span>
-                            <span className="status-badge">
-                              proposer: {negotiatedContract.proposer ?? "n/a"}
-                            </span>
-                            <span className="status-badge">
-                              created: {negotiatedContract.round_created ?? "n/a"}
-                            </span>
-                          </div>
-                          <div className="contract-law-grid">
-                            <div>
-                              <div className="section-kicker">Negotiated English law</div>
-                              <MarkdownView
-                                content={
-                                  asString(asRecord(negotiatedContract.metadata).nl_contract) ||
-                                  "No natural-language law recorded."
-                                }
-                              />
-                            </div>
-                            <div>
-                              <div className="section-kicker">Negotiated contract code</div>
-                              {contractMarkdown(negotiatedContract) ? (
-                                <MarkdownView content={contractMarkdown(negotiatedContract) ?? ""} />
-                              ) : (
-                                <p>No code attached to this contract.</p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {Object.keys(votes).length > 0 && (
-                        <div className="contract-block">
-                          <div className="section-kicker">Coded-contract vote</div>
-                          <div className="badge-row">
-                            <span className="status-badge">
-                              passed: {codedVoteData.passed === true ? "yes" : "no"}
-                            </span>
-                            <span className="status-badge">
-                              retry: {codedVoteData.retry_attempt ?? 0}
-                            </span>
-                          </div>
-                          <ul className="kv-list">
-                            {Object.entries(votes).map(([agent, value]) => (
-                              <li key={agent}>
-                                <span>{agent}</span>
-                                <strong>{formatVoteLabel(value)}</strong>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {bundle.turns.length > 0 && (
-                        <div className="contract-block">
-                          <div className="section-kicker">Contracting dialogue</div>
-                          <div className="contract-turn-list">
-                            {bundle.turns.map((turn, index) => (
-                              <div key={`${bundle.round}-turn-${index}`} className="contract-turn">
-                                <div className="contract-turn-meta">
-                                  <span>{turn.agent}</span>
-                                  <span>{turn.phase}</span>
-                                </div>
-                                <MarkdownView content={turn.message} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {executionLog.length > 0 && (
-                        <div className="contract-block">
-                          <div className="section-kicker">Enforcement execution log</div>
-                          <ul className="execution-log">
-                            {executionLog.map((item, index) => (
-                              <li key={`${bundle.round}-exec-${index}`}>
-                                <code>{item}</code>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </details>
-                  );
-                })}
-              </div>
-            ) : (
-              <p>No contracting events were logged for this run.</p>
-            )}
-          </Card.Body>
-        </Card>
-
+      <div className="run-view-grid run-view-grid--three">
         <Card className="run-view-section">
           <Card.Header>
             <h2>Conversations by round</h2>
@@ -1058,6 +868,196 @@ export const RunView: React.FC<RunViewProps> = ({
           </Card.Body>
         </Card>
       </div>
+
+      <Card className="run-view-section run-view-contract-timeline">
+        <Card.Header>
+          <h2>Contract timeline</h2>
+        </Card.Header>
+        <Card.Body>
+          {contractRounds.length ? (
+            <div className="contract-timeline">
+              {contractRounds.map((bundle) => {
+                const negotiationData = asRecord(bundle.negotiation?.data);
+                const enforcementData = asRecord(bundle.enforcement?.data);
+                const codedVoteData = asRecord(bundle.codedVote?.data);
+                const negotiatedContract = bundle.negotiatedContract ?? null;
+                const enforcedContract = bundle.enforcedContract ?? null;
+                const result = asRecord(enforcementData.result);
+                const votes = asRecord(codedVoteData.votes);
+                const executionLog = asArray<string>(result.execution_log);
+                return (
+                  <details
+                    key={bundle.round}
+                    className="contract-round"
+                    open={activeRound === bundle.round}
+                    onClick={() =>
+                      setActiveRound((prev) => (prev === bundle.round ? null : bundle.round))
+                    }
+                  >
+                    <summary>
+                      <span>Round {bundle.round}</span>
+                      <span className="contract-summary-chip">
+                        {asString(negotiationData.summary, "Contract activity")}
+                      </span>
+                    </summary>
+
+                    {bundle.toolCalls.length > 0 && (
+                      <div className="contract-block">
+                        <div className="section-kicker">Tool calls</div>
+                        <div className="tool-grid">
+                          {bundle.toolCalls.map((toolCall, index) => (
+                            <div key={`${bundle.round}-${index}`} className="tool-card">
+                              <strong>
+                                {asString(toolCall.parsed?.tool, "tool_call")}
+                              </strong>
+                              <MarkdownView
+                                content={
+                                  toolCall.parsed
+                                    ? codeFence(
+                                        JSON.stringify(toolCall.parsed, null, 2),
+                                        "json"
+                                      )
+                                    : codeFence(toolCall.raw, "json")
+                                }
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {enforcedContract && (
+                      <div className="contract-block">
+                        <div className="section-kicker">Law used for enforcement this round</div>
+                        <div className="badge-row">
+                          <span className="status-badge">
+                            {enforcedContract.contract_type ?? "unknown"}
+                          </span>
+                          <span className="status-badge">
+                            proposer: {enforcedContract.proposer ?? "n/a"}
+                          </span>
+                          <span className="status-badge">
+                            created: {enforcedContract.round_created ?? "n/a"}
+                          </span>
+                        </div>
+                        <div className="contract-law-grid">
+                          <div>
+                            <div className="section-kicker">Natural-language law</div>
+                            <MarkdownView
+                              content={
+                                asString(asRecord(enforcedContract.metadata).nl_contract) ||
+                                "No natural-language law recorded."
+                              }
+                            />
+                          </div>
+                          <div>
+                            <div className="section-kicker">Rendered contract code</div>
+                            {contractMarkdown(enforcedContract) ? (
+                              <MarkdownView content={contractMarkdown(enforcedContract) ?? ""} />
+                            ) : (
+                              <p>No code attached to this contract.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {negotiatedContract && (
+                      <div className="contract-block">
+                        <div className="section-kicker">Law adopted at end of round</div>
+                        <div className="badge-row">
+                          <span className="status-badge">
+                            {negotiatedContract.contract_type ?? "unknown"}
+                          </span>
+                          <span className="status-badge">
+                            proposer: {negotiatedContract.proposer ?? "n/a"}
+                          </span>
+                          <span className="status-badge">
+                            created: {negotiatedContract.round_created ?? "n/a"}
+                          </span>
+                        </div>
+                        <div className="contract-law-grid">
+                          <div>
+                            <div className="section-kicker">Negotiated English law</div>
+                            <MarkdownView
+                              content={
+                                asString(asRecord(negotiatedContract.metadata).nl_contract) ||
+                                "No natural-language law recorded."
+                              }
+                            />
+                          </div>
+                          <div>
+                            <div className="section-kicker">Negotiated contract code</div>
+                            {contractMarkdown(negotiatedContract) ? (
+                              <MarkdownView content={contractMarkdown(negotiatedContract) ?? ""} />
+                            ) : (
+                              <p>No code attached to this contract.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {Object.keys(votes).length > 0 && (
+                      <div className="contract-block">
+                        <div className="section-kicker">Coded-contract vote</div>
+                        <div className="badge-row">
+                          <span className="status-badge">
+                            passed: {codedVoteData.passed === true ? "yes" : "no"}
+                          </span>
+                          <span className="status-badge">
+                            retry: {codedVoteData.retry_attempt ?? 0}
+                          </span>
+                        </div>
+                        <ul className="kv-list">
+                          {Object.entries(votes).map(([agent, value]) => (
+                            <li key={agent}>
+                              <span>{agent}</span>
+                              <strong>{formatVoteLabel(value)}</strong>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {bundle.turns.length > 0 && (
+                      <div className="contract-block">
+                        <div className="section-kicker">Contracting dialogue</div>
+                        <div className="contract-turn-list">
+                          {bundle.turns.map((turn, index) => (
+                            <div key={`${bundle.round}-turn-${index}`} className="contract-turn">
+                              <div className="contract-turn-meta">
+                                <span>{turn.agent}</span>
+                                <span>{turn.phase}</span>
+                              </div>
+                              <MarkdownView content={turn.message} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {executionLog.length > 0 && (
+                      <div className="contract-block">
+                        <div className="section-kicker">Enforcement execution log</div>
+                        <ul className="execution-log">
+                          {executionLog.map((item, index) => (
+                            <li key={`${bundle.round}-exec-${index}`}>
+                              <code>{item}</code>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </details>
+                );
+              })}
+            </div>
+          ) : (
+            <p>No contracting events were logged for this run.</p>
+          )}
+        </Card.Body>
+      </Card>
     </div>
   );
 };
