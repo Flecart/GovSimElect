@@ -194,7 +194,9 @@ class FishingConverseComponent(ConverseComponent):
       debug: bool,
   ) -> None:
     """Contracting negotiation or free-form turn-taking. Mutates conversation and html lists."""
-    rt = getattr(self.persona, "contracting_runtime", None)
+    from simulation.scenarios.fishing.contracting import ContractingOrchestrator
+      
+    rt: ContractingOrchestrator | None = getattr(self.persona, "contracting_runtime", None)
     if rt is not None and rt.enabled:
       print(f"CONTRACTING: {self.persona.identity.name}")
       neg_transcript, _, _, html_neg = (

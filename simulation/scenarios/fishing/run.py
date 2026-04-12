@@ -48,13 +48,16 @@ def _print_env_summary(env, agent_id, obs, stage: str) -> None:
 def make_harvest_report(
     personas: dict[str, PersonaAgent],
     last_rounds_harvest_stats: dict[str, int],
+    env,
 ) -> str:
   """Factual per-agent catch summary for harvest_report / leader context."""
-  report = ""
+  remaining_fish = env.internal_global_state["resource_in_pool"]
+  report = f"There are {remaining_fish} tons of fish left in the lake.\n"
   for _, persona in personas.items():
     name = persona.identity.name
     tons = last_rounds_harvest_stats.get(name, 0)
     report += f"\t{name} caught {tons} tons of fish\n"
+
   return report
 
 
@@ -230,6 +233,7 @@ async def _run_sim_loop(
             report_text = make_harvest_report(
                 personas,
                 round_harvest_stats[curr_round],
+                env,
             )
             for p in personas.values():
                 p.update_harvest_report(report_text)
@@ -309,6 +313,7 @@ async def run(
         for persona in personas.values():
             persona.set_contracting_runtime(contracting_runtime)
         env.set_harvest_enforcer(contracting_runtime.enforce_catches)
+        env.set_post_regen_hook(contracting_runtime.on_post_regen)
         env.set_contracting_enabled(True)
     else:
         env.set_contracting_enabled(False)

@@ -1,17 +1,17 @@
 """Formal contracting support for the fishing scenario."""
 
 from .contract import (
-    Contract,
     ContractMode,
     ContractType,
     EnforcementResult,
     FishingContractState,
+    FormalContract,
     NegotiationProtocol,
 )
 from .runtime import ContractingConfig, ContractingOrchestrator
 
 __all__ = [
-    "Contract",
+    "FormalContract",
     "ContractMode",
     "ContractType",
     "ContractingConfig",

@@ -53,7 +53,11 @@ class FishingConcurrentEnv(ConcurrentEnv):
     regen_mode_str = OmegaConf.select(cfg, "regen_mode", default="deterministic") or "deterministic"
     self._regen_mode = RegenMode(regen_mode_str)
     regen_seed = int(OmegaConf.select(cfg, "regen_seed", default=42) or 42)
-    self._regen_manager = RegenManager(mode=self._regen_mode, seed=regen_seed)
+    rfr = OmegaConf.select(cfg, "regen_factor_range", default=[1.5, 2.5])
+    iid_values = (float(rfr[0]), float(rfr[1]))
+    self._regen_manager = RegenManager(
+        mode=self._regen_mode, seed=regen_seed, iid_values=iid_values
+    )
     self._last_regen_state: RegenState | None = None
 
   def _prompt_pool_amount_of_resource(self):

@@ -46,9 +46,9 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
   )
   svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
   contract_context = (
-      "\nThe current contract for this round is the following:"
+      "\n<constitution>\n"
       f" {formal_contract}\n"
-      f"This contract is enforced in mode: {contract_mode}.\n"
+      "</constitution>\n"
       if formal_contract else
       ""
   )

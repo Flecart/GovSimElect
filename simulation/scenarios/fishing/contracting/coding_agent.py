@@ -52,8 +52,10 @@ class CodingAgent:
         temperature=self.temperature,
         default_value=(
             "```python\n"
-            "def catch(name, amount, month):\n"
-            "    return amount\n"
+            "class DefaultLaw(Contract):\n"
+            "    VERSION = 1\n"
+            "    def resolve(self, month, fish_population, submissions, ctx):\n"
+            "        return dict(submissions)\n"
             "```"
         ),
     )
@@ -70,10 +72,9 @@ class CodingAgent:
       if matches:
         code = matches[0].strip()
         if (
-            "catches" in code
-            or "modified_catches" in code
-            or "def catch(" in code
-            or "class " in code
+            "class " in code
+            and "Contract" in code
+            and "def resolve(" in code
         ):
           return code
     return None

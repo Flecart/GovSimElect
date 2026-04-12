@@ -198,11 +198,15 @@ def get_sytem_prompt_v3(persona):
 
   # Scenario-specific regen text overrides the generic range-based text.
   if regen_mode == "iid_stochastic":
-    text_regen_rate = (
-        " Each month, the lake's regeneration rate is either 1.5 or 2.5 with"
-        " equal probability, and you will not be told which value was realized."
-        " The average regeneration rate is 2.0."
-    )
+    if min_regen == max_regen:
+      text_regen_rate = (
+        f" Each month, the lake's regeneration rate is {min_regen}."
+      )
+    else:
+        text_regen_rate = (
+            f" Each month, the lake's regeneration rate is either {min_regen} or {max_regen} with"
+            " equal probability, and you will not be told which value was realized."
+        )
   elif regen_mode == "endogenous_hysteresis":
     text_regen_rate = (
         " The lake can become polluted if you fish too much, and once polluted,"
@@ -210,13 +214,6 @@ def get_sytem_prompt_v3(persona):
         " normal sustainable level for some time. You will be told whether the"
         " lake is currently healthy or polluted, but you must figure out the"
         " dynamics from experience."
-    )
-  elif min_regen is not None and max_regen is not None and min_regen != max_regen:
-    text_regen_rate = (
-        " At the end of the month, the remaining fish will reproduce and the"
-        " population will increase. The regeneration factor of increase is"
-        f" sampled uniformly between one of {{{min_regen}, {max_regen}}} for each"
-        " month."
     )
   else:
     text_regen_rate = (
@@ -229,7 +226,7 @@ def get_sytem_prompt_v3(persona):
       f" along with other {num_agents - 1} fishermen catching at the same time with you. The lake has a carrying capacity of 100"
       " tons of fish. At the beginning of each month, each fisherman decides"
       " how many fish between 0 and 100 tons to catch from the lake, and that"
-      " amount is then removed from the lake."
+      " amount is then removed from the lake. You are encouraged to think about the optimal amount of fish to catch given the current situation."
   )
 
   text_post = (
@@ -239,10 +236,10 @@ def get_sytem_prompt_v3(persona):
       " opportunity to negotiate and persuade others to influence their"
       " behavior in the next month. For example, if there are 90 tons of fish"
       " at the beginning of the month and the fishermen catch a total of 30"
-      " fish (some more some less), given a regeneration factor of 2.0, there will be 30*2=60 tons of fish"
+      " fish (some more some less), given a regeneration rate of 2.0, there will be 30*2=60 tons of fish"
       " left at the end of the month before reproduction, if next round there"
       " and are 60 tons of fish left, there will be 60*2=min(100, 120)=100 tons after reproduction. The month proceeds as follows: lake (you decide how many fish to catch), restaurant (you negotiate with other fishermen), home (you reflect on the month and decide how many fish to catch next month)."
-      " Note that if you collectively finish the lake, the lake won't be able to recover and you won't be able to fish anymore."
+      " Note that if you collectively finish the lake, meaning the number of fish drops below 5 tons, the lake won't be able to recover and you won't be able to fish anymore."
       " Note that if many of you fish more, the number of fish will be randomly assigned to the overfishers, so you might not get all the fish you want."
   )
 

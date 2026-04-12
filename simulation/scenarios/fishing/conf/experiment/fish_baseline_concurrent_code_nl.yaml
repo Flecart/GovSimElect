@@ -59,7 +59,7 @@ contracting:
   enabled: true
   mode: code_nl
   negotiation_protocol: round_robin
-  max_turns: 6
+  max_turns: 10
   min_agree_agents: 3
   max_coding_retries: 2
   max_tool_calls_per_turn: 2

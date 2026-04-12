@@ -66,6 +66,7 @@ class ConcurrentEnv:
     self._regen_factor_range = regen_factor_range
     self._harvest_enforcer = None
     self._post_harvest_observer = None
+    self._post_regen_hook = None
     self._contracting_enabled = False
 
   ### Prompt text
@@ -222,6 +223,10 @@ class ConcurrentEnv:
 
   def set_harvest_enforcer(self, callback):
     self._harvest_enforcer = callback
+
+  def set_post_regen_hook(self, callback):
+    """Optional callback ``env -> None`` after fish regeneration each round (e.g. contract ``on_round_end``)."""
+    self._post_regen_hook = callback
 
   def set_post_harvest_observer(self, callback):
     self._post_harvest_observer = callback
@@ -573,6 +578,8 @@ class ConcurrentEnv:
               for agent in self.agents
           }
           self._apply_regeneration()
+          if self._post_regen_hook is not None:
+            self._post_regen_hook(self)
           self._set_sustainability_threshold()
           if self.cfg.harvesting_order == "random-sequential":
             agents = list(np.random.permutation(self.agents))

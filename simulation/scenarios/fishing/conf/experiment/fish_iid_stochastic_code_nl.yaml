@@ -64,7 +64,7 @@ contracting:
   mode: code_nl
   setting_context: "Monthly regeneration factor is sampled uniformly in the range ${experiment.env.regen_factor_range}."
   negotiation_protocol: round_robin
-  max_turns: 6
+  max_turns: 10
   min_agree_agents: 3
   max_coding_retries: 2
   max_tool_calls_per_turn: 2

@@ -295,6 +295,7 @@ def _write_fishing_run_summary_json(
             capacity=100.0,
             expected_regen=2.0,
             collapse_threshold=0.0,
+            verbose=False,
         )
         os.makedirs(run_dir, exist_ok=True)
         with open(summary_path, "w", encoding="utf-8") as handle:

@@ -57,6 +57,7 @@ def summarize(
     capacity: float,
     expected_regen: float,
     collapse_threshold: float,
+    verbose: bool = False,
 ) -> dict[str, Any]:
     harvesting_rows = [
         r
@@ -106,7 +107,11 @@ def summarize(
             # Use realized regen for this specific harvest round when available.
             r_t = regen_by_harvest_round.get(round_id, expected_regen)
             threshold = max(0.0, stock_before - stock_before / r_t) if r_t > 0 else 0.0
-            print(f"Round {round_id}: stock_before = {stock_before}, r_t = {r_t}, threshold = {threshold}, catches = {catches}")
+            if verbose:
+                print(
+                    f"Round {round_id}: stock_before = {stock_before}, "
+                    f"r_t = {r_t}, threshold = {threshold}, catches = {catches}"
+                )
             total_catches = sum(catches)
             if total_catches > threshold:
                 over_usage_count += len(catches)
@@ -289,6 +294,11 @@ def main() -> None:
         default=None,
         help="Optional path to save the full summary JSON",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print per-round stock / r_t / threshold / catches while summarizing",
+    )
     args = parser.parse_args()
 
     records = parse_log(args.log_path)
@@ -297,6 +307,7 @@ def main() -> None:
         capacity=args.capacity,
         expected_regen=args.expected_regen,
         collapse_threshold=args.collapse_threshold,
+        verbose=args.verbose,
     )
     print_human_summary(report, args.log_path)
 

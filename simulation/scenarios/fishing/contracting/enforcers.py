@@ -1,15 +1,17 @@
 """Enforcement for fishing formal contracts."""
 
-import ast
-import copy
 import json
+import random
 import re
+import traceback
 from abc import ABC, abstractmethod
 from typing import Any
 
 from simulation.utils import ModelWandbWrapper
 
-from .contract import Contract, EnforcementResult, FishingContractState
+from .contract import EnforcementResult, FishingContractState, FormalContract
+from .enforcement.context import EnforcementContext
+from .enforcement.framework_store import FrameworkOwnedStore
 from .prompts import nl_judge_prompt
 
 
@@ -19,7 +21,7 @@ class ContractEnforcer(ABC):
 
   def _validate_contract(
       self,
-      contract: Contract | None,
+      contract: FormalContract | None,
       decisions: dict[str, float],
       contract_type_name: str,
   ) -> EnforcementResult | None:
@@ -47,7 +49,7 @@ class ContractEnforcer(ABC):
   @abstractmethod
   def enforce(
       self,
-      contract: Contract,
+      contract: FormalContract,
       decisions: dict[str, float],
       state: FishingContractState,
       context: str = "",
@@ -59,7 +61,7 @@ class ContractEnforcer(ABC):
 class NoOpEnforcer(ContractEnforcer):
   def enforce(
       self,
-      contract: Contract,
+      contract: FormalContract,
       decisions: dict[str, float],
       state: FishingContractState,
       context: str = "",
@@ -72,321 +74,191 @@ class NoOpEnforcer(ContractEnforcer):
     )
 
 
-class LawExecutionRuntime:
-  """Named helper API available to Python-law contracts."""
+def _round_rng(store: FrameworkOwnedStore, month: int) -> random.Random:
+  if store.law_random_seed is None:
+    store.law_random_seed = 0x9E3779B1
+  seed = (int(store.law_random_seed) + int(month) * 1_000_003) & 0xFFFFFFFF
+  return random.Random(seed)
 
-  def __init__(
-      self,
-      catches: dict[str, float],
-      execution_state: dict[str, Any] | None = None,
-  ) -> None:
-    self.catches = catches
-    self.reward_adjustments: dict[str, float] = {}
-    self.execution_log: list[str] = []
-    self.state = copy.deepcopy(execution_state or {})
-    self.state.setdefault("escrow", {})
-    self.state.setdefault("insurance_pools", {})
-    self.state.setdefault("violation_counts", {})
-    self.state.setdefault("participation_costs", {})
-    self.state.setdefault("transfers", [])
 
-  def _ensure_agent(self, name: str) -> str:
-    agent = str(name)
-    self.catches.setdefault(agent, 0.0)
-    self.reward_adjustments.setdefault(agent, 0.0)
-    return agent
-
-  def _adjust_reward(self, name: str, delta: float, label: str) -> None:
-    agent = self._ensure_agent(name)
-    self.reward_adjustments[agent] = self.reward_adjustments.get(agent, 0.0) + float(delta)
-    self.execution_log.append(f"{label}: {agent} {delta:+.2f}")
-
-  def fish(self, name: str, amount: float) -> None:
-    agent = self._ensure_agent(name)
-    self.catches[agent] = max(0.0, float(amount))
-    self.execution_log.append(f"fish({agent}, {float(amount):.2f})")
-
-  def transfer(self, src: str, dst: str, amount: float, reason: str = "") -> None:
-    value = max(0.0, float(amount))
-    source = self._ensure_agent(src)
-    target = self._ensure_agent(dst)
-    if value <= 0:
-      return
-    self._adjust_reward(source, -value, f"transfer_out[{reason or 'unspecified'}]")
-    self._adjust_reward(target, value, f"transfer_in[{reason or 'unspecified'}]")
-    self.state["transfers"].append({
-        "src": source,
-        "dst": target,
-        "amount": value,
-        "reason": reason,
-    })
-
-  def escrow(
-      self,
-      name: str,
-      amount: float,
-      bucket: str = "default",
-      reason: str = "",
-  ) -> None:
-    value = max(0.0, float(amount))
-    agent = self._ensure_agent(name)
-    if value <= 0:
-      return
-    bucket_key = f"{agent}:{bucket}"
-    self.state["escrow"][bucket_key] = self.state["escrow"].get(bucket_key, 0.0) + value
-    self._adjust_reward(agent, -value, f"escrow[{bucket}]")
-    self.execution_log.append(f"escrow reason={reason or 'none'}")
-
-  def release_escrow(
-      self,
-      name: str,
-      amount: float | None = None,
-      bucket: str = "default",
-      recipient: str | None = None,
-      reason: str = "",
-  ) -> None:
-    agent = self._ensure_agent(name)
-    bucket_key = f"{agent}:{bucket}"
-    available = float(self.state["escrow"].get(bucket_key, 0.0))
-    if available <= 0:
-      return
-    value = available if amount is None else min(available, max(0.0, float(amount)))
-    if value <= 0:
-      return
-    self.state["escrow"][bucket_key] = available - value
-    payee = self._ensure_agent(recipient or agent)
-    self._adjust_reward(payee, value, f"release_escrow[{bucket}]")
-    self.execution_log.append(f"release_escrow reason={reason or 'none'}")
-
-  def sanction(self, name: str, amount: float, reason: str = "") -> None:
-    value = max(0.0, float(amount))
-    if value <= 0:
-      return
-    self._adjust_reward(name, -value, f"sanction[{reason or 'unspecified'}]")
-
-  def graduated_sanction(
-      self,
-      name: str,
-      base_amount: float,
-      key: str = "default",
-      multiplier: float = 1.0,
-      reason: str = "",
-  ) -> float:
-    agent = self._ensure_agent(name)
-    counter_key = f"{agent}:{key}"
-    count = int(self.state["violation_counts"].get(counter_key, 0)) + 1
-    self.state["violation_counts"][counter_key] = count
-    amount = max(0.0, float(base_amount)) * max(0.0, float(multiplier)) * count
-    self.sanction(agent, amount, reason or key)
-    self.execution_log.append(f"graduated_sanction count={count}")
-    return amount
-
-  def insurance(
-      self,
-      name: str,
-      premium: float = 0.0,
-      payout: float = 0.0,
-      pool: str = "default",
-      recipient: str | None = None,
-      reason: str = "",
-  ) -> None:
-    member = self._ensure_agent(name)
-    pool_key = str(pool)
-    self.state["insurance_pools"].setdefault(pool_key, 0.0)
-    premium_value = max(0.0, float(premium))
-    payout_value = max(0.0, float(payout))
-    if premium_value > 0:
-      self.state["insurance_pools"][pool_key] += premium_value
-      self._adjust_reward(member, -premium_value, f"insurance_premium[{pool_key}]")
-    if payout_value > 0:
-      available = float(self.state["insurance_pools"].get(pool_key, 0.0))
-      paid = min(available, payout_value)
-      if paid > 0:
-        self.state["insurance_pools"][pool_key] = available - paid
-        self._adjust_reward(recipient or member, paid, f"insurance_payout[{pool_key}]")
-    self.execution_log.append(f"insurance reason={reason or 'none'}")
-
-  def participation_cost(self, name: str, amount: float, reason: str = "") -> None:
-    value = max(0.0, float(amount))
-    if value <= 0:
-      return
-    agent = self._ensure_agent(name)
-    self.state["participation_costs"][agent] = (
-        self.state["participation_costs"].get(agent, 0.0) + value
+def _validate_catches_output(
+    final: dict[str, float],
+    agent_names: list[str],
+    submissions: dict[str, float],
+) -> tuple[bool, dict[str, float], str]:
+  """Return (ok, normalized_or_fallback, error_message)."""
+  expected = set(agent_names)
+  if set(final.keys()) != expected:
+    return (
+        False,
+        dict(submissions),
+        f"resolve() keys {set(final.keys())!r} != expected {expected!r}",
     )
-    self._adjust_reward(agent, -value, f"participation_cost[{reason or 'unspecified'}]")
+  out: dict[str, float] = {}
+  for name in agent_names:
+    try:
+      v = float(final[name])
+    except (TypeError, ValueError):
+      return False, dict(submissions), f"Non-numeric catch for {name!r}"
+    if v < 0 or v != v:  # nan
+      return False, dict(submissions), f"Invalid catch for {name!r}: {final[name]!r}"
+    out[name] = v
+  return True, out, ""
 
 
 class LawEnforcer(ContractEnforcer):
-  def _sanitize_contract_code(self, contract_str: str) -> str:
-    lines = contract_str.split("\n")
-    sanitized_lines = []
-    in_test_section = False
-    for line in lines:
-      lower = line.lower()
-      if any(pattern in lower for pattern in ["# example", "# test", "# usage"]):
-        in_test_section = True
-        continue
-      if in_test_section:
-        if line.strip() and not line.strip().startswith("#"):
-          in_test_section = False
-        else:
-          continue
-      if re.match(r"^catches\s*=\s*{", line.strip()):
-        continue
-      sanitized_lines.append(line)
-
-    sanitized = "\n".join(sanitized_lines)
-    try:
-      tree = ast.parse(sanitized)
-      for node in ast.walk(tree):
-        if isinstance(node, ast.FunctionDef) and any(
-            keyword in node.name.lower()
-            for keyword in ["catch", "enforce", "apply", "modify", "regulate", "check"]
-        ):
-          if node.name == "catch":
-            sanitized += (
-                "\nfor _name, _amount in list(catches.items()):\n"
-                f"    result = {node.name}(_name, _amount, month)\n"
-                "    if isinstance(result, (int, float)):\n"
-                "        fish(_name, result)\n"
-            )
-          else:
-            sanitized += (
-                f"\nresult = {node.name}(catches)\n"
-                "if isinstance(result, dict):\n"
-                "    catches.update(result)\n"
-            )
-          break
-    except SyntaxError:
-      return sanitized
-    return sanitized
-
-  def _resolve_catch_callable(
-      self,
-      exec_globals: dict[str, Any],
-      exec_locals: dict[str, Any],
-  ):
-    catch_callable = exec_locals.get("catch") or exec_globals.get("catch")
-    if callable(catch_callable):
-      return catch_callable
-
-    candidate_classes = [
-        exec_locals.get("LawContract"),
-        exec_globals.get("LawContract"),
-        exec_locals.get("FishingLaw"),
-        exec_globals.get("FishingLaw"),
-        exec_locals.get("Contract"),
-        exec_globals.get("Contract"),
-    ]
-    for candidate in candidate_classes:
-      if not isinstance(candidate, type):
-        continue
-      try:
-        instance = candidate(contract_state=exec_globals.get("contract_state"))
-      except TypeError:
-        try:
-          instance = candidate()
-        except TypeError:
-          continue
-      catch_method = getattr(instance, "catch", None)
-      if callable(catch_method):
-        return catch_method
-    return None
-
-  def _apply_catch_function(
-      self,
-      catch_callable,
-      catches: dict[str, float],
-      month: int,
-      fish_callback,
-  ) -> None:
-    for name, amount in list(catches.items()):
-      result = catch_callable(name, amount, month)
-      if isinstance(result, (int, float)):
-        fish_callback(name, result)
+  """Runs a deployed ``Contract`` subclass: hooks + ``resolve`` + payoff context."""
 
   def enforce(
       self,
-      contract: Contract,
+      contract: FormalContract,
       decisions: dict[str, float],
       state: FishingContractState,
       context: str = "",
       execution_state: dict[str, Any] | None = None,
+      deployed_instance: Any = None,
+      framework_store: FrameworkOwnedStore | None = None,
   ) -> EnforcementResult:
+    del context  # reserved
     if error := self._validate_contract(contract, decisions, "python-law"):
       return error
-
-    runtime = LawExecutionRuntime(decisions.copy(), execution_state)
-    exec_globals = {
-        "__builtins__": {
-            "abs": abs,
-            "min": min,
-            "max": max,
-            "sum": sum,
-            "len": len,
-            "int": int,
-            "float": float,
-            "dict": dict,
-        },
-        "catches": runtime.catches,
-        "fish_population": state.fish_population,
-        "month": state.round_number + 1,
-        "sustainability_threshold": state.sustainability_threshold,
-        "num_agents": state.num_agents,
-        "contract_state": runtime.state,
-        "fish": runtime.fish,
-        "transfer": runtime.transfer,
-        "escrow": runtime.escrow,
-        "release_escrow": runtime.release_escrow,
-        "sanction": runtime.sanction,
-        "graduated_sanction": runtime.graduated_sanction,
-        "insurance": runtime.insurance,
-        "participation_cost": runtime.participation_cost,
-    }
-    exec_locals: dict[str, Any] = {}
-    should_apply_catch_callable = True
-    try:
-      exec(contract.contract_str, exec_globals, exec_locals)
-    except Exception:
-      should_apply_catch_callable = False
-      exec_locals.clear()
-      runtime = LawExecutionRuntime(decisions.copy(), execution_state)
-      exec_globals["catches"] = runtime.catches
-      exec_globals["month"] = state.round_number + 1
-      exec_globals["contract_state"] = runtime.state
-      exec_globals["fish"] = runtime.fish
-      exec_globals["transfer"] = runtime.transfer
-      exec_globals["escrow"] = runtime.escrow
-      exec_globals["release_escrow"] = runtime.release_escrow
-      exec_globals["sanction"] = runtime.sanction
-      exec_globals["graduated_sanction"] = runtime.graduated_sanction
-      exec_globals["insurance"] = runtime.insurance
-      exec_globals["participation_cost"] = runtime.participation_cost
-      exec(self._sanitize_contract_code(contract.contract_str), exec_globals, exec_locals)
-
-    catch_callable = self._resolve_catch_callable(exec_globals, exec_locals)
-    if should_apply_catch_callable and catch_callable is not None:
-      self._apply_catch_function(
-          catch_callable=catch_callable,
-          catches=runtime.catches,
-          month=state.round_number + 1,
-          fish_callback=runtime.fish,
+    if deployed_instance is None or framework_store is None:
+      return EnforcementResult(
+          success=False,
+          modified_catches=decisions,
+          reasoning="Python law instance or framework store missing.",
       )
 
-    modified = exec_locals.get("modified_catches", exec_globals.get("catches", decisions))
+    law = deployed_instance
+    agent_names = list(contract.agent_names) if contract.agent_names else sorted(decisions.keys())
+    submissions = {n: float(decisions.get(n, 0.0)) for n in agent_names}
+    month = state.round_number + 1
+    fp = float(state.fish_population)
+    rng = _round_rng(framework_store, month)
+
+    reward_adjustments = {a: 0.0 for a in agent_names}
+    execution_log: list[str] = []
+
+    def _make_ctx() -> EnforcementContext:
+      return EnforcementContext(
+          month=month,
+          fish_population=fp,
+          num_agents=len(agent_names),
+          agent_names=agent_names,
+          store=framework_store,
+          reward_adjustments=reward_adjustments,
+          execution_log=execution_log,
+          rng=rng,
+      )
+
+    try:
+      law.on_round_start(month, fp, _make_ctx())
+    except Exception as exc:
+      tb = traceback.format_exc()
+      execution_log.append(f"on_round_start failed: {exc}\n{tb}")
+
+    resolve_ok = True
+    reasoning = "Applied Python-law contract."
+    try:
+      final = law.resolve(month, fp, submissions, _make_ctx())
+    except Exception as exc:
+      tb = traceback.format_exc()
+      contract.metadata["last_enforcement_failure"] = tb
+      resolve_ok = False
+      reasoning = f"resolve() raised; fail-open on submissions: {exc}"
+      final = dict(submissions)
+      for a in agent_names:
+        reward_adjustments[a] = 0.0
+      execution_log.clear()
+      execution_log.append(f"RESOLVE EXCEPTION:\n{tb}")
+
+    modified: dict[str, float]
+    success = True
+    if resolve_ok:
+      ok, normalized, err_msg = _validate_catches_output(
+          final if isinstance(final, dict) else {},
+          agent_names,
+          submissions,
+      )
+      if not ok:
+        contract.metadata["last_enforcement_failure"] = err_msg
+        reasoning = f"Malformed resolve() output; fail-open: {err_msg}"
+        normalized = dict(submissions)
+        for a in agent_names:
+          reward_adjustments[a] = 0.0
+        execution_log.clear()
+        execution_log.append(f"MALFORMED RESOLVE OUTPUT: {err_msg}")
+        success = False
+      modified = normalized
+    else:
+      modified = final
+      success = False
+
+    meta_state = {
+        "framework": framework_store.to_dict(),
+        "contract_bespoke_state": dict(getattr(law, "state", {}) or {}),
+    }
     return EnforcementResult(
-        success=True,
+        success=success,
         modified_catches=modified,
-        reasoning="Applied Python-law contract.",
-        reward_adjustments=runtime.reward_adjustments,
-        execution_log=runtime.execution_log,
+        reasoning=reasoning,
+        reward_adjustments=reward_adjustments,
+        execution_log=execution_log,
         metadata={
             "contract_type": "python_law",
-            "execution_state": runtime.state,
+            "execution_state": meta_state,
         },
     )
 
+  def run_on_round_end(
+      self,
+      law: Any,
+      framework_store: FrameworkOwnedStore,
+      env: Any,
+      formal_contract: FormalContract | None,
+  ) -> None:
+    """Invoke ``on_round_end`` after regeneration (optional hook)."""
+    if formal_contract is None:
+      return
+    month = max(1, int(getattr(env, "num_round", 1)))
+    fp_after = float(env.internal_global_state["resource_in_pool"])
+    name_map = getattr(env, "agent_id_to_name", {})
+    agents = getattr(env, "agents", [])
+    agent_names = [str(name_map.get(aid, aid)) for aid in agents]
+    final_catches = {
+        str(name_map.get(aid, aid)): float(
+            env.internal_global_state["last_collected_resource"].get(aid, 0.0)
+        )
+        for aid in agents
+    }
+    rng = _round_rng(framework_store, month + 17_000)
+    reward_adjustments = {a: 0.0 for a in agent_names}
+    execution_log: list[str] = []
+
+    def _make_ctx() -> EnforcementContext:
+      return EnforcementContext(
+          month=month,
+          fish_population=fp_after,
+          num_agents=len(agent_names),
+          agent_names=agent_names,
+          store=framework_store,
+          reward_adjustments=reward_adjustments,
+          execution_log=execution_log,
+          rng=rng,
+      )
+
+    try:
+      law.on_round_end(month, fp_after, final_catches, _make_ctx())
+    except Exception as exc:
+      tb = traceback.format_exc()
+      formal_contract.metadata.setdefault("round_end_hook_failures", []).append(tb)
+      formal_contract.metadata["last_hook_failure"] = str(exc)
+      return
+
+    for aid in agents:
+      name = str(name_map.get(aid, aid))
+      delta = float(reward_adjustments.get(name, 0.0))
+      env.rewards[aid] = env.rewards.get(aid, 0.0) + delta
 
 
 # Legacy code, could be still used if we want to have LLM courts.
@@ -403,7 +275,7 @@ class CodeNLJudge:
 
   def evaluate(
       self,
-      contract: Contract,
+      contract: FormalContract,
       decisions: dict[str, float],
       state: FishingContractState,
       conversation_summary: str = "",
@@ -468,7 +340,7 @@ class CodeNLJudge:
 class NLJudgeEnforcer(ContractEnforcer):
   def enforce(
       self,
-      contract: Contract,
+      contract: FormalContract,
       decisions: dict[str, float],
       state: FishingContractState,
       context: str = "",

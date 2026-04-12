@@ -34,10 +34,13 @@ class FishingContractState:
   speaker_idx: int = 0
   regime: str | None = None  # "healthy", "degraded", or None for non-hysteresis
   setting_context: str = ""
+  negotiation_max_turns: int = 10  # restaurant-phase speaking turns (round-robin / free-chat cap)
 
 
 @dataclass
-class Contract:
+class FormalContract:
+  """Stored negotiation/coding result (NL or Python source), distinct from deployed `Contract` law class."""
+
   contract_type: ContractType
   content: str
   proposer: str

@@ -8,6 +8,7 @@ from .contract import ContractMode, FishingContractState, NLNegotiationResult
 from .prompts import (
     coded_contract_feedback_prompt,
     coded_contract_vote_prompt,
+    constitution_vote_prompt,
     free_chat_turn_prompt,
     mayor_proposal_prompt,
     negotiation_system_prompt,
@@ -259,7 +260,7 @@ class RoundRobinNegotiationManager:
     for turn in range(self.max_turns):
       speaker_idx = (state.speaker_idx + turn) % len(self.agents)
       speaker = self.agents[speaker_idx]
-      retrieved = speaker.retrieve.retrieve(["contract", "agreement", "lake"], 8)
+      retrieved = speaker.retrieve.retrieve([], 8)
       tool_instructions = (
           self.toolbox.render_tool_instructions() if self.toolbox is not None else ""
       )
@@ -306,25 +307,22 @@ class RoundRobinNegotiationManager:
           "tool_calls_used": tool_calls_used,
       })
 
-      has_agree, target_agent, has_disagree = self._parse_agreement_signal(response)
+      has_agree, has_disagree = self._parse_agreement_signal(response)
       nl_contract = self._clean_message(response)
       is_own_proposal = self._is_own_proposal_message(
           speaker_name=speaker_name,
+          response=response,
           nl_contract=nl_contract,
           has_agree=has_agree,
-          target_agent=target_agent,
           has_disagree=has_disagree,
       )
       if is_own_proposal:
         proposals.append((turn, speaker_name, nl_contract))
         agreements[speaker_name] = nl_contract
       if has_agree and proposals:
-        proposal_to_agree = self._find_most_recent_proposal(
-            proposals,
-            target_agent,
-        )
-        if proposal_to_agree and proposal_to_agree[1] != speaker_name:
-          agreements[speaker_name] = proposal_to_agree[2]
+        last_proposer, last_text = proposals[-1][1], proposals[-1][2]
+        if last_proposer != speaker_name:
+          agreements[speaker_name] = last_text
 
       consensus = self._check_consensus(agreements)
       if consensus:
@@ -347,7 +345,7 @@ class RoundRobinNegotiationManager:
       speaker: PersonaAgent,
       response: str,
   ) -> tuple[str, str]:
-    has_agree, _, has_disagree = self._parse_agreement_signal(response)
+    has_agree, has_disagree = self._parse_agreement_signal(response)
     if has_agree or has_disagree or "<END_CONVERSATION>" in response.upper():
       return response, ""
     system_prompt, user_prompt = round_robin_tag_clarification_prompt(response)
@@ -359,38 +357,20 @@ class RoundRobinNegotiationManager:
         user_prompt,
         default_value=f"<DISAGREE> {response.strip()}",
     )
-    clarified_has_agree, _, clarified_has_disagree = self._parse_agreement_signal(
+    clarified_has_agree, clarified_has_disagree = self._parse_agreement_signal(
         clarified_response
     )
     if clarified_has_agree or clarified_has_disagree:
       return clarified_response, clarified_html
     return f"<DISAGREE> {response.strip()}", clarified_html
 
-  def _parse_agreement_signal(
-      self,
-      response: str,
-  ) -> tuple[bool, str | None, bool]:
-    match = re.search(r"<AGREE(?:\s+to\s*=\s*([^>]+))?>", response, re.IGNORECASE)
-    if match:
-      target = match.group(1)
-      if target:
-        return True, target.strip().strip("\"'"), False
-      return True, None, False
+  def _parse_agreement_signal(self, response: str) -> tuple[bool, bool]:
+    """Detect <AGREE> vs <DISAGREE>. <AGREE> always means assent to the latest proposal."""
+    if re.search(r"<AGREE(?:\s[^>]*)?>", response, re.IGNORECASE):
+      return True, False
     if "<DISAGREE>" in response.upper():
-      return False, None, True
-    return False, None, False
-
-  def _find_most_recent_proposal(
-      self,
-      proposals: list[tuple[int, str, str]],
-      target_agent: str | None,
-  ) -> tuple[int, str, str] | None:
-    if target_agent is None:
-      return proposals[-1]
-    for proposal in reversed(proposals):
-      if proposal[1] == target_agent:
-        return proposal
-    return None
+      return False, True
+    return False, False
 
   def _check_consensus(
       self,
@@ -422,20 +402,20 @@ class RoundRobinNegotiationManager:
   def _is_own_proposal_message(
       self,
       speaker_name: str,
+      response: str,
       nl_contract: str | None,
       has_agree: bool,
-      target_agent: str | None,
       has_disagree: bool,
   ) -> bool:
     if not nl_contract:
+      return False
+    if has_agree and not has_disagree and _extract_constitution_text(response) is None:
       return False
     if has_disagree:
       return self._looks_like_counterproposal(nl_contract)
     if not has_agree:
       return True
-    if target_agent is None:
-      return True
-    return target_agent == speaker_name
+    return True
 
   def _looks_like_counterproposal(self, message: str) -> bool:
     lowered = message.lower()
@@ -459,6 +439,46 @@ class CodedContractVotingManager:
       agents: list[PersonaAgent],
   ) -> None:
     self.agents = agents
+
+  async def vote_on_constitution(
+      self,
+      nl_contract: str,
+      state: FishingContractState,
+      active_nl_law: str = "",
+      active_code_law: str = "",
+  ) -> tuple[bool, list[dict[str, str]], dict[str, bool]]:
+    """Majority vote on the natural-language constitution before coding (CODE_LAW)."""
+    votes: dict[str, bool] = {}
+    conversations: list[dict[str, str]] = []
+    for agent in self.agents:
+      system_prompt, user_prompt = constitution_vote_prompt(
+          persona=agent,
+          state=state,
+          nl_contract=nl_contract,
+          active_nl_law=active_nl_law,
+          active_code_law=active_code_law,
+      )
+      response, html = await _aprompt_persona(
+          agent,
+          "contracting",
+          "constitution_vote",
+          system_prompt,
+          user_prompt,
+          default_value="<VOTE_YES>",
+      )
+      voted_yes = _parse_vote_tag(response)
+      votes[agent.identity.name] = voted_yes
+      conversations.append({
+          "agent": agent.identity.name,
+          "message": response,
+          "phase": "constitution_vote",
+          "vote": voted_yes,
+          "html": html,
+      })
+
+    yes_votes = sum(1 for voted_yes in votes.values() if voted_yes)
+    passed = yes_votes > len(self.agents) / 2
+    return passed, conversations, votes
 
   async def vote_on_coded_contract(
       self,

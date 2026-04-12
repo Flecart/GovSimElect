@@ -42,7 +42,7 @@ class ContractingConfig:
   enabled: bool = False
   mode: str = ContractMode.NO_COMMUNICATION.value
   negotiation_protocol: str = NegotiationProtocol.ROUND_ROBIN.value
-  max_turns: int = 6
+  max_turns: int = 10
   setting_context: str = ""
   min_agree_agents: int | None = None
   max_coding_retries: int = 2
@@ -118,6 +118,12 @@ class ContractingOrchestrator:
   def set_round(self, round_number: int) -> None:
     self.current_round = round_number
 
+  def on_post_regen(self, env: Any) -> None:
+    """Called by the env after fish regeneration (contract ``on_round_end`` hook)."""
+    mgr = self._manager
+    if hasattr(mgr, "on_post_regen"):
+      mgr.on_post_regen(env)
+
   async def aconduct_negotiation(
       self,
       personas: list[PersonaAgent],
@@ -141,6 +147,7 @@ class ContractingOrchestrator:
         max_rounds=self.max_rounds,
         speaker_idx=self.current_round,
         setting_context=self.cfg.setting_context,
+        negotiation_max_turns=self.cfg.max_turns,
     )
     self._manager.clear_conversation()
 
@@ -150,6 +157,7 @@ class ContractingOrchestrator:
           max_turns=self.cfg.max_turns,
       )
     elif self.cfg.negotiation_protocol == NegotiationProtocol.MAYORAL_VOTING.value:
+      raise ValueError("Mayoral voting negotiation protocol is not supported in this version.")
       negotiation_manager = MayoralVotingNegotiationManager(
           personas,
           max_turns=self.cfg.max_turns,
@@ -388,6 +396,37 @@ class ContractingOrchestrator:
       )
       if active_contract.contract_type == ContractType.PYTHON_LAW:
         active_code_law = active_contract.content
+
+    constitution_passed, constitution_conversations, constitution_votes = (
+        await voting_manager.vote_on_constitution(
+            nl_contract=nl_contract,
+            state=state,
+            active_nl_law=active_nl_law,
+            active_code_law=active_code_law,
+        )
+    )
+    for idx, turn in enumerate(constitution_conversations, start=len(self._manager._conversation)):
+      self._manager.add_conversation_turn(
+          agent_name=turn["agent"],
+          message=turn["message"],
+          turn_number=idx,
+          phase=turn.get("phase", "constitution_vote"),
+          html=turn.get("html", ""),
+      )
+    self._log(
+        "constitution_vote",
+        {
+            "round": self.current_round,
+            "votes": constitution_votes,
+            "passed": constitution_passed,
+        },
+    )
+    if not constitution_passed:
+      return (
+          None,
+          "The proposed constitution did not receive majority support; the prior law stays in force.",
+      )
+
     for retry_attempt in range(self.cfg.max_coding_retries + 1):
       coded_contract, response, html = await self._coding_agent.translate(
           nl_contract=nl_contract,
@@ -405,37 +444,16 @@ class ContractingOrchestrator:
           phase="coding_agent_translation",
           html=html,
       )
-      if coded_contract is None:
-        return None, response
-      passed, payload, vote_conversations, votes = await voting_manager.vote_on_coded_contract(
-          coded_contract=coded_contract,
-          nl_contract=nl_contract,
-          state=state,
-          retry_attempt=retry_attempt,
-          active_nl_law=active_nl_law,
-          active_code_law=active_code_law,
-      )
-      for idx, turn in enumerate(vote_conversations, start=len(self._manager._conversation)):
-        self._manager.add_conversation_turn(
-            agent_name=turn["agent"],
-            message=turn["message"],
-            turn_number=idx,
-            phase=turn.get("phase", "coded_contract_vote"),
-            html=turn.get("html", ""),
-        )
-      if passed:
-        contract_votes = votes
+      if coded_contract is not None:
         self._log(
-            "coded_vote",
+            "code_law_adopted",
             {
                 "round": self.current_round,
-                "votes": contract_votes,
-                "passed": True,
                 "retry_attempt": retry_attempt,
             },
         )
         return coded_contract, response
-      feedback = payload
+      feedback = response
     return None, last_response
 
   async def _store_contract_memories(
@@ -532,8 +550,10 @@ class ContractingOrchestrator:
 
   def _default_code_law(self) -> str:
     return (
-        "def catch(name, amount, month):\n"
-        "    return amount\n"
+        "class DefaultPassthrough(Contract):\n"
+        "    VERSION = 1\n"
+        "    def resolve(self, month, fish_population, submissions, ctx):\n"
+        "        return dict(submissions)\n"
     )
 
   def _install_default_contract(self) -> None:
