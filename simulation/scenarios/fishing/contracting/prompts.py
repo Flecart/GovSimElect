@@ -14,7 +14,7 @@ from .contract import ContractMode, FishingContractState
 
 def _state_lines(state: FishingContractState) -> str:
   lines = (
-      f"Round: {state.round_number + 1}/{state.max_rounds}\n"
+      f"Round: {state.round_number + 1}\n"
       f"Fish currently in the lake: {state.fish_population:.1f}\n"
       f"Number of fishers: {state.num_agents}\n"
   )
@@ -419,7 +419,7 @@ def constitution_vote_prompt(
       f"You are {persona.identity.name}, a fisherman in the village.\n\n"
       "CURRENT SITUATION:\n"
       f"- Fish in the lake: {state.fish_population:.1f} tons\n"
-      f"- Round: {state.round_number + 1} of {state.max_rounds}\n\n"
+      f"- Round: {state.round_number + 1}\n\n"
       f"{role_context + chr(10) if role_context else ''}"
       f"{_active_law_block(active_nl_law)}"
       f"{_active_code_law_block(active_code_law)}"
@@ -473,7 +473,7 @@ def _coded_contract_vote_system_prompt(
       f"You are {persona.identity.name}, a fisherman in the village.\n\n"
       "CURRENT SITUATION:\n"
       f"- Fish in the lake: {state.fish_population:.1f} tons\n"
-      f"- Round: {state.round_number + 1} of {state.max_rounds}\n\n"
+      f"- Round: {state.round_number + 1}\n\n"
       f"{role_context + chr(10) if role_context else ''}"
       f"{_active_law_block(active_nl_law)}"
       f"{_active_code_law_block(active_code_law)}"

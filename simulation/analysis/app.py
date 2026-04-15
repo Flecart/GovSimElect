@@ -17,7 +17,7 @@ from flask import jsonify, request
 from flask_caching import Cache
 from plotly.subplots import make_subplots
 
-from .preprocessing import get_data
+from .preprocessing import get_data, get_summary_runs
 
 
 def get_available_subsets():
@@ -167,6 +167,23 @@ def _serialize_dataframe(df):
     return cleaned.to_dict(orient="records")
 
 
+def _sanitize_json_value(value):
+    """Recursively convert NaN/inf values to None for strict JSON responses."""
+    if isinstance(value, dict):
+        return {k: _sanitize_json_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_json_value(v) for v in value]
+    if isinstance(value, tuple):
+        return [_sanitize_json_value(v) for v in value]
+    if isinstance(value, np.generic):
+        value = value.item()
+    if isinstance(value, float):
+        if not np.isfinite(value):
+            return None
+        return value
+    return value
+
+
 def _build_run_label(row):
     name = row.get("name")
     if isinstance(name, str) and name not in {"", "."}:
@@ -187,6 +204,20 @@ def _build_chart_key(row):
     if isinstance(name, str) and name not in {"", "."}:
         return name
     return _build_run_label(row)
+
+
+def _build_summary_runs(summary_df):
+    summary_runs = []
+    if summary_df is None or summary_df.empty:
+        return summary_runs
+
+    cleaned_summary = summary_df.reset_index().replace([np.nan, np.inf, -np.inf], None)
+    for row in cleaned_summary.to_dict(orient="records"):
+        row["run_key"] = row.get("run_id")
+        row["run_label"] = _build_run_label(row)
+        row["chart_key"] = _build_chart_key(row)
+        summary_runs.append(row)
+    return summary_runs
 
 
 def _load_contracting_events(summary_df):
@@ -376,7 +407,7 @@ def _load_resource_time_series(summary_df):
 @server.route("/api/results", methods=["GET"])
 def api_list_results():
     subsets = get_available_subsets()
-    return {"subsets": subsets}
+    return _sanitize_json_value({"subsets": subsets})
 
 
 @server.route("/api/results/<subset_name>", methods=["GET"])
@@ -394,7 +425,6 @@ def api_result_subset(subset_name):
 
     summary_group_df = data.get("summary_group_df")
     summary_df = data.get("summary_df")
-    run_data = data.get("run_data", {})
     ts_resource = _load_resource_time_series(summary_df)
     legacy_resource = data.get("resource_in_pool") or {}
     # Prefer the API time-series builder when it has rows; otherwise use preprocessing
@@ -410,16 +440,9 @@ def api_result_subset(subset_name):
     contracting_data = _load_contracting_events(summary_df)
     run_records = _load_run_records(summary_df)
     fishing_summaries = _load_fishing_summaries(summary_df)
-    summary_runs = []
-    if summary_df is not None:
-        cleaned_summary = summary_df.reset_index().replace([np.nan, np.inf, -np.inf], None)
-        for row in cleaned_summary.to_dict(orient="records"):
-            row["run_key"] = row.get("run_id")
-            row["run_label"] = _build_run_label(row)
-            row["chart_key"] = _build_chart_key(row)
-            summary_runs.append(row)
+    summary_runs = _build_summary_runs(summary_df)
 
-    return {
+    response = {
         "summary_groups": _serialize_dataframe(summary_group_df),
         "summary_runs": summary_runs,
         "run_data": run_records,
@@ -435,6 +458,82 @@ def api_result_subset(subset_name):
             for _, row in summary_df.iterrows()
         },
     }
+    return _sanitize_json_value(response)
+
+
+@server.route("/api/results/<subset_name>/index", methods=["GET"])
+def api_result_subset_index(subset_name):
+    """Lightweight subset index for sidebar/navigation."""
+    if subset_name not in get_available_subsets():
+        return {"error": f"Unknown subset: {subset_name}"}, 404
+
+    summary_df, summary_group_df = get_summary_runs(subset_name)
+    summary_runs = _build_summary_runs(summary_df)
+
+    return _sanitize_json_value({
+        "summary_groups": _serialize_dataframe(summary_group_df),
+        "summary_runs": summary_runs,
+    })
+
+
+@server.route("/api/results/<subset_name>/group/<path:group_name>", methods=["GET"])
+def api_result_subset_group(subset_name, group_name):
+    """Fetch group-level chart data for one experiment group only."""
+    if subset_name not in get_available_subsets():
+        return {"error": f"Unknown subset: {subset_name}"}, 404
+
+    summary_df, _ = get_summary_runs(subset_name)
+    if summary_df is None or summary_df.empty:
+        return {"resource_rows": []}
+
+    group_df = summary_df[summary_df["group"].astype(str) == str(group_name)]
+    if group_df.empty:
+        return {"error": f"Unknown group: {group_name}"}, 404
+
+    ts_resource = _load_resource_time_series(group_df)
+    resource_df = ts_resource.get(group_name)
+    if resource_df is None or resource_df.empty:
+        return {"resource_rows": []}
+
+    return _sanitize_json_value({
+        "resource_rows": resource_df.replace([np.nan, np.inf, -np.inf], None).to_dict(
+            orient="records"
+        )
+    })
+
+
+@server.route("/api/results/<subset_name>/run/<path:run_id>", methods=["GET"])
+def api_result_subset_run(subset_name, run_id):
+    """Fetch heavy payload for a single run only."""
+    if subset_name not in get_available_subsets():
+        return {"error": f"Unknown subset: {subset_name}"}, 404
+
+    summary_df, _ = get_summary_runs(subset_name)
+    if summary_df is None or summary_df.empty:
+        return {"error": "No runs in subset"}, 404
+
+    match = summary_df[summary_df["run_id"].astype(str) == str(run_id)]
+    if match.empty:
+        return {"error": f"Unknown run_id: {run_id}"}, 404
+
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    row = match.iloc[0]
+    run_row = row.to_dict()
+    run_row["run_key"] = run_row.get("run_id")
+    run_row["run_label"] = _build_run_label(run_row)
+    run_row["chart_key"] = _build_chart_key(run_row)
+
+    run_records = _load_run_records(match)
+    contracting_data = _load_contracting_events(match)
+    fishing_summary = _write_fishing_run_summary_json(base_path, row["group"], row["name"])
+
+    response = {
+        "run": run_row,
+        "run_data": run_records.get(str(run_id), []),
+        "contracting_data": contracting_data.get(str(run_id), []),
+        "fishing_summary": fishing_summary,
+    }
+    return _sanitize_json_value(response)
 
 
 def api_refresh_fishing_summary():
@@ -457,8 +556,7 @@ def api_refresh_fishing_summary():
     if subset_name not in get_available_subsets():
         return {"error": f"Unknown subset: {subset_name}"}, 404
 
-    data = get_data(subset_name)
-    summary_df = data.get("summary_df")
+    summary_df, _ = get_summary_runs(subset_name)
     if summary_df is None or summary_df.empty:
         return {"error": "No runs in subset"}, 404
 
@@ -476,7 +574,7 @@ def api_refresh_fishing_summary():
             "error": "log_env.json not found for this run; cannot summarize.",
         }, 400
 
-    return {"fishing_summary": report}
+    return _sanitize_json_value({"fishing_summary": report})
 
 
 @server.before_request

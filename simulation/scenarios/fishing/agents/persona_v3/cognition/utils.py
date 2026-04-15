@@ -185,6 +185,9 @@ def get_sytem_prompt_v1(persona):
 
 def get_sytem_prompt_v3(persona):
   """System prompt for v3."""
+  persona_names = ["John", "Kate", "Jack", "Emma", "Luke"]
+  persona_names.remove(persona.name)
+  list_string_persona_name = ", ".join(persona_names)
 
   regen_mode = None
   num_agents = persona.env.num_agents
@@ -205,7 +208,7 @@ def get_sytem_prompt_v3(persona):
     else:
         text_regen_rate = (
             f" Each month, the lake's regeneration rate is either {min_regen} or {max_regen} with"
-            " equal probability, and you will not be told which value was realized."
+            " equal probability."
         )
   elif regen_mode == "endogenous_hysteresis":
     text_regen_rate = (
@@ -222,25 +225,37 @@ def get_sytem_prompt_v3(persona):
     )
 
   text_pre = (
-      f"You are {persona.name}, a fisherman, and you fish every month in a lake"
-      f" along with other {num_agents - 1} fishermen catching at the same time with you. The lake has a carrying capacity of 100"
+      f"You're a fisherman named {persona.name} who, along with four others  ({list_string_persona_name}), fishes in a lake every month."
+      f" The lake has a carrying capacity of 100"
       " tons of fish. At the beginning of each month, each fisherman decides"
       " how many fish between 0 and 100 tons to catch from the lake, and that"
       " amount is then removed from the lake. You are encouraged to think about the optimal amount of fish to catch given the current situation."
   )
 
   text_post = (
-      " At the end of each month, the number of fish caught by"
-      " each fisherman will be revealed, and the fishermen will have the"
-      " opportunity to communicate with each other. They can use this as an"
-      " opportunity to negotiate and persuade others to influence their"
-      " behavior in the next month. For example, if there are 90 tons of fish"
-      " at the beginning of the month and the fishermen catch a total of 30"
-      " fish (some more some less), given a regeneration rate of 2.0, there will be 30*2=60 tons of fish"
-      " left at the end of the month before reproduction, if next round there"
-      " and are 60 tons of fish left, there will be 60*2=min(100, 120)=100 tons after reproduction. The month proceeds as follows: lake (you decide how many fish to catch), restaurant (you negotiate with other fishermen), home (you reflect on the month and decide how many fish to catch next month)."
-      " Note that if you collectively finish the lake, meaning the number of fish drops below 5 tons, the lake won't be able to recover and you won't be able to fish anymore."
-      " Note that if many of you fish more, the number of fish will be randomly assigned to the overfishers, so you might not get all the fish you want."
+      " At the end of each month, the"
+      " number of fish caught by each fisherman will be"
+      " revealed, and the fishermen will have the"
+      " opportunity to communicate with each other."
+      " They can use this as an opportunity to negotiate"
+      " and persuade others to influence their behavior"
+      " in the next month. For example, if there are 90"
+      " tons of fish at the beginning of the month and"
+      " the fishermen catch a total of 30 fish, given a"
+      " regeneration factor of 2.0, there will be 60"
+      " tons of fish left at the end of the month"
+      " before reproduction, and 100 tons after"
+      " reproduction. In general, you are not sure if you will continue fishing in the next month."
+    #   " At the end of each month, the number of fish caught by"
+    #   " each fisherman will be revealed, and the fishermen will have the"
+    #   " opportunity to communicate with each other. They can use this as an"
+    #   " opportunity to negotiate and persuade others to influence their"
+    #   " behavior in the next month. For example, if there are 90 tons of fish"
+    #   " at the beginning of the month and the fishermen catch a total of 30"
+    #   " fish (some more some less), given a regeneration rate of 2.0, there will be 30*2=60 tons of fish"
+    #   " left at the end of the month before reproduction, if next round there"
+    #   " and are 60 tons of fish left, there will be 60*2=min(100, 120)=100 tons after reproduction."
+    #   " If the number of fish at any moment drops below 5 tons, the lake won't be able to recover and you won't be able to fish anymore."
   )
 
   text = text_pre + text_regen_rate + text_post

@@ -10,6 +10,8 @@ from datetime import datetime
 from html import escape
 from typing import Any
 
+import backoff
+
 from .logger import WandbLogger
 
 _ACTIVE_PROMPT_ROLE = contextvars.ContextVar("active_prompt_role", default="user")
@@ -49,8 +51,21 @@ class RemoteModelSpec:
     seed: int | None = None
 
 
+def _resolve_backend_name(model_name: str, backend_name: str | None) -> str:
+    """Auto-route non-OpenAI model ids to OpenRouter by default."""
+    normalized_backend = (backend_name or "").strip()
+    if not normalized_backend:
+        return "OpenAI" if model_name.startswith("openai/") else "OpenRouter"
+
+    if normalized_backend.lower() == "openai" and not model_name.startswith("openai/"):
+        return "OpenRouter"
+
+    return normalized_backend
+
+
 def get_model(model_name: str, seed: int | None = None, backend_name: str = "OpenAI"):
-    return RemoteModelSpec(model_name=model_name, backend_name=backend_name, seed=seed)
+    resolved_backend = _resolve_backend_name(model_name=model_name, backend_name=backend_name)
+    return RemoteModelSpec(model_name=model_name, backend_name=resolved_backend, seed=seed)
 
 
 class PromptSession:
@@ -195,6 +210,13 @@ class ModelWandbWrapper:
             return {"max_completion_tokens": max_tokens}
         return {"max_tokens": max_tokens}
 
+    @staticmethod
+    def _reasoning_disabled_extra_body() -> dict[str, Any]:
+        # qwen
+        return {
+            "reasoning": {"exclude": True}
+        }
+
     async def _achat_completion(
         self,
         messages: list[dict[str, str]],
@@ -213,6 +235,7 @@ class ModelWandbWrapper:
                 top_p=top_p,
                 seed=self.seed,
                 stop=stop,
+                extra_body=self._reasoning_disabled_extra_body(),
                 **length_kwargs,
             )
         message_content = out.choices[0].message.content
@@ -294,14 +317,19 @@ class ModelWandbWrapper:
             top_p = self.top_p
 
         response_text = default_value
-        try:
-            response_text, _, _ = await self._achat_completion(
+
+        @backoff.on_exception(backoff.expo, Exception, max_tries=5)
+        async def _achat_with_backoff() -> tuple[str, int, int]:
+            return await self._achat_completion(
                 session.messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 top_p=top_p,
                 stop=stop,
             )
+
+        try:
+            response_text, _, _ = await _achat_with_backoff()
             response_text = response_text or default_value
         except Exception as e:
             warnings.warn(

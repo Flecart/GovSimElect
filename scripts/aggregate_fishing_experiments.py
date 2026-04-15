@@ -8,8 +8,10 @@ plus derived fields), then aggregate across runs.
 Survival reporting (per user spec):
   - Per run: ``survival_rounds_n`` equals paper metric ``survival_time_m`` (rounds
     with stock above collapse threshold, as computed by summarize_fishing_log).
-  - Per-run rate: ``survival_rounds_n / max_rounds`` (default max_rounds=12).
-  - Pooled rate across K runs: ``sum(survival_rounds_n) / (K * max_rounds)``.
+  - Aggregate reporting includes direct month-based survival statistics:
+    average survival months and sample std across runs.
+  - Legacy rate fields remain available for compatibility:
+    ``survival_rounds_n / max_rounds`` and pooled ``sum(n)/(K*max_rounds)``.
 
 Regeneration factor R:
   - Per run: mean of realized ``r_t`` over regen events (round-averaged in log space).
@@ -211,6 +213,11 @@ def aggregate_payload(rows: list[RunAggRow], *, max_rounds: int) -> dict[str, An
         "pooled_survival_rate_sum_n_over_k_max_rounds": pooled_survival,
         "pooled_survival_numerator_sum_survival_rounds_n": sum_n,
         "pooled_survival_denominator_k_times_max_rounds": k * max_rounds,
+        "survival_months_m": {
+            "mean": _safe_mean(ns),
+            "std": _safe_stdev(ns),
+            "values": [r.survival_rounds_n for r in rows],
+        },
         "survival_rounds_n": {
             "mean": _safe_mean(ns),
             "std": _safe_stdev(ns),
@@ -353,21 +360,18 @@ def main(argv: list[str] | None = None) -> int:
 
     # Short human-readable lines on stderr when output file is set (or always as supplement)
     p = agg.get("pooled_survival_rate_sum_n_over_k_max_rounds")
-    sr = agg.get("survival_rate_per_run_n_over_max_rounds", {})
-    mr = agg.get("mean_realized_r_t_per_run", {})
+    sm = agg.get("survival_months_m", {})
     print("\n--- Summary ---", file=sys.stderr)
+    # print the directory name
+    print(f"Directory: {root}", file=sys.stderr)
+    print(
+        f"Average survival months (m) mean ± std: {sm.get('mean')} ± {sm.get('std')}",
+        file=sys.stderr,
+    )
     print(
         f"Pooled survival rate sum(n)/(K*max_rounds): {p}",
         file=sys.stderr,
     )
-    # print(
-    #     f"Per-run survival rate mean ± std: {sr.get('mean')} ± {sr.get('std')}",
-    #     file=sys.stderr,
-    # )
-    # print(
-    #     f"Per-run mean R (realized r_t) mean ± std: {mr.get('mean')} ± {mr.get('std')}",
-    #     file=sys.stderr,
-    # )
     pm = agg.get("paper_metrics_across_runs") or {}
     for key, label in (
         ("total_gain_R", "Total gain R"),
