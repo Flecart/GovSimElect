@@ -8,28 +8,34 @@ bash scripts/standard/run_iid_stochastic_nl.sh
 # shows example on how to change model
 
 MODEL="x-ai/grok-4.1-fast" \
-GROUP="grok41-nl" \
+NAME="grok-4.1-fast" \
+GROUP="1-nl" \
 bash scripts/standard/run_iid_stochastic_nl.sh &
 
 
 MODEL="x-ai/grok-4.1-fast" \
-GROUP="grok41-nl-prosocial" \
+NAME="grok-4.1-fast" \
+GROUP="1-nl-prosocial" \
 bash scripts/standard/run_iid_stochastic_nl_prosocial.sh &
 
 MODEL="x-ai/grok-4.1-fast" \
-GROUP="grok41-code-law" \
+NAME="grok-4.1-fast" \
+GROUP="2-code-law" \
 bash scripts/standard/run_iid_stochastic_code_law.sh &
 
 MODEL="x-ai/grok-4.1-fast" \
-GROUP="grok41-code-law-prosocial" \
+NAME="grok-4.1-fast" \
+GROUP="2-code-law-prosocial" \
 bash scripts/standard/run_iid_stochastic_code_law_prosocial.sh &
 
 MODEL="x-ai/grok-4.1-fast" \
-GROUP="grok41-no-contract" \
+NAME="grok-4.1-fast" \
+GROUP="0-no-contract" \
 bash scripts/standard/run_iid_stochastic_no_contract.sh &
 
 MODEL="x-ai/grok-4.1-fast" \
-GROUP="grok41-no-contract-prosocial" \
+NAME="grok-4.1-fast" \
+GROUP="0-no-contract-prosocial" \
 bash scripts/standard/run_iid_stochastic_no_contract_prosocial.sh &
 
 wait

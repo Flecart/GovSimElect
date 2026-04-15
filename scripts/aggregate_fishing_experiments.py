@@ -325,6 +325,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     payloads: list[dict[str, Any]] = []
+    # runs = sorted(runs, key=lambda x: x.name)
     for run_dir in runs:
         try:
             p = ensure_metrics_for_run(

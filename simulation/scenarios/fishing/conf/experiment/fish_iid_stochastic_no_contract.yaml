@@ -1,4 +1,4 @@
-name: fishing_${code_version}/${group_name}
+name: ${group_name}/
 run_name: ""
 storage_name: ""
 scenario: fishing
