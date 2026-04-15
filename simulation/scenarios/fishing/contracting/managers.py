@@ -32,7 +32,8 @@ class ContractManager(ABC):
   def _validate_agree_tag(self, message: str, require_tag: bool) -> bool:
     if not require_tag:
       return True
-    return "<AGREE>" in message.upper()
+    # Allow explicit, targeted agreement forms like <AGREE Alice>.
+    return re.search(r"<AGREE(?:\s[^>]*)?>", message, re.IGNORECASE) is not None
 
   @abstractmethod
   def extract_from_message(
@@ -150,8 +151,9 @@ class NLContractManager(ContractManager):
   ) -> str | None:
     if not self._validate_agree_tag(message, require_agree_tag):
       return None
-    cleaned = re.sub(r"<AGREE[^>]*>", "", message, flags=re.IGNORECASE).strip()
-    cleaned = re.sub(r"\s+", " ", cleaned)
+    # Preserve agreement signals in extracted text so downstream logic can
+    # inspect whether assent was generic or targeted.
+    cleaned = re.sub(r"\s+", " ", message).strip()
     return cleaned or None
 
   def set_contract(

@@ -8,7 +8,6 @@ from typing import List
 import numpy as np
 from omegaconf import DictConfig, OmegaConf
 
-from simulation.persona import SVOPersonaType
 from simulation.persona.common import PersonaActionHarvesting
 from simulation.persona.common import PersonaEnvironment
 from simulation.persona.common import PersonaIdentity
@@ -53,6 +52,15 @@ def make_harvest_report(
   """Factual per-agent catch summary for harvest_report / leader context."""
   remaining_fish = env.internal_global_state["resource_in_pool"]
   report = f"There are {remaining_fish} tons of fish left in the lake.\n"
+  adverse_event = env.internal_global_state.pop("recent_adverse_event", None)
+  if adverse_event is not None:
+    event_type = adverse_event.get("type", "adverse event")
+    stock_before = adverse_event.get("stock_before", remaining_fish)
+    stock_after = adverse_event.get("stock_after", remaining_fish)
+    report += (
+        "A drought hit the lake since the previous cycle. "
+        f"Fish stock changed from {stock_before} to {stock_after} after the {event_type} shock.\n"
+    )
   for _, persona in personas.items():
     name = persona.identity.name
     tons = last_rounds_harvest_stats.get(name, 0)

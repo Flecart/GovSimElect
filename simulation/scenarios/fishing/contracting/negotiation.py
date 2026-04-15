@@ -135,14 +135,12 @@ class MayoralVotingNegotiationManager:
     mayor_idx = state.speaker_idx % len(self.agents)
     mayor = self.agents[mayor_idx]
     others = [agent for agent in self.agents if agent != mayor]
-    retrieved_memories = mayor.retrieve.retrieve(["contract", "agreement", "lake"], 8)
     tool_instructions = (
         self.toolbox.render_tool_instructions() if self.toolbox is not None else ""
     )
     system_prompt = negotiation_system_prompt(
         mayor,
         self.agents,
-        retrieved_memories,
         state,
         mode,
         tool_instructions=tool_instructions,
@@ -255,19 +253,18 @@ class RoundRobinNegotiationManager:
   ) -> NLNegotiationResult:
     conversations: list[dict[str, str]] = []
     proposals: list[tuple[int, str, str]] = []
+    proposal_by_proposer: dict[str, str] = {}
     agreements: dict[str, str] = {}
 
     for turn in range(self.max_turns):
       speaker_idx = (state.speaker_idx + turn) % len(self.agents)
       speaker = self.agents[speaker_idx]
-      retrieved = speaker.retrieve.retrieve([], 8)
       tool_instructions = (
           self.toolbox.render_tool_instructions() if self.toolbox is not None else ""
       )
       system_prompt = negotiation_system_prompt(
           speaker,
           self.agents,
-          retrieved,
           state,
           mode,
           tool_instructions=tool_instructions,
@@ -318,11 +315,17 @@ class RoundRobinNegotiationManager:
       )
       if is_own_proposal:
         proposals.append((turn, speaker_name, nl_contract))
+        proposal_by_proposer[speaker_name.lower()] = nl_contract
         agreements[speaker_name] = nl_contract
       if has_agree and proposals:
-        last_proposer, last_text = proposals[-1][1], proposals[-1][2]
-        if last_proposer != speaker_name:
-          agreements[speaker_name] = last_text
+        target_proposer = self._extract_agree_target(response)
+        target_contract = self._resolve_agreement_target_contract(
+            target_proposer=target_proposer,
+            proposal_by_proposer=proposal_by_proposer,
+            proposals=proposals,
+        )
+        if target_contract is not None:
+          agreements[speaker_name] = target_contract
 
       consensus = self._check_consensus(agreements)
       if consensus:
@@ -365,7 +368,14 @@ class RoundRobinNegotiationManager:
     return f"<DISAGREE> {response.strip()}", clarified_html
 
   def _parse_agreement_signal(self, response: str) -> tuple[bool, bool]:
-    """Detect <AGREE> vs <DISAGREE>. <AGREE> always means assent to the latest proposal."""
+    """Detect agreement/disagreement tags.
+
+    Supported agree forms include:
+      - <AGREE>
+      - <AGREE Alice>
+      - <AGREE to=Alice>
+      - <AGREE to="Alice">
+    """
     if re.search(r"<AGREE(?:\s[^>]*)?>", response, re.IGNORECASE):
       return True, False
     if "<DISAGREE>" in response.upper():
@@ -416,6 +426,37 @@ class RoundRobinNegotiationManager:
     if not has_agree:
       return True
     return True
+
+  def _extract_agree_target(self, response: str) -> str | None:
+    match = re.search(r"<AGREE(?:\s+([^>]*))?>", response, re.IGNORECASE)
+    if not match:
+      return None
+    raw_args = (match.group(1) or "").strip()
+    if not raw_args:
+      return None
+
+    keyed_match = re.search(
+        r"\bto\s*=\s*(?:\"([^\"]+)\"|'([^']+)'|([^\s>]+))",
+        raw_args,
+        re.IGNORECASE,
+    )
+    if keyed_match:
+      return next((group for group in keyed_match.groups() if group), None)
+
+    # Backward-compatible support: <AGREE Alice>
+    return raw_args
+
+  def _resolve_agreement_target_contract(
+      self,
+      target_proposer: str | None,
+      proposal_by_proposer: dict[str, str],
+      proposals: list[tuple[int, str, str]],
+  ) -> str | None:
+    if target_proposer:
+      return proposal_by_proposer.get(target_proposer.strip().lower())
+    if not proposals:
+      return None
+    return proposals[-1][2]
 
   def _looks_like_counterproposal(self, message: str) -> bool:
     lowered = message.lower()

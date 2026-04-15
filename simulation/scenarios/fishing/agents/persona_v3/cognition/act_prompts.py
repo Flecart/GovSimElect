@@ -44,26 +44,34 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
   session = model.start_prompt(
       agent.identity.name, "fishing_cognition_act", "choose_act_options"
   )
-  svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
-  contract_context = (
-      "\n<constitution>\n"
-      f" {formal_contract}\n"
-      "</constitution>\n"
-      if formal_contract else
-      ""
-  )
-  leader_prompt = ""
-  if leader_agenda == "":
-    leader_prompt = f"\nThe current policy following the mayor's agenda is the following: \n {leader_agenda}\n"
+  #   contract_mode = {
+  mode_text = {
+      "code_law": "The constitution describes specific rules for the community. It will be enforced at its best effort.",
+      "code_nl": "The constitution describes general rules of the community. It won't be enforced.",
+  } 
+#   svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)
+  if formal_contract:
+    contract_context = (
+        "Contracts are renegotiated every month and allow for caps, penalties, and mutual obligations. The constitution is the current agreement between the fishers."
+        f"{mode_text[contract_mode]}\n"
+        "\n<constitution>\n"
+        f" {formal_contract}\n"
+        "</constitution>\n"
+    )
+  else:
+    contract_context = ""
+#   leader_prompt = ""
+#   if leader_agenda == "":
+#     leader_prompt = f"\nThe current policy following the mayor's agenda is the following: \n {leader_agenda}\n"
     
   session.add_message("system", get_sytem_prompt(agent.identity))
   session.add_user(
       f"{location_time_info(current_location, current_time)}"
-      f"Current context: {context}\n"
+      f"Current constitution: {context}\n"
       f"{contract_context}"
       f"{memory_prompt(agent.identity, memories)}\n"
-      f"{svo_prompt + chr(10) if svo_prompt else ''}"
-      f"{leader_prompt + chr(10) if leader_prompt else ''}"
+    #   f"{svo_prompt + chr(10) if svo_prompt else ''}"
+    #   f"{leader_prompt + chr(10) if leader_prompt else ''}"
       f"Task: With a fishing range set between {interval[0]}-{interval[-1]}, how many tons of fish would you catch this month?\n"
       f"You may express the action explicitly as fish({agent.identity.name}, N).\n"
       f"{reasoning_steps_prompt()}\n"

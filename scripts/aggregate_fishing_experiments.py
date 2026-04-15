@@ -382,7 +382,7 @@ def main(argv: list[str] | None = None) -> int:
     ):
         block = pm.get(key) or {}
         print(
-            f"{label} mean ± std: {block.get('mean')} ± {block.get('std')}",
+                f"{label} mean ± std: {block.get('mean'):.3f} ± {block.get('std'):.3f}",
             file=sys.stderr,
         )
     return 0

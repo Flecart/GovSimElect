@@ -44,7 +44,8 @@ class ContractingConfig:
   negotiation_protocol: str = NegotiationProtocol.ROUND_ROBIN.value
   max_turns: int = 10
   setting_context: str = ""
-  min_agree_agents: int | None = None
+  # Default enactment rule: more than 3 unique agents agree.
+  min_agree_agents: int | None = 4
   max_coding_retries: int = 2
   coding_temperature: float = 0.3
   judge_temperature: float = 0.3
@@ -165,10 +166,11 @@ class ContractingOrchestrator:
           max_tool_calls=self.cfg.max_tool_calls_per_turn,
       )
     else:
+      required_agreements = max(self.cfg.min_agree_agents or 0, 4)
       negotiation_manager = RoundRobinNegotiationManager(
           personas,
           max_turns=self.cfg.max_turns,
-          min_agree_agents=self.cfg.min_agree_agents,
+          min_agree_agents=required_agreements,
           toolbox=ContractToolbox(self._contract_history),
           max_tool_calls=self.cfg.max_tool_calls_per_turn,
       )
@@ -190,7 +192,6 @@ class ContractingOrchestrator:
 
     summary = ""
     final_contract_text = None
-    coding_response = None
     agreed_to_keep_unchanged = False
     if self.mode == ContractMode.FREE_CHAT:
       summary = "Fishers had an open pre-harvest chat. No formal contract objective was applied."
@@ -228,7 +229,7 @@ class ContractingOrchestrator:
           votes=result.votes,
           agreements=result.agreements,
           passed=True,
-          consensus_threshold=self.cfg.min_agree_agents,
+          consensus_threshold=max(self.cfg.min_agree_agents or 0, 4),
       )
       await self._store_contract_memories(
           personas=personas,

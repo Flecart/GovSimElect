@@ -61,7 +61,7 @@ def _deliberation_scope_block(mode: ContractMode) -> str:
       "DELIBERATION SCOPE:\n"
       "- Negotiate concrete rules for the fishery for the upcoming round: catches, fairness, penalties, and mutual obligations.\n"
       "- Prefer specific numbers and clear conditions over vague slogans.\n"
-      "- Judge proposals on clarity, fairness, and workability for fishers — not on whether they could be implemented in any particular technical form.\n"
+      "- Judge proposals on clarity, fairness, and workability for fishers.\n"
   )
 
 
@@ -176,7 +176,6 @@ def _persona_harvest_context(
 def negotiation_system_prompt(
     persona: PersonaAgent,
     target_personas: list[PersonaAgent],
-    retrieved_memories: list[tuple],
     state: FishingContractState,
     mode: ContractMode,
     tool_instructions: str = "",
@@ -184,20 +183,19 @@ def negotiation_system_prompt(
 ) -> str:
   counterpart_names = [p.identity.name for p in target_personas]
   contract_mode = {
-      ContractMode.CODE_LAW: "a natural-language constitution for the next round",
+      ContractMode.CODE_LAW: "a natural-language constitution for the next round, this will be enforced.",
       ContractMode.CODE_NL: "a natural-language common constitution that outlines rules and guidelines for the community",
       ContractMode.FREE_CHAT: "an informal free chat",
       ContractMode.GOVSIM: "an informal conversation",
       ContractMode.NO_COMMUNICATION: "no communication",
   }[mode]
-  role_context = _persona_role_context(persona)
+  
+  mode_text = f"You will be negotiating {contract_mode}"
   return (
       f"{get_sytem_prompt(persona.identity)}\n"
-      f"{memory_prompt(persona.identity, retrieved_memories)}\n"
-      f"{role_context + chr(10) if role_context else ''}"
+      f"{mode_text}\n"
       "You are in the monthly post-harvest discussion with "
       f"{list_to_comma_string(counterpart_names)}.\n"
-      f"Your goal is to negotiate {contract_mode} for the next round.\n"
       f"{_negotiation_rounds_notice(state)}"
       f"{_active_law_block(active_law_text)}"
       f"{_deliberation_scope_block(mode)}"
@@ -240,17 +238,13 @@ def mayor_proposal_prompt(
       f"{_persona_harvest_context(persona, agent_resource_num)}"
       f"{_resource_report(agent_resource_num)}\n\n"
       f"{memory_prompt_text}\n"
-      f"{_active_law_block(active_law_text)}"
-      f"{_negotiation_rounds_notice(state)}"
-      f"{_deliberation_scope_block(mode)}"
-      f"{_state_lines(state)}\n"
-      f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Propose one clear contract for the next round in plain English.\n"
       "If there is already an active law and you want to keep it exactly as it is without any changes,\n"
-      "you must output exactly the word <UNCHANGED> and nothing else.\n"
-      "Otherwise, if you want a new law or to change the current one, keep it concrete and enforceable.\n"
-      "When proposing a new law, include exactly one <constitution>...</constitution> block with the declared new constitution. Only add <constitution> if you want to propose a new law. If you agree with the current one, don't add <constitution>.\n"
+      "When proposing a new law, include exactly one <constitution>...</constitution> block with the declared new constitution."
+      "If you agree with the current one, add <constitution> <UNCHANGED> </constitution>."
+      " The important part is that you add the <constitution> tags and the word <UNCHANGED> in between.\n"
       "Only the text inside that block will be voted on and adopted."
+      " When writing the law, use only specific legal language. <constitution> XYZ shall ... </constitution>."
   )
 
 
@@ -318,6 +312,7 @@ def round_robin_prompt(
       "Otherwise, if you propose a new contract, include exactly one <constitution>...</constitution> block. Don't add <constitution> if you agree with the current one.\n"
       "Only the text inside <constitution>...</constitution> will be voted on as the contract.\n"
       "If you agree with the most recent contract proposal in this thread, you must include <AGREE>.\n"
+      "You can also agree with a specific proposer by including <AGREE to=Alice>.\n"
       "If you disagree or reject the current proposal, you must include <DISAGREE>.\n"
       "Use <END_CONVERSATION> only if further negotiation is pointless."
   )
@@ -332,7 +327,7 @@ def round_robin_tag_clarification_prompt(
   user_prompt = (
       "Your last response did not follow the required agreement protocol.\n"
       "Rewrite it so that it includes exactly one of these tags:\n"
-      "- <AGREE>\n"
+      "- <AGREE> or or <AGREE to=Alice> \n"
       "- <DISAGREE>\n"
       "Preserve your original meaning. Keep the response short.\n"
       f"Original response:\n{original_response}\n"

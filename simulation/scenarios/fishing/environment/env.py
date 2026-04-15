@@ -8,6 +8,11 @@ from simulation.scenarios.common.environment.concurrent_env import (
 )
 from .regen import RegenManager, RegenMode, RegenState
 
+ADVERSE_TRIGGER_ROUND = 6
+ADVERSE_FISH_DROP = 50
+ADVERSE_MIN_FISH = 5
+ADVERSE_EVENT_LABEL = "drought"
+
 
 def tons_in_lake(num):
   return f"Before everyone fishes, there are {num} tons of fish in the lake."
@@ -59,6 +64,10 @@ class FishingConcurrentEnv(ConcurrentEnv):
         mode=self._regen_mode, seed=regen_seed, iid_values=iid_values
     )
     self._last_regen_state: RegenState | None = None
+    self._adverse_mode_enabled = bool(
+        OmegaConf.select(cfg, "adverse_scenario", default=False)
+    )
+    self._adverse_triggered = False
 
   def _prompt_pool_amount_of_resource(self):
     if self.cfg.harvesting_order == "concurrent":
@@ -95,10 +104,43 @@ class FishingConcurrentEnv(ConcurrentEnv):
     self.internal_global_state["regen_factor"] = regen_state.regen_factor
     # Store regen state for observation and logging.
     self.internal_global_state["regen_state"] = regen_state
+    self.internal_global_state["recent_adverse_event"] = None
+    if (
+        self._adverse_mode_enabled
+        and not self._adverse_triggered
+        and self.num_round == ADVERSE_TRIGGER_ROUND
+    ):
+      before_shock = int(self.internal_global_state["resource_in_pool"])
+      after_shock = int(max(before_shock - ADVERSE_FISH_DROP, ADVERSE_MIN_FISH))
+      self.internal_global_state["resource_in_pool"] = after_shock
+      self.internal_global_state["resource_before_harvesting"] = after_shock
+      self._adverse_triggered = True
+      self.internal_global_state["recent_adverse_event"] = {
+          "type": ADVERSE_EVENT_LABEL,
+          "trigger_round": ADVERSE_TRIGGER_ROUND,
+          "stock_before": before_shock,
+          "stock_after": after_shock,
+          "fish_drop": ADVERSE_FISH_DROP,
+      }
     self.log_step_regen(regen_state)
 
   def _observe_pool(self, agent):
     obs = super()._observe_pool(agent)
+    adverse_event = self.internal_global_state.get("recent_adverse_event")
+    if adverse_event is not None:
+      msg = (
+          "A drought has hit the lake. Fish stock dropped suddenly since last month."
+      )
+      obs.events.append(
+          PersonaEvent(
+              msg,
+              created=self.internal_global_state["next_time"][agent],
+              expiration=get_expiration_next_month(
+                  self.internal_global_state["next_time"][agent]
+              ),
+              always_include=True,
+          )
+      )
     # For hysteresis mode, inject regime observation event.
     if self._regen_mode == RegenMode.ENDOGENOUS_HYSTERESIS and self._last_regen_state is not None:
       regime = self._last_regen_state.regime
@@ -134,6 +176,13 @@ class FishingConcurrentEnv(ConcurrentEnv):
         "realized_r_t": [regen_state.regen_factor],
         "regen_mode": [regen_state.mode.value],
     }
+    adverse_event = self.internal_global_state.get("recent_adverse_event")
+    if adverse_event is not None:
+      tmp["adverse_event_type"] = [adverse_event.get("type")]
+      tmp["adverse_event_trigger_round"] = [adverse_event.get("trigger_round")]
+      tmp["adverse_event_stock_before"] = [adverse_event.get("stock_before")]
+      tmp["adverse_event_stock_after"] = [adverse_event.get("stock_after")]
+      tmp["adverse_event_fish_drop"] = [adverse_event.get("fish_drop")]
     if regen_state.regime is not None:
       tmp["regime"] = [regen_state.regime]
       tmp["m_t"] = [regen_state.m_t]

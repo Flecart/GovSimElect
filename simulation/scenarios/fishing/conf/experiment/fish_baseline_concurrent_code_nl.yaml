@@ -3,12 +3,13 @@ run_name: ""
 storage_name: ""
 scenario: fishing
 
+
 defaults:
-  - persona@personas.persona_0: baseline_fisherman
-  - persona@personas.persona_1: baseline_fisherman
-  - persona@personas.persona_2: baseline_fisherman
-  - persona@personas.persona_3: baseline_fisherman
-  - persona@personas.persona_4: baseline_fisherman
+  - persona@personas.persona_0: selfish_fisherman
+  - persona@personas.persona_1: selfish_fisherman
+  - persona@personas.persona_2: selfish_fisherman
+  - persona@personas.persona_3: selfish_fisherman
+  - persona@personas.persona_4: selfish_fisherman
 
 env:
   name: fish_baseline_concurrent_code_nl
