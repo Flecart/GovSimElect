@@ -63,9 +63,18 @@ def _resolve_backend_name(model_name: str, backend_name: str | None) -> str:
     return normalized_backend
 
 
+
+def _normalize_remote_model_name(path: str, backend: str) -> str:
+    if backend.lower() == "openai" and path.lower().startswith("openai/"):
+        return path.split("/", 1)[1]
+    return path
+
 def get_model(model_name: str, seed: int | None = None, backend_name: str = "OpenAI"):
+    model_name_normalized = _normalize_remote_model_name(model_name, backend_name)
     resolved_backend = _resolve_backend_name(model_name=model_name, backend_name=backend_name)
-    return RemoteModelSpec(model_name=model_name, backend_name=resolved_backend, seed=seed)
+    print(f"model_name_normalized: {model_name_normalized}")
+    print(f"resolved_backend: {resolved_backend}")
+    return RemoteModelSpec(model_name=model_name_normalized, backend_name=resolved_backend, seed=seed)
 
 
 class PromptSession:
@@ -235,7 +244,6 @@ class ModelWandbWrapper:
                 top_p=top_p,
                 seed=self.seed,
                 stop=stop,
-                extra_body=self._reasoning_disabled_extra_body(),
                 **length_kwargs,
             )
         message_content = out.choices[0].message.content

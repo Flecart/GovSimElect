@@ -1,130 +1,37 @@
+#!/usr/bin/env bash
+# Launch all stochastic variants across multiple models.
+# Usage: bash scripts/stochastic/stochastic.sh
+set -euo pipefail
 
-# shows example on how to change model
-MODEL="openai/gpt-5.4-mini" \
-NAME="sto-gpt-5.4-mini" \
-GROUP="1-nl" \
-bash scripts/stochastic/run_iid_stochastic_nl.sh &
+launch_case() {
+  local model="$1"
+  local name="$2"
+  local group="$3"
+  local prosocial_count="$4"
+  local script_path="$5"
 
-MODEL="openai/gpt-5.4-mini" \
-NAME="sto-gpt-5.4-mini" \
-GROUP="1-nl-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_nl_prosocial.sh &
+  MODEL="$model" \
+  NAME="$name" \
+  GROUP="$group" \
+  PROSOCIAL_COUNT="$prosocial_count" \
+  bash "$script_path" &
+}
 
-MODEL="openai/gpt-5.4-mini" \
-NAME="sto-gpt-5.4-mini" \
-GROUP="2-code-law" \
-bash scripts/stochastic/run_iid_stochastic_code_law.sh &
+launch_model_matrix() {
+  local model="$1"
+  local name="$2"
 
-MODEL="openai/gpt-5.4-mini" \
-NAME="sto-gpt-5.4-mini" \
-GROUP="2-code-law-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_code_law_prosocial.sh &
+  launch_case "$model" "$name" "1-nl" 0 "scripts/stochastic/run_iid_stochastic_nl.sh"
+  launch_case "$model" "$name" "1-nl-prosocial" 5 "scripts/stochastic/run_iid_stochastic_nl.sh"
+  launch_case "$model" "$name" "2-code-law" 0 "scripts/stochastic/run_iid_stochastic_code_law.sh"
+  launch_case "$model" "$name" "2-code-law-prosocial" 5 "scripts/stochastic/run_iid_stochastic_code_law.sh"
+  launch_case "$model" "$name" "0-no-contract" 0 "scripts/stochastic/run_iid_stochastic_no_contract.sh"
+  launch_case "$model" "$name" "0-no-contract-prosocial" 5 "scripts/stochastic/run_iid_stochastic_no_contract.sh"
+}
 
-MODEL="openai/gpt-5.4-mini" \
-NAME="sto-gpt-5.4-mini" \
-GROUP="0-no-contract" \
-bash scripts/stochastic/run_iid_stochastic_no_contract.sh &
-
-MODEL="openai/gpt-5.4-mini" \
-NAME="sto-gpt-5.4-mini" \
-GROUP="0-no-contract-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_no_contract_prosocial.sh &
-
-
-
-MODEL="qwen/qwen3.6-plus" \
-NAME="sto-qwen3.6-plus" \
-GROUP="1-nl" \
-bash scripts/stochastic/run_iid_stochastic_nl.sh &
-
-MODEL="qwen/qwen3.6-plus" \
-NAME="sto-qwen3.6-plus" \
-GROUP="1-nl-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_nl_prosocial.sh &
-
-MODEL="qwen/qwen3.6-plus" \
-NAME="sto-qwen3.6-plus" \
-GROUP="2-code-law" \
-bash scripts/stochastic/run_iid_stochastic_code_law.sh &
-
-MODEL="qwen/qwen3.6-plus" \
-NAME="sto-qwen3.6-plus" \
-GROUP="2-code-law-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_code_law_prosocial.sh &
-
-MODEL="qwen/qwen3.6-plus" \
-NAME="sto-qwen3.6-plus" \
-GROUP="0-no-contract" \
-bash scripts/stochastic/run_iid_stochastic_no_contract.sh &
-
-MODEL="qwen/qwen3.6-plus" \
-NAME="sto-qwen3.6-plus" \
-GROUP="0-no-contract-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_no_contract_prosocial.sh &
-
-
-
-MODEL="mistralai/mistral-small-2603" \
-NAME="sto-mistral-small-2603" \
-GROUP="1-nl" \
-bash scripts/stochastic/run_iid_stochastic_nl.sh &
-
-MODEL="mistralai/mistral-small-2603" \
-NAME="sto-mistral-small-2603" \
-GROUP="1-nl-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_nl_prosocial.sh &
-
-MODEL="mistralai/mistral-small-2603" \
-NAME="sto-mistral-small-2603" \
-GROUP="2-code-law" \
-bash scripts/stochastic/run_iid_stochastic_code_law.sh &
-
-MODEL="mistralai/mistral-small-2603" \
-NAME="sto-mistral-small-2603" \
-GROUP="2-code-law-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_code_law_prosocial.sh &
-
-MODEL="mistralai/mistral-small-2603" \
-NAME="sto-mistral-small-2603" \
-GROUP="0-no-contract" \
-bash scripts/stochastic/run_iid_stochastic_no_contract.sh &
-
-MODEL="mistralai/mistral-small-2603" \
-NAME="sto-mistral-small-2603" \
-GROUP="0-no-contract-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_no_contract_prosocial.sh &
-
-
-
-MODEL="x-ai/grok-4.1-fast" \
-NAME="sto-grok-4.1-fast" \
-GROUP="1-nl" \
-bash scripts/stochastic/run_iid_stochastic_nl.sh &
-
-
-MODEL="x-ai/grok-4.1-fast" \
-NAME="sto-grok-4.1-fast" \
-GROUP="1-nl-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_nl_prosocial.sh &
-
-MODEL="x-ai/grok-4.1-fast" \
-NAME="sto-grok-4.1-fast" \
-GROUP="2-code-law" \
-bash scripts/stochastic/run_iid_stochastic_code_law.sh &
-
-MODEL="x-ai/grok-4.1-fast" \
-NAME="sto-grok-4.1-fast" \
-GROUP="2-code-law-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_code_law_prosocial.sh &
-
-MODEL="x-ai/grok-4.1-fast" \
-NAME="sto-grok-4.1-fast" \
-GROUP="0-no-contract" \
-bash scripts/stochastic/run_iid_stochastic_no_contract.sh &
-
-MODEL="x-ai/grok-4.1-fast" \
-NAME="sto-grok-4.1-fast" \
-GROUP="0-no-contract-prosocial" \
-bash scripts/stochastic/run_iid_stochastic_no_contract_prosocial.sh &
+launch_model_matrix "openai/gpt-5.4-mini" "sto-gpt-5.4-mini"
+launch_model_matrix "qwen/qwen3.6-plus" "sto-qwen3.6-plus"
+launch_model_matrix "mistralai/mistral-small-2603" "sto-mistral-small-2603"
+launch_model_matrix "x-ai/grok-4.1-fast" "sto-grok-4.1-fast"
 
 wait

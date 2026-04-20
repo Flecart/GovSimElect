@@ -2,12 +2,18 @@ import React from "react";
 
 interface SidebarProps {
   subsets: string[];
+  loadingSubsets: boolean;
   activeSubset: string | null;
   onSubsetChange: (subset: string) => void;
-  groups: string[];
+  activePath: string | null;
+  canNavigateUp: boolean;
+  onNavigateUp: () => void;
+  groups: { key: string; label: string; isDirectory: boolean }[];
+  loadingGroups: boolean;
   activeGroup: string | null;
-  onGroupChange: (group: string) => void;
+  onGroupChange: (group: string, isDirectory: boolean) => void;
   runs: { key: string; label: string }[];
+  loadingRuns: boolean;
   activeRun: string | null;
   selectedRuns: string[];
   onRunChange: (runKey: string) => void;
@@ -16,12 +22,18 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   subsets,
+  loadingSubsets,
   activeSubset,
   onSubsetChange,
+  activePath,
+  canNavigateUp,
+  onNavigateUp,
   groups,
+  loadingGroups,
   activeGroup,
   onGroupChange,
   runs,
+  loadingRuns,
   activeRun,
   selectedRuns,
   onRunChange,
@@ -30,7 +42,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className="sidebar">
       <section>
-        <h2 className="sidebar-title">Result subsets</h2>
+        <h2 className="sidebar-title">
+          Result subsets
+          {loadingSubsets ? (
+            <span className="inline-loader" aria-label="Loading subsets" />
+          ) : null}
+        </h2>
         <ul className="sidebar-list">
           {subsets.map((subset) => (
             <li key={subset}>
@@ -45,30 +62,62 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </li>
           ))}
+          {!loadingSubsets && subsets.length === 0 ? (
+            <li className="sidebar-empty">No subsets found</li>
+          ) : null}
         </ul>
       </section>
 
       <section>
-        <h2 className="sidebar-title">Groups</h2>
+        <h2 className="sidebar-title">
+          Groups
+          {loadingGroups ? (
+            <span className="inline-loader" aria-label="Loading groups" />
+          ) : null}
+        </h2>
+        <div className="sidebar-path">
+          <span>{activePath || "/"}</span>
+          <button
+            type="button"
+            className="sidebar-path-up"
+            onClick={onNavigateUp}
+            disabled={!canNavigateUp}
+          >
+            Up
+          </button>
+        </div>
         <ul className="sidebar-list">
           {groups.map((group) => (
-            <li key={group}>
+            <li key={group.key}>
               <button
                 className={
                   "sidebar-item" +
-                  (group === activeGroup ? " sidebar-item--active" : "")
+                  (!group.isDirectory && group.key === activeGroup
+                    ? " sidebar-item--active"
+                    : "")
                 }
-                onClick={() => onGroupChange(group)}
+                onClick={() => onGroupChange(group.key, group.isDirectory)}
               >
-                {group}
+                <span className="sidebar-item-prefix">
+                  {group.isDirectory ? "▸" : "•"}
+                </span>
+                {group.label}
               </button>
             </li>
           ))}
+          {!loadingGroups && groups.length === 0 ? (
+            <li className="sidebar-empty">No groups in this path</li>
+          ) : null}
         </ul>
       </section>
 
       <section>
-        <h2 className="sidebar-title">Runs</h2>
+        <h2 className="sidebar-title">
+          Runs
+          {loadingRuns ? (
+            <span className="inline-loader" aria-label="Loading runs" />
+          ) : null}
+        </h2>
         <ul className="sidebar-list">
           {runs.map((run) => (
             <li key={run.key}>
@@ -92,6 +141,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </div>
             </li>
           ))}
+          {!loadingRuns && runs.length === 0 ? (
+            <li className="sidebar-empty">No runs in selected group</li>
+          ) : null}
         </ul>
       </section>
     </div>

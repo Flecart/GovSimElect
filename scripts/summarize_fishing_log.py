@@ -3,6 +3,15 @@
 
 This script computes the GovSim metrics from Section 2.4 of
 https://arxiv.org/html/2404.16698v2 and prints a concise run summary.
+
+Cross-run helpers used by ``aggregate_fishing_experiments.py``:
+
+- Bootstrap percentile CI for pooled survival rate ``q``, resampling **runs** with
+  replacement (primary for reporting when runs are the exchangeable units).
+- Bootstrap percentile CIs for the mean of per-run metrics (survival months, R,
+  efficiency, equality, over-usage).
+- Optional reference-only Wilson / IID-trial SE helpers for ``q`` (assumptions often
+  violated; see aggregate JSON notes).
 """
 
 from __future__ import annotations
@@ -13,10 +22,129 @@ import math
 import re
 from collections import Counter, defaultdict
 from pathlib import Path
-from typing import Any
+from statistics import NormalDist
+from typing import Any, Sequence
+
+import numpy as np
 
 
 LIMIT_PATTERN = re.compile(r"Detected negotiated resource limit:\s*([0-9]+(?:\.[0-9]+)?)")
+
+
+def approximate_se_pooled_survival_q(q: float, *, k: int, max_rounds: int) -> float | None:
+    """Reference-only SE for q under an IID agent-month model (optimistic if violated).
+
+    Uses SE(q) ≈ sqrt(q(1-q) / (K * max_rounds)), i.e. independent Bernoulli trials
+    per agent-month. Within-run months are usually correlated; this understates SE
+    when stated as uncertainty for q — prefer ``bootstrap_ci_pooled_survival_q``.
+    """
+    trials = k * max_rounds
+    if trials <= 0 or q < 0 or q > 1:
+        return None
+    return math.sqrt(max(0.0, q * (1.0 - q) / float(trials)))
+
+
+def wilson_score_interval_for_binomial(
+    successes: int, trials: int, *, alpha: float = 0.05
+) -> tuple[float | None, float | None]:
+    """Wilson score CI for binomial proportion (successes out of trials)."""
+    if trials <= 0 or successes < 0 or successes > trials:
+        return None, None
+    z = NormalDist().inv_cdf(1.0 - alpha / 2.0)
+    z2 = z * z
+    phat = successes / trials
+    denom = 1.0 + z2 / trials
+    center = (phat + z2 / (2.0 * trials)) / denom
+    inner = phat * (1.0 - phat) / trials + z2 / (4.0 * trials * trials)
+    half = z * math.sqrt(max(0.0, inner)) / denom
+    lo = max(0.0, center - half)
+    hi = min(1.0, center + half)
+    return lo, hi
+
+
+def bootstrap_ci_pooled_survival_q(
+    survival_rounds_per_run: Sequence[float],
+    *,
+    max_rounds: int,
+    n_boot: int = 10_000,
+    alpha: float = 0.05,
+    rng_seed: int = 0,
+) -> dict[str, Any]:
+    """Bootstrap percentile CI for pooled q = sum_k n_k / (K * max_rounds).
+
+    Resamples **runs** with replacement (each replicate uses K draws, same K as
+    observed). For each replicate, q* = sum(n*) / (K * max_rounds).
+    """
+    arr = np.asarray(list(survival_rounds_per_run), dtype=float)
+    k = int(arr.size)
+    n_boot = int(n_boot)
+    if k <= 0 or max_rounds <= 0:
+        return {
+            "q": None,
+            "ci_low": None,
+            "ci_high": None,
+            "alpha": alpha,
+            "n_bootstrap": n_boot,
+            "rng_seed": rng_seed,
+            "n_runs": k,
+            "max_rounds": max_rounds,
+        }
+    denom = float(k * max_rounds)
+    q_obs = float(arr.sum() / denom)
+    rng = np.random.default_rng(rng_seed)
+    idx = rng.integers(0, k, size=(n_boot, k))
+    q_boot = arr[idx].sum(axis=1) / denom
+    pct_lo = 100.0 * alpha / 2.0
+    pct_hi = 100.0 * (1.0 - alpha / 2.0)
+    lo, hi = np.percentile(q_boot, [pct_lo, pct_hi])
+    return {
+        "q": q_obs,
+        "ci_low": float(lo),
+        "ci_high": float(hi),
+        "alpha": alpha,
+        "n_bootstrap": n_boot,
+        "rng_seed": rng_seed,
+        "n_runs": k,
+        "max_rounds": max_rounds,
+        "procedure": "Resample runs with replacement; q* = sum(survival_rounds_n) / (K*max_rounds).",
+    }
+
+
+def bootstrap_ci_mean(
+    values: Sequence[float],
+    *,
+    n_boot: int = 10_000,
+    alpha: float = 0.05,
+    rng_seed: int = 0,
+) -> dict[str, Any]:
+    """Bootstrap percentile CI for the mean (resample runs with replacement)."""
+    arr = np.asarray(list(values), dtype=float)
+    n_boot = int(n_boot)
+    if arr.size == 0:
+        return {
+            "mean": None,
+            "ci_low": None,
+            "ci_high": None,
+            "alpha": alpha,
+            "n_bootstrap": n_boot,
+            "rng_seed": rng_seed,
+            "n_values": 0,
+        }
+    rng = np.random.default_rng(rng_seed)
+    idx = rng.integers(0, arr.size, size=(n_boot, arr.size))
+    means = arr[idx].mean(axis=1)
+    pct_lo = 100.0 * alpha / 2.0
+    pct_hi = 100.0 * (1.0 - alpha / 2.0)
+    lo, hi = np.percentile(means, [pct_lo, pct_hi])
+    return {
+        "mean": float(arr.mean()),
+        "ci_low": float(lo),
+        "ci_high": float(hi),
+        "alpha": alpha,
+        "n_bootstrap": n_boot,
+        "rng_seed": rng_seed,
+        "n_values": int(arr.size),
+    }
 
 
 def _safe_float(value: Any) -> float | None:

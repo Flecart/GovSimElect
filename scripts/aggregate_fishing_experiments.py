@@ -8,10 +8,17 @@ plus derived fields), then aggregate across runs.
 Survival reporting (per user spec):
   - Per run: ``survival_rounds_n`` equals paper metric ``survival_time_m`` (rounds
     with stock above collapse threshold, as computed by summarize_fishing_log).
-  - Aggregate reporting includes direct month-based survival statistics:
-    average survival months and sample std across runs.
-  - Legacy rate fields remain available for compatibility:
+  - Aggregate reporting emphasizes bootstrap percentile CIs (resample runs with
+    replacement) for mean survival months m, pooled survival rate q, paper metrics
+    R/u/e/o mean across runs. Sample std across runs remains in JSON for appendix use.
+  - Legacy fields remain for compatibility:
     ``survival_rounds_n / max_rounds`` and pooled ``sum(n)/(K*max_rounds)``.
+  - Reference-only Wilson / IID-se formulas for q live under
+    ``reference_only_intervals_under_strong_or_violated_assumptions`` (do not treat as
+    primary uncertainty when runs are correlated).
+
+Bootstrap helpers (including ``bootstrap_ci_pooled_survival_q``) live in
+``summarize_fishing_log.py``.
 
 Regeneration factor R:
   - Per run: mean of realized ``r_t`` over regen events (round-averaged in log space).
@@ -198,25 +205,143 @@ def collect_rows(payloads: Iterable[dict[str, Any]], max_rounds: int) -> list[Ru
     return rows
 
 
-def aggregate_payload(rows: list[RunAggRow], *, max_rounds: int) -> dict[str, Any]:
+def aggregate_payload(
+    mod: Any,
+    rows: list[RunAggRow],
+    *,
+    max_rounds: int,
+    n_boot: int = 10_000,
+    bootstrap_seed: int = 0,
+    bootstrap_alpha: float = 0.05,
+    wilson_alpha: float = 0.05,
+    decomposition_cutoff_month: int | None = None,
+) -> dict[str, Any]:
     k = len(rows)
     sum_n = sum(r.survival_rounds_n for r in rows)
-    pooled_survival = float(sum_n) / float(k * max_rounds) if k > 0 and max_rounds > 0 else None
+    trials = k * max_rounds
+    pooled_survival = float(sum_n) / float(trials) if k > 0 and max_rounds > 0 else None
+    if k > 0 and max_rounds > 0 and trials > 0:
+        q_point = float(pooled_survival) if pooled_survival is not None else 0.0
+        se_q_iid_reference = mod.approximate_se_pooled_survival_q(
+            q_point, k=k, max_rounds=max_rounds
+        )
+        w_lo, w_hi = mod.wilson_score_interval_for_binomial(
+            sum_n, trials, alpha=wilson_alpha
+        )
+    else:
+        se_q_iid_reference = None
+        w_lo, w_hi = None, None
 
     rates = [r.survival_rate for r in rows]
     ns = [float(r.survival_rounds_n) for r in rows]
+    mean_ns = _safe_mean(ns)
     r_means = [r.mean_realized_r_t for r in rows if r.mean_realized_r_t is not None]
+
+    gains = [r.total_gain_R for r in rows]
+    boot_m = mod.bootstrap_ci_mean(
+        ns,
+        n_boot=n_boot,
+        alpha=bootstrap_alpha,
+        rng_seed=bootstrap_seed,
+    )
+    boot_r = mod.bootstrap_ci_mean(
+        gains,
+        n_boot=n_boot,
+        alpha=bootstrap_alpha,
+        rng_seed=bootstrap_seed + 1,
+    )
+    boot_q = mod.bootstrap_ci_pooled_survival_q(
+        ns,
+        max_rounds=max_rounds,
+        n_boot=n_boot,
+        alpha=bootstrap_alpha,
+        rng_seed=bootstrap_seed + 2,
+    )
+    us = [r.efficiency_u for r in rows]
+    es = [r.equality_e for r in rows]
+    os = [r.over_usage_o for r in rows]
+    boot_u = mod.bootstrap_ci_mean(
+        us,
+        n_boot=n_boot,
+        alpha=bootstrap_alpha,
+        rng_seed=bootstrap_seed + 3,
+    )
+    boot_e = mod.bootstrap_ci_mean(
+        es,
+        n_boot=n_boot,
+        alpha=bootstrap_alpha,
+        rng_seed=bootstrap_seed + 4,
+    )
+    boot_o = mod.bootstrap_ci_mean(
+        os,
+        n_boot=n_boot,
+        alpha=bootstrap_alpha,
+        rng_seed=bootstrap_seed + 5,
+    )
+
+    at_full = sum(1 for r in rows if r.survival_rounds_n >= max_rounds)
+    below_full = k - at_full
+    decomp: dict[str, Any] = {
+        "runs_reaching_full_horizon_survival_n_ge_max_rounds": at_full,
+        "runs_below_full_horizon_survival_n_lt_max_rounds": below_full,
+        "per_run_survival_rounds_n": [r.survival_rounds_n for r in rows],
+    }
+    if decomposition_cutoff_month is not None:
+        cu = int(decomposition_cutoff_month)
+        decomp["early_collapse_before_month_cutoff"] = {
+            "cutoff_month": cu,
+            "interpretation": (
+                "survival_rounds_n strictly less than cutoff counts as collapsed "
+                "before completing that month (paper survival_time_m is months survived)."
+            ),
+            "runs_collapsed_strictly_before_cutoff_survival_n_lt_cutoff": sum(
+                1 for r in rows if r.survival_rounds_n < cu
+            ),
+            "runs_not_collapsed_before_cutoff_survival_n_ge_cutoff": sum(
+                1 for r in rows if r.survival_rounds_n >= cu
+            ),
+        }
 
     return {
         "num_runs": k,
         "max_rounds": max_rounds,
         "pooled_survival_rate_sum_n_over_k_max_rounds": pooled_survival,
         "pooled_survival_numerator_sum_survival_rounds_n": sum_n,
-        "pooled_survival_denominator_k_times_max_rounds": k * max_rounds,
+        "pooled_survival_denominator_k_times_max_rounds": trials,
+        "pooled_survival_q_statistics": {
+            "q": pooled_survival,
+            "bootstrap_ci_q_resample_runs": boot_q,
+            "q_equals_mean_survival_months_over_max_rounds": (
+                (float(mean_ns) / float(max_rounds))
+                if mean_ns is not None and max_rounds > 0
+                else None
+            ),
+            "reference_only_intervals_under_strong_or_violated_assumptions": {
+                "wilson_on_pooled_binomial_K_times_max_rounds_trials": {
+                    "alpha": wilson_alpha,
+                    "ci_low": w_lo,
+                    "ci_high": w_hi,
+                    "note": (
+                        "Wilson treats sum(n) successes as binomial over K*max_rounds "
+                        "trials; independence of agent-months is typically violated."
+                    ),
+                },
+                "optimistic_se_if_agent_months_were_iid": {
+                    "value": se_q_iid_reference,
+                    "note": (
+                        "sqrt(q(1-q)/(K*max_rounds)) is a lower bound on uncertainty "
+                        "when months within a run are correlated (e.g. early death vs "
+                        "full horizon). Prefer bootstrap_ci_q_resample_runs for primary "
+                        "inference."
+                    ),
+                },
+            },
+        },
         "survival_months_m": {
             "mean": _safe_mean(ns),
             "std": _safe_stdev(ns),
             "values": [r.survival_rounds_n for r in rows],
+            "bootstrap_ci_mean_across_runs": boot_m,
         },
         "survival_rounds_n": {
             "mean": _safe_mean(ns),
@@ -233,22 +358,32 @@ def aggregate_payload(rows: list[RunAggRow], *, max_rounds: int) -> dict[str, An
             "std": _safe_stdev([float(x) for x in r_means]),
             "values": r_means,
         },
+        "survival_outcome_decomposition": decomp,
+        "bootstrap_settings": {
+            "n_bootstrap": n_boot,
+            "alpha": bootstrap_alpha,
+            "rng_seed_base": bootstrap_seed,
+        },
         "paper_metrics_across_runs": {
             "total_gain_R": {
-                "mean": _safe_mean([r.total_gain_R for r in rows]),
-                "std": _safe_stdev([r.total_gain_R for r in rows]),
+                "mean": _safe_mean(gains),
+                "std": _safe_stdev(gains),
+                "bootstrap_ci_mean_across_runs": boot_r,
             },
             "efficiency_u": {
-                "mean": _safe_mean([r.efficiency_u for r in rows]),
-                "std": _safe_stdev([r.efficiency_u for r in rows]),
+                "mean": _safe_mean(us),
+                "std": _safe_stdev(us),
+                "bootstrap_ci_mean_across_runs": boot_u,
             },
             "equality_e": {
-                "mean": _safe_mean([r.equality_e for r in rows]),
-                "std": _safe_stdev([r.equality_e for r in rows]),
+                "mean": _safe_mean(es),
+                "std": _safe_stdev(es),
+                "bootstrap_ci_mean_across_runs": boot_e,
             },
             "over_usage_o": {
-                "mean": _safe_mean([r.over_usage_o for r in rows]),
-                "std": _safe_stdev([r.over_usage_o for r in rows]),
+                "mean": _safe_mean(os),
+                "std": _safe_stdev(os),
+                "bootstrap_ci_mean_across_runs": boot_o,
             },
         },
         "runs": [
@@ -303,6 +438,35 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Per-round debug prints from summarize (very noisy)",
     )
+    parser.add_argument(
+        "--bootstrap-samples",
+        type=int,
+        default=1000,
+        help="Resamples for bootstrap CIs on mean survival months and total gain R",
+    )
+    parser.add_argument("--bootstrap-seed", type=int, default=0)
+    parser.add_argument(
+        "--bootstrap-alpha",
+        type=float,
+        default=0.05,
+        help="Alpha for bootstrap percentile intervals (default: 0.05 → 95%% CI)",
+    )
+    parser.add_argument(
+        "--wilson-alpha",
+        type=float,
+        default=0.05,
+        help="Alpha for Wilson score interval on pooled q (default: 0.05)",
+    )
+    parser.add_argument(
+        "--decomposition-cutoff-month",
+        type=int,
+        default=None,
+        metavar="M",
+        help=(
+            "Optional survival month cutoff for decomposition: count runs with "
+            "survival_rounds_n < M vs ≥ M (e.g. 8 for collapsed before month 8)"
+        ),
+    )
     args = parser.parse_args(argv)
 
     root = args.parent_dir.resolve()
@@ -347,32 +511,62 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     rows = collect_rows(payloads, args.max_rounds)
-    agg = aggregate_payload(rows, max_rounds=args.max_rounds)
+    agg = aggregate_payload(
+        mod,
+        rows,
+        max_rounds=args.max_rounds,
+        n_boot=args.bootstrap_samples,
+        bootstrap_seed=args.bootstrap_seed,
+        bootstrap_alpha=args.bootstrap_alpha,
+        wilson_alpha=args.wilson_alpha,
+        decomposition_cutoff_month=args.decomposition_cutoff_month,
+    )
     agg["parent_dir"] = str(root)
     agg["metrics_basename"] = METRICS_BASENAME
 
-    text = json.dumps(agg, indent=2) + "\n"
-    if args.output is not None:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(text, encoding="utf-8")
-        print(f"Wrote aggregate ({len(payloads)} run(s)) to {args.output}", file=sys.stderr)
-    else:
-        print(text, end="")
+    # text = json.dumps(agg, indent=2) + "\n"
+    # if args.output is not None:
+    #     args.output.parent.mkdir(parents=True, exist_ok=True)
+    #     args.output.write_text(text, encoding="utf-8")
+    #     print(f"Wrote aggregate ({len(payloads)} run(s)) to {args.output}", file=sys.stderr)
+    # else:
+    #     print(text, end="")
 
-    # Short human-readable lines on stderr when output file is set (or always as supplement)
-    p = agg.get("pooled_survival_rate_sum_n_over_k_max_rounds")
-    sm = agg.get("survival_months_m", {})
+    # Human-readable summary on stderr (bootstrap CIs primary; std only in JSON)
+    sm = agg.get("survival_months_m") or {}
+    pq = agg.get("pooled_survival_q_statistics") or {}
+
     print("\n--- Summary ---", file=sys.stderr)
-    # print the directory name
     print(f"Directory: {root}", file=sys.stderr)
-    print(
-        f"Average survival months (m) mean ± std: {sm.get('mean')} ± {sm.get('std')}",
-        file=sys.stderr,
-    )
-    print(
-        f"Pooled survival rate sum(n)/(K*max_rounds): {p}",
-        file=sys.stderr,
-    )
+
+    m_mean = sm.get("mean")
+    bsm = sm.get("bootstrap_ci_mean_across_runs") or {}
+    if m_mean is not None and bsm.get("ci_low") is not None and bsm.get("ci_high") is not None:
+        alpha_b = float(bsm.get("alpha", 0.05))
+        print(
+            f"Mean survival months m: {m_mean:.2f} "
+            f"({(1.0 - alpha_b) * 100:.0f}% bootstrap CI for mean: "
+            f"[{bsm['ci_low']:.2f}, {bsm['ci_high']:.2f}])",
+            file=sys.stderr,
+        )
+    elif m_mean is not None:
+        print(f"Mean survival months m: {m_mean:.2f}", file=sys.stderr)
+    else:
+        print("Mean survival months m: n/a", file=sys.stderr)
+
+    bq = pq.get("bootstrap_ci_q_resample_runs") or {}
+    q_pt = bq.get("q")
+    if q_pt is not None and bq.get("ci_low") is not None and bq.get("ci_high") is not None:
+        alpha_q = float(bq.get("alpha", 0.05))
+        print(
+            f"Pooled survival rate q: {q_pt:.4f} "
+            f"({(1.0 - alpha_q) * 100:.0f}% bootstrap CI, resample runs: "
+            f"[{bq['ci_low']:.4f}, {bq['ci_high']:.4f}])",
+            file=sys.stderr,
+        )
+    else:
+        print(f"Pooled survival rate q: {agg.get('pooled_survival_rate_sum_n_over_k_max_rounds')}", file=sys.stderr)
+
     pm = agg.get("paper_metrics_across_runs") or {}
     for key, label in (
         ("total_gain_R", "Total gain R"),
@@ -381,10 +575,46 @@ def main(argv: list[str] | None = None) -> int:
         ("over_usage_o", "Over-usage o"),
     ):
         block = pm.get(key) or {}
+        mean_v = block.get("mean")
+        boot = block.get("bootstrap_ci_mean_across_runs") or {}
+        if mean_v is None:
+            print(f"{label}: n/a", file=sys.stderr)
+            continue
+        if boot.get("ci_low") is not None and boot.get("ci_high") is not None:
+            alpha_x = float(boot.get("alpha", 0.05))
+            print(
+                f"{label}: {mean_v:.4f} "
+                f"({(1.0 - alpha_x) * 100:.0f}% bootstrap CI for mean: "
+                f"[{boot['ci_low']:.4f}, {boot['ci_high']:.4f}])",
+                file=sys.stderr,
+            )
+        else:
+            print(f"{label}: {mean_v:.4f}", file=sys.stderr)
+
+    dd = agg.get("survival_outcome_decomposition") or {}
+    print(
+        "Survival decomposition: "
+        f"full horizon (n ≥ max_rounds)={dd.get('runs_reaching_full_horizon_survival_n_ge_max_rounds', '?')}, "
+        f"below horizon={dd.get('runs_below_full_horizon_survival_n_lt_max_rounds', '?')}",
+        file=sys.stderr,
+    )
+    early = dd.get("early_collapse_before_month_cutoff")
+    if isinstance(early, dict):
         print(
-                f"{label} mean ± std: {block.get('mean'):.3f} ± {block.get('std'):.3f}",
+            f"  Before month {early.get('cutoff_month')}: "
+            f"collapsed (n < cutoff)={early.get('runs_collapsed_strictly_before_cutoff_survival_n_lt_cutoff')}, "
+            f"not collapsed (n ≥ cutoff)={early.get('runs_not_collapsed_before_cutoff_survival_n_ge_cutoff')}",
             file=sys.stderr,
         )
+
+    bs = agg.get("bootstrap_settings") or {}
+    if bs:
+        print(
+            f"Bootstrap params: n={bs.get('n_bootstrap')}, alpha={bs.get('alpha')}, "
+            f"seed_base={bs.get('rng_seed_base')}",
+            file=sys.stderr,
+        )
+
     return 0
 
 

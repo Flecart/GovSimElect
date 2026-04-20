@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Layout } from "./components/Layout";
 import { Sidebar } from "./components/Sidebar";
 import { ContractingEvent, RunView, RunRow } from "./components/RunView";
@@ -47,6 +47,12 @@ interface RunOption {
 
 type SummaryRun = ApiSubsetIndexResponse["summary_runs"][number];
 
+interface GroupItem {
+  key: string;
+  label: string;
+  isDirectory: boolean;
+}
+
 function getRunKey(run: SummaryRun): string {
   return String(run.run_key ?? run.run_id ?? run.name ?? "");
 }
@@ -92,6 +98,20 @@ function toSelectionPath(subset: string | null, group: string | null): string {
   return `/${encodeURIComponent(subset)}/${encodeURIComponent(relativeGroup)}`;
 }
 
+function normalizeGroupPath(group: unknown, subset: string | null): string {
+  if (typeof group !== "string" || group.length === 0) return "";
+  if (!subset) return group;
+  const subsetPrefix = `${subset}/`;
+  return group.startsWith(subsetPrefix) ? group.slice(subsetPrefix.length) : group;
+}
+
+function parentPath(path: string | null): string | null {
+  if (!path) return null;
+  const parts = path.split("/").filter(Boolean);
+  if (parts.length <= 1) return null;
+  return parts.slice(0, -1).join("/");
+}
+
 export const App: React.FC = () => {
   const pathSelection = useMemo(
     () => parsePathSelection(window.location.pathname),
@@ -99,10 +119,14 @@ export const App: React.FC = () => {
   );
   const [subsets, setSubsets] = useState<string[]>([]);
   const [activeSubset, setActiveSubset] = useState<string | null>(pathSelection.subset);
+  const [activePath, setActivePath] = useState<string | null>(pathSelection.group);
   const [activeGroup, setActiveGroup] = useState<string | null>(pathSelection.group);
   const [summaryRuns, setSummaryRuns] = useState<ApiSubsetIndexResponse["summary_runs"]>([]);
   const [activeRun, setActiveRun] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loadingRun, setLoadingRun] = useState(false);
+  const [loadingSubsets, setLoadingSubsets] = useState(false);
+  const [loadingSubsetIndex, setLoadingSubsetIndex] = useState(false);
+  const [loadingGroupData, setLoadingGroupData] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [summaryGroups, setSummaryGroups] = useState<SummaryGroupRow[]>([]);
   const [resourceRows, setResourceRows] = useState<ResourceRow[]>([]);
@@ -112,6 +136,16 @@ export const App: React.FC = () => {
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
+  const activePathRef = useRef<string | null>(pathSelection.group);
+  const activeGroupRef = useRef<string | null>(pathSelection.group);
+
+  useEffect(() => {
+    activePathRef.current = activePath;
+  }, [activePath]);
+
+  useEffect(() => {
+    activeGroupRef.current = activeGroup;
+  }, [activeGroup]);
 
   const refreshFishingSummary = useCallback(async () => {
     if (!activeSubset || !activeRun) {
@@ -137,6 +171,7 @@ export const App: React.FC = () => {
     const loadSubsets = async () => {
       try {
         setError(null);
+        setLoadingSubsets(true);
         const res = await fetch(`/api/results?ts=${Date.now()}`);
         if (cancelled) return;
         if (!res.ok) {
@@ -155,6 +190,9 @@ export const App: React.FC = () => {
       } catch (e) {
         if (cancelled) return;
         setError((e as Error).message);
+      } finally {
+        if (cancelled) return;
+        setLoadingSubsets(false);
       }
     };
     loadSubsets();
@@ -172,6 +210,7 @@ export const App: React.FC = () => {
     const loadSubsetIndex = async () => {
       try {
         setError(null);
+        setLoadingSubsetIndex(true);
         const res = await fetch(
           `/api/results/${encodeURIComponent(activeSubset)}/index?ts=${Date.now()}`
         );
@@ -188,24 +227,44 @@ export const App: React.FC = () => {
         setSummaryRuns(nextRuns);
         setLastUpdatedAt(Date.now());
 
-        const nextGroups = Array.from(
-          new Set(nextRuns.map((r) => r.group))
+        const nextGroupPaths = Array.from(
+          new Set(
+            nextRuns
+              .map((r) => normalizeGroupPath(r.group, activeSubset))
+              .filter((path) => path.length > 0)
+          )
         ).sort();
-        const fullPathGroupCandidate =
-          activeSubset && activeGroup
-            ? `${activeSubset}/${activeGroup}`
-            : null;
-        const nextActiveGroup =
-          activeGroup && nextGroups.includes(activeGroup)
-            ? activeGroup
-            : fullPathGroupCandidate && nextGroups.includes(fullPathGroupCandidate)
-              ? fullPathGroupCandidate
-              : nextGroups[0] ?? null;
+        const initialPathCandidate = normalizeGroupPath(
+          activePathRef.current,
+          activeSubset
+        );
+        const initialGroupCandidate = normalizeGroupPath(
+          activeGroupRef.current,
+          activeSubset
+        );
+        const hasInitialPath = initialPathCandidate
+          ? nextGroupPaths.some(
+              (path) => path === initialPathCandidate || path.startsWith(`${initialPathCandidate}/`)
+            )
+          : true;
+
+        const nextPath = hasInitialPath
+          ? initialPathCandidate || null
+          : parentPath(nextGroupPaths[0] ?? null);
         if (cancelled) return;
-        setActiveGroup(nextActiveGroup);
+        setActivePath((prev) => (prev === nextPath ? prev : nextPath));
+        const nextActiveGroup = nextGroupPaths.includes(initialGroupCandidate)
+          ? initialGroupCandidate
+          : nextGroupPaths.includes(initialPathCandidate)
+            ? initialPathCandidate
+            : null;
+        setActiveGroup((prev) => (prev === nextActiveGroup ? prev : nextActiveGroup));
       } catch (e) {
         if (cancelled) return;
         setError((e as Error).message);
+      } finally {
+        if (cancelled) return;
+        setLoadingSubsetIndex(false);
       }
     };
 
@@ -215,17 +274,74 @@ export const App: React.FC = () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeSubset, activeGroup]);
+  }, [activeSubset]);
 
-  const groups = useMemo(
-    () => Array.from(new Set(summaryRuns.map((r) => r.group))).sort(),
-    [summaryRuns]
+  const groupPaths = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          summaryRuns
+            .map((r) => normalizeGroupPath(r.group, activeSubset))
+            .filter((path) => path.length > 0)
+        )
+      ).sort(),
+    [summaryRuns, activeSubset]
   );
+
+  const groupItems = useMemo<GroupItem[]>(() => {
+    const dir = activePath ?? "";
+    const prefix = dir ? `${dir}/` : "";
+    const children = new Map<string, { hasDescendant: boolean; isLeaf: boolean }>();
+    for (const path of groupPaths) {
+      if (dir && path !== dir && !path.startsWith(prefix)) continue;
+      if (!dir && path.length === 0) continue;
+      if (path === dir) continue;
+      const remainder = dir ? path.slice(prefix.length) : path;
+      const [head, ...tail] = remainder.split("/");
+      if (!head) continue;
+      const childPath = dir ? `${dir}/${head}` : head;
+      const existing = children.get(childPath) ?? { hasDescendant: false, isLeaf: false };
+      if (tail.length > 0) {
+        existing.hasDescendant = true;
+      } else {
+        existing.isLeaf = true;
+      }
+      children.set(childPath, existing);
+    }
+
+    const directLeafChildren = Array.from(children.entries()).filter(
+      ([, value]) => value.isLeaf && !value.hasDescendant
+    );
+    const directDirectoryChildren = Array.from(children.entries()).filter(
+      ([, value]) => value.hasDescendant
+    );
+    const isStandardDirectory =
+      directLeafChildren.length === 5 && directDirectoryChildren.length === 0;
+    const candidateEntries = isStandardDirectory
+      ? directLeafChildren
+      : Array.from(children.entries());
+
+    return candidateEntries
+      .map(([path, value]) => {
+        const segments = path.split("/");
+        return {
+          key: path,
+          label: segments[segments.length - 1],
+          isDirectory: value.hasDescendant
+        };
+      })
+      .sort((a, b) => {
+        if (a.isDirectory !== b.isDirectory) {
+          return a.isDirectory ? -1 : 1;
+        }
+        return a.label.localeCompare(b.label);
+      });
+  }, [groupPaths, activePath]);
 
   const runsForActiveGroup = useMemo<RunOption[]>(() => {
     if (!activeGroup) return [];
     return summaryRuns
-      .filter((r) => r.group === activeGroup)
+      .filter((r) => normalizeGroupPath(r.group, activeSubset) === activeGroup)
       .map((r) => ({
         key: getRunKey(r),
         label: getRunLabel(r),
@@ -233,7 +349,7 @@ export const App: React.FC = () => {
         group: r.group
       }))
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [summaryRuns, activeGroup]);
+  }, [summaryRuns, activeGroup, activeSubset]);
 
   const chartKeyByRun = useMemo(
     () =>
@@ -242,6 +358,14 @@ export const App: React.FC = () => {
       ) as Record<string, string>,
     [summaryRuns]
   );
+
+  const rawGroupByNormalized = useMemo(() => {
+    const pairs = summaryRuns.map((run) => [
+      normalizeGroupPath(run.group, activeSubset),
+      run.group
+    ]);
+    return Object.fromEntries(pairs) as Record<string, string>;
+  }, [summaryRuns, activeSubset]);
 
   const runLabelByKey = useMemo(
     () =>
@@ -269,29 +393,32 @@ export const App: React.FC = () => {
   }, [runsForActiveGroup, activeRun]);
 
   useEffect(() => {
-    const url = toSelectionPath(activeSubset, activeGroup);
+    const url = toSelectionPath(activeSubset, activeGroup ?? activePath);
     if (window.location.pathname !== url) {
       window.history.replaceState({}, "", url);
     }
-  }, [activeSubset, activeGroup]);
+  }, [activeSubset, activeGroup, activePath]);
 
   useEffect(() => {
     if (!activeSubset || !activeGroup) {
       setResourceRows([]);
+      setLoadingGroupData(false);
       return;
     }
 
     let cancelled = false;
     const loadGroupData = async () => {
       try {
+        setLoadingGroupData(true);
+        const groupKey = rawGroupByNormalized[activeGroup] ?? activeGroup;
         const res = await fetch(
           `/api/results/${encodeURIComponent(activeSubset)}/group/${encodeURIComponent(
-            activeGroup
+            groupKey
           )}?ts=${Date.now()}`
         );
         if (cancelled) return;
         if (!res.ok) {
-          throw new Error(`Failed to load group "${activeGroup}" (status ${res.status})`);
+          throw new Error(`Failed to load group "${groupKey}" (status ${res.status})`);
         }
         const data: ApiGroupResponse = await res.json();
         if (cancelled) return;
@@ -299,6 +426,9 @@ export const App: React.FC = () => {
       } catch (e) {
         if (cancelled) return;
         setError((e as Error).message);
+      } finally {
+        if (cancelled) return;
+        setLoadingGroupData(false);
       }
     };
 
@@ -308,20 +438,21 @@ export const App: React.FC = () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [activeSubset, activeGroup]);
+  }, [activeSubset, activeGroup, rawGroupByNormalized]);
 
   useEffect(() => {
     if (!activeSubset || !activeRun) {
       setRunData(null);
       setContractingEvents([]);
       setFishingSummary(null);
+      setLoadingRun(false);
       return;
     }
 
     let cancelled = false;
     const loadRunData = async () => {
       try {
-        setLoading(true);
+        setLoadingRun(true);
         const res = await fetch(
           `/api/results/${encodeURIComponent(activeSubset)}/run/${encodeURIComponent(
             activeRun
@@ -342,7 +473,7 @@ export const App: React.FC = () => {
         setError((e as Error).message);
       } finally {
         if (cancelled) return;
-        setLoading(false);
+        setLoadingRun(false);
       }
     };
 
@@ -362,11 +493,13 @@ export const App: React.FC = () => {
   const sidebar = (
     <Sidebar
       subsets={subsets}
+      loadingSubsets={loadingSubsets}
       activeSubset={activeSubset}
       onSubsetChange={(subset) => {
         if (subset === activeSubset) return;
         setError(null);
         setActiveSubset(subset);
+        setActivePath(null);
         setActiveGroup(null);
         setActiveRun(null);
         setSummaryGroups([]);
@@ -377,18 +510,36 @@ export const App: React.FC = () => {
         setContractingEvents([]);
         setFishingSummary(null);
       }}
-      groups={groups}
+      activePath={activePath}
+      canNavigateUp={Boolean(activePath)}
+      onNavigateUp={() => {
+        setActivePath((prev) => parentPath(prev));
+        setActiveGroup(null);
+        setActiveRun(null);
+        setSelectedRuns([]);
+      }}
+      groups={groupItems}
+      loadingGroups={loadingSubsetIndex}
       activeGroup={activeGroup}
-      onGroupChange={(group) => {
+      onGroupChange={(group, isDirectory) => {
+        if (isDirectory) {
+          setActivePath(group);
+          setActiveGroup(null);
+          setActiveRun(null);
+          setSelectedRuns([]);
+          return;
+        }
+        setActivePath(parentPath(group));
         setActiveGroup(group);
         setActiveRun(null);
         const keys = summaryRuns
-          .filter((r) => r.group === group)
+          .filter((r) => normalizeGroupPath(r.group, activeSubset) === group)
           .map((r) => getRunKey(r))
           .sort();
         setSelectedRuns(keys);
       }}
       runs={runsForActiveGroup.map((run) => ({ key: run.key, label: run.label }))}
+      loadingRuns={loadingRun}
       activeRun={activeRun}
       selectedRuns={selectedRuns}
       onRunChange={(run) => {
@@ -422,7 +573,18 @@ export const App: React.FC = () => {
       </header>
 
       {error && <div className="alert alert-error">{error}</div>}
-      {loading && <div className="alert">Loading selected run…</div>}
+      {(loadingRun || loadingSubsetIndex || loadingGroupData) && (
+        <div className="alert alert-info alert-loading">
+          <span className="inline-loader" aria-hidden="true" />
+          <span>
+            {loadingRun
+              ? "Loading selected run..."
+              : loadingSubsetIndex
+                ? "Refreshing subset index..."
+                : "Loading group data..."}
+          </span>
+        </div>
+      )}
 
       <div className="tabs-row tabs-row-main">
         <button
