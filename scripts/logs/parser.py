@@ -69,10 +69,45 @@ def parse_summaries(text: str) -> pd.DataFrame:
         rows.append(row)
     return pd.DataFrame(rows)
 
+
+ 
+# For models with multiple parent_runs per cell (gpt-5.4-mini), aggregate across runs:
+# average the point estimate and average the CI half-widths (they are comparable-sized bootstrap CIs).
+def ci_half(lo, hi):
+    return (hi - lo) / 2.0
+ 
+
+
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as f:
         text = f.read()
     df = parse_summaries(text)
-    print(f"Parsed {len(df)} rows")
-    print(df.head())
-    df.to_csv("/home/claude/govsim/parsed.csv", index=False)
+    
+    
+    metrics = ['m', 'q', 'R', 'u', 'e', 'o']
+    for mt in metrics:
+        df[f'{mt}_hw'] = ci_half(df[f'{mt}_lo'], df[f'{mt}_hi'])
+    
+    # Determine the full_horizon count - if a cell has 2 parent_runs, they had 5 runs each so total 10;
+    # we'll sum full_horizon and below_horizon across parent_runs.
+    agg = df.groupby(['model', 'prosocial', 'cond_id', 'condition']).agg(
+        m=('m', 'mean'),
+        q=('q', 'mean'),
+        R=('R', 'mean'),
+        u=('u', 'mean'),
+        e=('e', 'mean'),
+        o=('o', 'mean'),
+        m_hw=('m_hw', 'mean'),
+        q_hw=('q_hw', 'mean'),
+        R_hw=('R_hw', 'mean'),
+        u_hw=('u_hw', 'mean'),
+        e_hw=('e_hw', 'mean'),
+        o_hw=('o_hw', 'mean'),
+        full_horizon=('full_horizon', 'sum'),
+        below_horizon=('below_horizon', 'sum'),
+        n_parent_runs=('m', 'size'),
+    ).reset_index()
+    
+    agg['total_runs'] = (agg['full_horizon'] + agg['below_horizon']).astype(int)
+    print(agg[['model', 'prosocial', 'condition', 'm', 'q', 'R', 'full_horizon', 'total_runs']].to_string())
+    agg.to_csv('aggregated.csv', index=False)

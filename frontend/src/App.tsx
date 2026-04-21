@@ -168,10 +168,12 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const loadSubsets = async () => {
+    const loadSubsets = async (background = false) => {
       try {
         setError(null);
-        setLoadingSubsets(true);
+        if (!background) {
+          setLoadingSubsets(true);
+        }
         const res = await fetch(`/api/results?ts=${Date.now()}`);
         if (cancelled) return;
         if (!res.ok) {
@@ -192,11 +194,15 @@ export const App: React.FC = () => {
         setError((e as Error).message);
       } finally {
         if (cancelled) return;
-        setLoadingSubsets(false);
+        if (!background) {
+          setLoadingSubsets(false);
+        }
       }
     };
-    loadSubsets();
-    const interval = window.setInterval(loadSubsets, 5000);
+    void loadSubsets(false);
+    const interval = window.setInterval(() => {
+      void loadSubsets(true);
+    }, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
@@ -207,10 +213,12 @@ export const App: React.FC = () => {
     if (!activeSubset) return;
 
     let cancelled = false;
-    const loadSubsetIndex = async () => {
+    const loadSubsetIndex = async (background = false) => {
       try {
         setError(null);
-        setLoadingSubsetIndex(true);
+        if (!background) {
+          setLoadingSubsetIndex(true);
+        }
         const res = await fetch(
           `/api/results/${encodeURIComponent(activeSubset)}/index?ts=${Date.now()}`
         );
@@ -264,12 +272,16 @@ export const App: React.FC = () => {
         setError((e as Error).message);
       } finally {
         if (cancelled) return;
-        setLoadingSubsetIndex(false);
+        if (!background) {
+          setLoadingSubsetIndex(false);
+        }
       }
     };
 
-    loadSubsetIndex();
-    const interval = window.setInterval(loadSubsetIndex, 5000);
+    void loadSubsetIndex(false);
+    const interval = window.setInterval(() => {
+      void loadSubsetIndex(true);
+    }, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
@@ -288,55 +300,71 @@ export const App: React.FC = () => {
     [summaryRuns, activeSubset]
   );
 
-  const groupItems = useMemo<GroupItem[]>(() => {
-    const dir = activePath ?? "";
-    const prefix = dir ? `${dir}/` : "";
-    const children = new Map<string, { hasDescendant: boolean; isLeaf: boolean }>();
-    for (const path of groupPaths) {
-      if (dir && path !== dir && !path.startsWith(prefix)) continue;
-      if (!dir && path.length === 0) continue;
-      if (path === dir) continue;
-      const remainder = dir ? path.slice(prefix.length) : path;
-      const [head, ...tail] = remainder.split("/");
-      if (!head) continue;
-      const childPath = dir ? `${dir}/${head}` : head;
+  const groupItemsByParent = useMemo(() => {
+    const tree = new Map<string, Map<string, { hasDescendant: boolean; isLeaf: boolean }>>();
+    const upsertChild = (
+      parent: string,
+      childPath: string,
+      mutate: (value: { hasDescendant: boolean; isLeaf: boolean }) => void
+    ) => {
+      const children = tree.get(parent) ?? new Map<string, { hasDescendant: boolean; isLeaf: boolean }>();
       const existing = children.get(childPath) ?? { hasDescendant: false, isLeaf: false };
-      if (tail.length > 0) {
-        existing.hasDescendant = true;
-      } else {
-        existing.isLeaf = true;
-      }
+      mutate(existing);
       children.set(childPath, existing);
+      tree.set(parent, children);
+    };
+
+    for (const path of groupPaths) {
+      const segments = path.split("/").filter(Boolean);
+      if (segments.length === 0) continue;
+
+      for (let index = 0; index < segments.length; index += 1) {
+        const parent = segments.slice(0, index).join("/");
+        const childPath = segments.slice(0, index + 1).join("/");
+        const isLeaf = index === segments.length - 1;
+        upsertChild(parent, childPath, (value) => {
+          if (isLeaf) {
+            value.isLeaf = true;
+          } else {
+            value.hasDescendant = true;
+          }
+        });
+      }
     }
 
-    const directLeafChildren = Array.from(children.entries()).filter(
-      ([, value]) => value.isLeaf && !value.hasDescendant
-    );
-    const directDirectoryChildren = Array.from(children.entries()).filter(
-      ([, value]) => value.hasDescendant
-    );
-    const isStandardDirectory =
-      directLeafChildren.length === 5 && directDirectoryChildren.length === 0;
-    const candidateEntries = isStandardDirectory
-      ? directLeafChildren
-      : Array.from(children.entries());
+    const itemsByParent = new Map<string, GroupItem[]>();
+    for (const [parent, children] of tree.entries()) {
+      const entries = Array.from(children.entries());
+      const directLeafChildren = entries.filter(([, value]) => value.isLeaf && !value.hasDescendant);
+      const directDirectoryChildren = entries.filter(([, value]) => value.hasDescendant);
+      const isStandardDirectory =
+        directLeafChildren.length === 5 && directDirectoryChildren.length === 0;
+      const candidateEntries = isStandardDirectory ? directLeafChildren : entries;
 
-    return candidateEntries
-      .map(([path, value]) => {
-        const segments = path.split("/");
-        return {
-          key: path,
-          label: segments[segments.length - 1],
-          isDirectory: value.hasDescendant
-        };
-      })
-      .sort((a, b) => {
-        if (a.isDirectory !== b.isDirectory) {
-          return a.isDirectory ? -1 : 1;
-        }
-        return a.label.localeCompare(b.label);
-      });
-  }, [groupPaths, activePath]);
+      const items = candidateEntries
+        .map(([path, value]) => {
+          const segments = path.split("/");
+          return {
+            key: path,
+            label: segments[segments.length - 1],
+            isDirectory: value.hasDescendant
+          };
+        })
+        .sort((a, b) => {
+          if (a.isDirectory !== b.isDirectory) {
+            return a.isDirectory ? -1 : 1;
+          }
+          return a.label.localeCompare(b.label);
+        });
+      itemsByParent.set(parent, items);
+    }
+    return itemsByParent;
+  }, [groupPaths]);
+
+  const groupItems = useMemo<GroupItem[]>(
+    () => groupItemsByParent.get(activePath ?? "") ?? [],
+    [groupItemsByParent, activePath]
+  );
 
   const runsForActiveGroup = useMemo<RunOption[]>(() => {
     if (!activeGroup) return [];
@@ -407,20 +435,35 @@ export const App: React.FC = () => {
     }
 
     let cancelled = false;
-    const loadGroupData = async () => {
+    const loadGroupData = async (background = false) => {
       try {
-        setLoadingGroupData(true);
-        const groupKey = rawGroupByNormalized[activeGroup] ?? activeGroup;
-        const res = await fetch(
-          `/api/results/${encodeURIComponent(activeSubset)}/group/${encodeURIComponent(
-            groupKey
-          )}?ts=${Date.now()}`
-        );
-        if (cancelled) return;
-        if (!res.ok) {
-          throw new Error(`Failed to load group "${groupKey}" (status ${res.status})`);
+        if (!background) {
+          setLoadingGroupData(true);
         }
-        const data: ApiGroupResponse = await res.json();
+        const candidateKeys = Array.from(
+          new Set([rawGroupByNormalized[activeGroup] ?? "", activeGroup].filter(Boolean))
+        );
+        let data: ApiGroupResponse | null = null;
+        let lastError: string | null = null;
+
+        for (const groupKey of candidateKeys) {
+          const res = await fetch(
+            `/api/results/${encodeURIComponent(activeSubset)}/group/${encodeURIComponent(
+              groupKey
+            )}?ts=${Date.now()}`
+          );
+          if (cancelled) return;
+          if (!res.ok) {
+            lastError = `Failed to load group "${groupKey}" (status ${res.status})`;
+            continue;
+          }
+          data = (await res.json()) as ApiGroupResponse;
+          break;
+        }
+
+        if (!data) {
+          throw new Error(lastError ?? `Failed to load group "${activeGroup}"`);
+        }
         if (cancelled) return;
         setResourceRows(data.resource_rows ?? []);
       } catch (e) {
@@ -428,12 +471,16 @@ export const App: React.FC = () => {
         setError((e as Error).message);
       } finally {
         if (cancelled) return;
-        setLoadingGroupData(false);
+        if (!background) {
+          setLoadingGroupData(false);
+        }
       }
     };
 
-    loadGroupData();
-    const interval = window.setInterval(loadGroupData, 5000);
+    void loadGroupData(false);
+    const interval = window.setInterval(() => {
+      void loadGroupData(true);
+    }, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);
@@ -450,9 +497,11 @@ export const App: React.FC = () => {
     }
 
     let cancelled = false;
-    const loadRunData = async () => {
+    const loadRunData = async (background = false) => {
       try {
-        setLoadingRun(true);
+        if (!background) {
+          setLoadingRun(true);
+        }
         const res = await fetch(
           `/api/results/${encodeURIComponent(activeSubset)}/run/${encodeURIComponent(
             activeRun
@@ -473,12 +522,16 @@ export const App: React.FC = () => {
         setError((e as Error).message);
       } finally {
         if (cancelled) return;
-        setLoadingRun(false);
+        if (!background) {
+          setLoadingRun(false);
+        }
       }
     };
 
-    loadRunData();
-    const interval = window.setInterval(loadRunData, 5000);
+    void loadRunData(false);
+    const interval = window.setInterval(() => {
+      void loadRunData(true);
+    }, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(interval);

@@ -412,3 +412,15 @@ for prosocial in 0 1 2 3 4 5; do
   bash scripts/stochastic/run_iid_stochastic_no_contract.sh &
 done
 
+
+
+  MODEL="x-ai/grok-4.1-fast" \
+  NAME="grok-4.1-fast" \
+  GROUP="2-code-law-p0" \
+  PROSOCIAL_COUNT="0" \
+  bash scripts/stochastic/run_iid_stochastic_code_law.sh
+MODEL="x-ai/grok-4.1-fast" \
+NAME="grok-4.1-fast" \
+GROUP="0-no-contract-p0" \
+PROSOCIAL_COUNT=0 \
+bash scripts/stochastic/run_iid_stochastic_no_contract.sh &

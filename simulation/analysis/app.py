@@ -2,6 +2,7 @@ import importlib.util
 import json
 import os
 import traceback
+import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -220,6 +221,75 @@ def _build_summary_runs(summary_df):
     return summary_runs
 
 
+_INDEX_CACHE_TTL_SECONDS = 60.0
+_GROUP_CACHE_TTL_SECONDS = 30.0
+_index_cache = {}
+_run_response_cache = {}
+_group_response_cache = {}
+
+
+def _fast_subset_index(subset_name):
+    """Build lightweight run index from filesystem only (no YAML flattening)."""
+    base_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "results", subset_name)
+    )
+    if not os.path.isdir(base_path):
+        return {"summary_groups": [], "summary_runs": []}
+
+    summary_runs = []
+    groups = {}
+    for group in sorted(os.listdir(base_path)):
+        group_path = os.path.join(base_path, group)
+        if not os.path.isdir(group_path):
+            continue
+
+        for root, _, files in os.walk(group_path):
+            if "log_env.json" not in files:
+                continue
+            rel_run_path = os.path.relpath(root, group_path)
+            rel_parent = os.path.dirname(rel_run_path)
+            full_group = (
+                f"{subset_name}/{group}"
+                if rel_parent in {"", "."}
+                else f"{subset_name}/{group}/{rel_parent}"
+            )
+            run_id = f"{group}/{rel_run_path}"
+            run_row = {
+                "name": rel_run_path,
+                "group": full_group,
+                "run_id": run_id,
+            }
+            run_row["run_key"] = run_id
+            run_row["run_label"] = _build_run_label(run_row)
+            run_row["chart_key"] = _build_chart_key(run_row)
+            summary_runs.append(run_row)
+            groups[full_group] = {"id": full_group, "group": full_group}
+
+    summary_runs.sort(key=lambda row: (str(row.get("group", "")), str(row.get("name", ""))))
+    sorted_groups = sorted(groups.values(), key=lambda row: str(row.get("group", "")))
+    return {"summary_groups": sorted_groups, "summary_runs": summary_runs}
+
+
+def _cached_subset_index(subset_name):
+    now = time.time()
+    cached = _index_cache.get(subset_name)
+    if cached and now - cached["created_at"] < _INDEX_CACHE_TTL_SECONDS:
+        return cached["payload"]
+    payload = _fast_subset_index(subset_name)
+    _index_cache[subset_name] = {"created_at": now, "payload": payload}
+    return payload
+
+
+def _cached_group_response(cache_key, builder):
+    now = time.time()
+    cached = _group_response_cache.get(cache_key)
+    if cached and now - cached["created_at"] < _GROUP_CACHE_TTL_SECONDS:
+        return cached["payload"]
+    payload = builder()
+    _group_response_cache[cache_key] = {"created_at": now, "payload": payload}
+    return payload
+
+
 def _load_contracting_events(summary_df):
     if summary_df is None or summary_df.empty:
         return {}
@@ -267,6 +337,34 @@ def _load_run_records(summary_df):
         df = df.replace([np.nan, np.inf, -np.inf], None)
         run_records[row["run_id"]] = df.to_dict(orient="records")
     return run_records
+
+
+def _load_single_run_records(run_path):
+    if not os.path.exists(run_path):
+        return []
+    try:
+        df = pd.read_json(run_path, orient="records")
+    except (ValueError, OSError):
+        # e.g. read while another process replaces the file; next poll usually succeeds
+        return []
+    df = df.replace([np.nan, np.inf, -np.inf], None)
+    return df.to_dict(orient="records")
+
+
+def _load_single_contracting_events(contracting_path):
+    if not os.path.exists(contracting_path):
+        return []
+    events = []
+    with open(contracting_path, "r") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                events.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return events
 
 
 _SUMMARIZE_FISHING_MOD = None
@@ -467,13 +565,8 @@ def api_result_subset_index(subset_name):
     if subset_name not in get_available_subsets():
         return {"error": f"Unknown subset: {subset_name}"}, 404
 
-    summary_df, summary_group_df = get_summary_runs(subset_name)
-    summary_runs = _build_summary_runs(summary_df)
-
-    return _sanitize_json_value({
-        "summary_groups": _serialize_dataframe(summary_group_df),
-        "summary_runs": summary_runs,
-    })
+    payload = _cached_subset_index(subset_name)
+    return _sanitize_json_value(payload)
 
 
 @server.route("/api/results/<subset_name>/group/<path:group_name>", methods=["GET"])
@@ -482,24 +575,59 @@ def api_result_subset_group(subset_name, group_name):
     if subset_name not in get_available_subsets():
         return {"error": f"Unknown subset: {subset_name}"}, 404
 
-    summary_df, _ = get_summary_runs(subset_name)
-    if summary_df is None or summary_df.empty:
-        return {"resource_rows": []}
+    def build_response():
+        summary_df, _ = get_summary_runs(subset_name)
+        if summary_df is None or summary_df.empty:
+            return {"resource_rows": []}
 
-    group_df = summary_df[summary_df["group"].astype(str) == str(group_name)]
-    if group_df.empty:
-        return {"error": f"Unknown group: {group_name}"}, 404
-
-    ts_resource = _load_resource_time_series(group_df)
-    resource_df = ts_resource.get(group_name)
-    if resource_df is None or resource_df.empty:
-        return {"resource_rows": []}
-
-    return _sanitize_json_value({
-        "resource_rows": resource_df.replace([np.nan, np.inf, -np.inf], None).to_dict(
-            orient="records"
+        resolved_group_name = str(group_name)
+        prefix = f"{subset_name}/"
+        relative_group = (
+            resolved_group_name[len(prefix):]
+            if resolved_group_name.startswith(prefix)
+            else resolved_group_name
         )
-    })
+        root_group = relative_group.split("/", 1)[0]
+        nested_prefix = relative_group[len(root_group):].lstrip("/")
+
+        root_group_name = f"{subset_name}/{root_group}"
+        group_df = summary_df[summary_df["group"].astype(str) == root_group_name]
+        if nested_prefix:
+            group_df = group_df[
+                group_df["name"].astype(str).str.startswith(f"{nested_prefix}/")
+                | (group_df["name"].astype(str) == nested_prefix)
+            ]
+        if group_df.empty:
+            return {"error": f"Unknown group: {resolved_group_name}"}, 404
+
+        ts_resource = _load_resource_time_series(group_df)
+        resource_df = ts_resource.get(root_group_name)
+        if resource_df is None or resource_df.empty:
+            return {"resource_rows": []}
+
+        # Keep only run series that belong to the selected nested group.
+        allowed_chart_keys = {
+            _build_chart_key(row)
+            for _, row in group_df.iterrows()
+        }
+        keep_columns = [
+            col
+            for col in resource_df.columns
+            if col in {"x", "round"} or col in allowed_chart_keys
+        ]
+        # Fallback: if filtering removed all run columns, return unfiltered data.
+        # This avoids empty charts when naming/path normalization mismatches occur.
+        if len(keep_columns) > 2:
+            resource_df = resource_df[keep_columns]
+
+        return {
+            "resource_rows": resource_df.replace([np.nan, np.inf, -np.inf], None).to_dict(
+                orient="records"
+            )
+        }
+
+    payload = _cached_group_response(f"{subset_name}:{group_name}", build_response)
+    return _sanitize_json_value(payload)
 
 
 @server.route("/api/results/<subset_name>/run/<path:run_id>", methods=["GET"])
@@ -508,30 +636,55 @@ def api_result_subset_run(subset_name, run_id):
     if subset_name not in get_available_subsets():
         return {"error": f"Unknown subset: {subset_name}"}, 404
 
-    summary_df, _ = get_summary_runs(subset_name)
-    if summary_df is None or summary_df.empty:
-        return {"error": "No runs in subset"}, 404
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    run_id = str(run_id)
+    run_parts = run_id.split("/", 1)
+    if len(run_parts) != 2 or not run_parts[0] or not run_parts[1]:
+        return {"error": f"Malformed run_id: {run_id}"}, 404
 
-    match = summary_df[summary_df["run_id"].astype(str) == str(run_id)]
-    if match.empty:
+    group_suffix, run_name = run_parts
+    run_group = f"{subset_name}/{group_suffix}"
+    run_dir = os.path.join(base_path, run_group, run_name)
+    log_path = os.path.join(run_dir, "log_env.json")
+    contracting_path = os.path.join(run_dir, "contracting_results.jsonl")
+    summary_path = os.path.join(run_dir, "fishing_run_summary.json")
+
+    if not os.path.exists(run_dir):
         return {"error": f"Unknown run_id: {run_id}"}, 404
 
-    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
-    row = match.iloc[0]
-    run_row = row.to_dict()
-    run_row["run_key"] = run_row.get("run_id")
+    cache_key = f"{subset_name}:{run_id}"
+    log_mtime = os.path.getmtime(log_path) if os.path.exists(log_path) else None
+    contracting_mtime = (
+        os.path.getmtime(contracting_path) if os.path.exists(contracting_path) else None
+    )
+    summary_mtime = os.path.getmtime(summary_path) if os.path.exists(summary_path) else None
+    cache_fingerprint = (log_mtime, contracting_mtime, summary_mtime)
+    cached = _run_response_cache.get(cache_key)
+    if cached and cached.get("fingerprint") == cache_fingerprint:
+        return _sanitize_json_value(cached["response"])
+
+    run_row = {
+        "run_id": run_id,
+        "name": run_name,
+        "group": run_group,
+    }
+    run_row["run_key"] = run_row["run_id"]
     run_row["run_label"] = _build_run_label(run_row)
     run_row["chart_key"] = _build_chart_key(run_row)
 
-    run_records = _load_run_records(match)
-    contracting_data = _load_contracting_events(match)
-    fishing_summary = _write_fishing_run_summary_json(base_path, row["group"], row["name"])
+    run_records = _load_single_run_records(log_path)
+    contracting_data = _load_single_contracting_events(contracting_path)
+    fishing_summary = _write_fishing_run_summary_json(base_path, run_group, run_name)
 
     response = {
         "run": run_row,
-        "run_data": run_records.get(str(run_id), []),
-        "contracting_data": contracting_data.get(str(run_id), []),
+        "run_data": run_records,
+        "contracting_data": contracting_data,
         "fishing_summary": fishing_summary,
+    }
+    _run_response_cache[cache_key] = {
+        "fingerprint": cache_fingerprint,
+        "response": response,
     }
     return _sanitize_json_value(response)
 
@@ -556,18 +709,19 @@ def api_refresh_fishing_summary():
     if subset_name not in get_available_subsets():
         return {"error": f"Unknown subset: {subset_name}"}, 404
 
-    summary_df, _ = get_summary_runs(subset_name)
-    if summary_df is None or summary_df.empty:
-        return {"error": "No runs in subset"}, 404
+    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
+    run_parts = run_id.split("/", 1)
+    if len(run_parts) != 2 or not run_parts[0] or not run_parts[1]:
+        return {"error": f"Malformed run_id: {run_id}"}, 404
 
-    match = summary_df[summary_df["run_id"].astype(str) == run_id]
-    if match.empty:
+    group_suffix, run_name = run_parts
+    run_group = f"{subset_name}/{group_suffix}"
+    run_dir = os.path.join(base_path, run_group, run_name)
+    if not os.path.isdir(run_dir):
         return {"error": f"Unknown run_id: {run_id}"}, 404
 
-    row = match.iloc[0]
-    base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "results"))
     report = _write_fishing_run_summary_json(
-        base_path, row["group"], row["name"], force=True
+        base_path, run_group, run_name, force=True
     )
     if report is None:
         return {
