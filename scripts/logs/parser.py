@@ -81,6 +81,11 @@ def ci_half(lo, hi):
 if __name__ == "__main__":
     with open(sys.argv[1], "r") as f:
         text = f.read()
+        
+    if len(sys.argv) > 2:
+        end_file = sys.argv[2]
+    else:
+        end_file = "aggregated.csv"
     df = parse_summaries(text)
     
     
@@ -97,6 +102,16 @@ if __name__ == "__main__":
         u=('u', 'mean'),
         e=('e', 'mean'),
         o=('o', 'mean'),
+        m_lo=('m_lo', 'mean'),
+        m_hi=('m_hi', 'mean'),
+        q_lo=('q_lo', 'mean'),
+        q_hi=('q_hi', 'mean'),
+        R_lo=('R_lo', 'mean'),
+        R_hi=('R_hi', 'mean'),
+        u_lo=('u_lo', 'mean'),
+        u_hi=('u_hi', 'mean'),
+        e_lo=('e_lo', 'mean'),
+        e_hi=('e_hi', 'mean'),
         m_hw=('m_hw', 'mean'),
         q_hw=('q_hw', 'mean'),
         R_hw=('R_hw', 'mean'),
@@ -110,4 +125,4 @@ if __name__ == "__main__":
     
     agg['total_runs'] = (agg['full_horizon'] + agg['below_horizon']).astype(int)
     print(agg[['model', 'prosocial', 'condition', 'm', 'q', 'R', 'full_horizon', 'total_runs']].to_string())
-    agg.to_csv('aggregated.csv', index=False)
+    agg.to_csv(end_file, index=False)

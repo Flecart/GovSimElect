@@ -413,6 +413,30 @@ for prosocial in 0 1 2 3 4 5; do
 done
 
 
+for prosocial in 0 1 2 3 4 5; do
+  MODEL="openai/gpt-4o" \
+  NAME="sto/gpt-4o" \
+  GROUP="1-nl-p${prosocial}" \
+  PROSOCIAL_COUNT="$prosocial" \
+  bash scripts/stochastic/run_iid_stochastic_nl.sh &
+  MODEL="openai/gpt-4o" \
+  NAME="sto/gpt-4o" \
+  GROUP="2-code-law-p${prosocial}" \
+  PROSOCIAL_COUNT="$prosocial" \
+  bash scripts/stochastic/run_iid_stochastic_code_law.sh &
+  MODEL="openai/gpt-4o" \
+  NAME="sto/gpt-4o" \
+  GROUP="0-no-contract-p${prosocial}" \
+  PROSOCIAL_COUNT="$prosocial" \
+  bash scripts/stochastic/run_iid_stochastic_no_contract.sh &
+done
+ 
+  MODEL="openai/gpt-4o" \
+  NAME="sto/gpt-4o" \
+  GROUP="1-nl-ptest" \
+  PROSOCIAL_COUNT="0" \
+  bash scripts/stochastic/run_iid_stochastic_nl.sh
+
 
   MODEL="x-ai/grok-4.1-fast" \
   NAME="grok-4.1-fast" \
