@@ -50,6 +50,7 @@ def _negotiation_rounds_notice(state: FishingContractState) -> str:
   return (
       f"This discussion is limited to {n} speaking turns total (round-robin: one fisher speaks per turn). "
       f"With {state.num_agents} fishers, each person may speak about {per_s} times on average before the discussion ends.\n"
+      "If no agreement is reached with majority vote before the end of the discussion, the current law remains in force."
   )
 
 
@@ -297,12 +298,11 @@ def round_robin_prompt(
   retrieved_memories = persona.retrieve.retrieve([], 8)
   memory_prompt_text = memory_prompt(persona.identity, retrieved_memories)
   return (
-      f"{_persona_harvest_context(persona, agent_resource_num)}"
-      f"{_resource_report(agent_resource_num)}\n\n"
+      f"{_persona_harvest_context(persona, agent_resource_num)}\n"
       f"{memory_prompt_text}\n"
-      f"{_active_law_block(active_law_text)}"
-      f"{_negotiation_rounds_notice(state)}"
-      f"{_deliberation_scope_block(mode)}"
+      f"{_active_law_block(active_law_text)}\n"
+      f"{_negotiation_rounds_notice(state)}\n"
+      f"{_deliberation_scope_block(mode)}\n"
       f"{_state_lines(state)}\n"
       f"{tool_instructions + chr(10) if tool_instructions else ''}"
       "Conversation so far:\n"
@@ -327,7 +327,7 @@ def round_robin_tag_clarification_prompt(
   user_prompt = (
       "Your last response did not follow the required agreement protocol.\n"
       "Rewrite it so that it includes exactly one of these tags:\n"
-      "- <AGREE> or or <AGREE to=Alice> \n"
+      "- <AGREE> or <AGREE to=Alice>\n"
       "- <DISAGREE>\n"
       "Preserve your original meaning. Keep the response short.\n"
       f"Original response:\n{original_response}\n"
@@ -379,6 +379,7 @@ def coding_agent_prompt(
         "    But ONLY if the contract explicitly states this constraint.\n"
         "- If the contract specifies escrow, sanctions, insurance, participation fees, or transfers, encode them using `ctx` methods inside `resolve` (or hooks).\n"
         "- Use `self.state` only for bespoke ledgers; do not store framework escrow/violations there.\n"
+        "- If your law uses `self.state`, override `__init__` with `prior_state=None` and call `super().__init__(..., prior_state=prior_state)` so state survives contract replacement.\n"
         "- The law must keep working in future months, not just the current one.\n"
         "- Do NOT add formulas, safety margins, or dynamic calculations the contract does not specify.\n"
         "- Do NOT model reproduction or compute post-catch population.\n"
@@ -428,8 +429,8 @@ def constitution_vote_prompt(
       "PROPOSED CONSTITUTION (natural language):\n"
       f"\"\"\"\n{nl_contract}\n\"\"\"\n\n"
       "VOTING GUIDELINES:\n"
-      "- Vote YES if you accept this text as the formal agreement for the next round.\n"
-      "- Vote NO if the text is vague, unfair, or worse than keeping the current law.\n"
+      "- Vote <VOTE_YES> if you accept this text as the formal agreement for the next round.\n"
+      "- Vote <VOTE_NO> if the text is vague, unfair, or worse than keeping the current law.\n"
       f"- A NO vote leaves the current law in force{': ' + active_nl_law if active_nl_law else '.'}\n\n"
       "If you ratify the constitution, start your response with <VOTE_YES>.\n"
       "Otherwise start with <VOTE_NO> and explain briefly."

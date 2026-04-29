@@ -88,8 +88,7 @@ async def _aprompt_persona_with_tools(
 
 
 def _parse_vote_tag(message: str) -> bool:
-  upper = message.upper()
-  return "<VOTE_YES>" in upper or "YES" in upper.split()[:5]
+  return "<VOTE_YES>" in message.upper()
 
 
 def _extract_constitution_text(message: str) -> str | None:
@@ -225,8 +224,7 @@ class MayoralVotingNegotiationManager:
     return message if len(message) > 5 else None
 
   def _parse_vote(self, message: str) -> bool:
-    upper = message.upper()
-    return "<VOTE_YES>" in upper or "YES" in upper.split()[:5]
+    return "<VOTE_YES>" in message.upper()
 
 
 class RoundRobinNegotiationManager:
@@ -326,7 +324,8 @@ class RoundRobinNegotiationManager:
         )
         if target_contract is not None:
           agreements[speaker_name] = target_contract
-
+    
+      print(f"Agreements: {agreements}")
       consensus = self._check_consensus(agreements)
       if consensus:
         return NLNegotiationResult(
@@ -350,6 +349,9 @@ class RoundRobinNegotiationManager:
   ) -> tuple[str, str]:
     has_agree, has_disagree = self._parse_agreement_signal(response)
     if has_agree or has_disagree or "<END_CONVERSATION>" in response.upper():
+      return response, ""
+    # A response with a <constitution> block is a new proposal — no agreement tag required.
+    if _extract_constitution_text(response) is not None:
       return response, ""
     system_prompt, user_prompt = round_robin_tag_clarification_prompt(response)
     clarified_response, clarified_html = await _aprompt_persona(
@@ -376,11 +378,9 @@ class RoundRobinNegotiationManager:
       - <AGREE to=Alice>
       - <AGREE to="Alice">
     """
-    if re.search(r"<AGREE(?:\s[^>]*)?>", response, re.IGNORECASE):
-      return True, False
-    if "<DISAGREE>" in response.upper():
-      return False, True
-    return False, False
+    has_agree = re.search(r"<AGREE(?:\s[^>]*)?>", response, re.IGNORECASE) is not None
+    has_disagree = "<DISAGREE>" in response.upper()
+    return has_agree, has_disagree
 
   def _check_consensus(
       self,
@@ -419,10 +419,11 @@ class RoundRobinNegotiationManager:
   ) -> bool:
     if not nl_contract:
       return False
-    if has_agree and not has_disagree and _extract_constitution_text(response) is None:
+    has_constitution = _extract_constitution_text(response) is not None
+    if has_agree and not has_disagree and not has_constitution:
       return False
     if has_disagree:
-      return self._looks_like_counterproposal(nl_contract)
+      return has_constitution
     if not has_agree:
       return True
     return True
@@ -457,22 +458,6 @@ class RoundRobinNegotiationManager:
     if not proposals:
       return None
     return proposals[-1][2]
-
-  def _looks_like_counterproposal(self, message: str) -> bool:
-    lowered = message.lower()
-    proposal_markers = [
-        "<constitution>",
-        # "i propose",
-        # "my proposal",
-        # "counterproposal",
-        # "instead,",
-        # "rather,",
-        # "no more than",
-        # "at most",
-        # "each of us should",
-    ]
-    return any(marker in lowered for marker in proposal_markers)
-
 
 class CodedContractVotingManager:
   def __init__(
@@ -530,6 +515,7 @@ class CodedContractVotingManager:
       active_nl_law: str = "",
       active_code_law: str = "",
   ) -> tuple[bool, str | None, list[dict[str, str]], dict[str, bool]]:
+    raise NotImplementedError("CodedContractVotingManager.vote_on_coded_contract is not implemented")
     votes: dict[str, bool] = {}
     conversations: list[dict[str, str]] = []
     for agent in self.agents:

@@ -62,10 +62,11 @@ def instantiate_contract(
       )
     kwargs["prior_state"] = migrated
   else:
-    if old_instance is not None and cls.VERSION != old_instance.__class__.VERSION:
+    if old_instance is not None and prior_state:
       discontinuity_log.append(
           f"State reset: new law class {cls.__name__} VERSION={cls.VERSION} "
-          f"does not accept prior_state; prior was VERSION={old_instance.__class__.VERSION}.",
+          f"does not accept prior_state; prior state keys {list(prior_state.keys())} dropped "
+          f"(prior VERSION={old_instance.__class__.VERSION}).",
       )
   return cls(**kwargs)  # type: ignore[misc]
 

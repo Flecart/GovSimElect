@@ -24,7 +24,6 @@ from .contract import (
 )
 from .managers import LawContractManager, NLContractManager, NoCommsManager
 from .negotiation import (
-    CodedContractVotingManager,
     FreeChatNegotiationManager,
     MayoralVotingNegotiationManager,
     RoundRobinNegotiationManager,
@@ -385,7 +384,6 @@ class ContractingOrchestrator:
       state: FishingContractState,
       nl_contract: str,
   ) -> tuple[str | None, str | None]:
-    voting_manager = CodedContractVotingManager(personas)
     feedback = None
     last_response = None
     active_contract = self._manager.get_contract()
@@ -397,36 +395,6 @@ class ContractingOrchestrator:
       )
       if active_contract.contract_type == ContractType.PYTHON_LAW:
         active_code_law = active_contract.content
-
-    constitution_passed, constitution_conversations, constitution_votes = (
-        await voting_manager.vote_on_constitution(
-            nl_contract=nl_contract,
-            state=state,
-            active_nl_law=active_nl_law,
-            active_code_law=active_code_law,
-        )
-    )
-    for idx, turn in enumerate(constitution_conversations, start=len(self._manager._conversation)):
-      self._manager.add_conversation_turn(
-          agent_name=turn["agent"],
-          message=turn["message"],
-          turn_number=idx,
-          phase=turn.get("phase", "constitution_vote"),
-          html=turn.get("html", ""),
-      )
-    self._log(
-        "constitution_vote",
-        {
-            "round": self.current_round,
-            "votes": constitution_votes,
-            "passed": constitution_passed,
-        },
-    )
-    if not constitution_passed:
-      return (
-          None,
-          "The proposed constitution did not receive majority support; the prior law stays in force.",
-      )
 
     for retry_attempt in range(self.cfg.max_coding_retries + 1):
       coded_contract, response, html = await self._coding_agent.translate(
