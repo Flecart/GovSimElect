@@ -315,12 +315,15 @@ class RoundRobinNegotiationManager:
         proposals.append((turn, speaker_name, nl_contract))
         proposal_by_proposer[speaker_name.lower()] = nl_contract
         agreements[speaker_name] = nl_contract
-      if has_agree and proposals:
+      elif has_agree and proposals:
+        # Only resolve AGREE if speaker didn't also submit their own constitution.
+        # A constitution block always takes precedence over a co-occurring AGREE tag.
         target_proposer = self._extract_agree_target(response)
         target_contract = self._resolve_agreement_target_contract(
             target_proposer=target_proposer,
             proposal_by_proposer=proposal_by_proposer,
             proposals=proposals,
+            agreements=agreements,
         )
         if target_contract is not None:
           agreements[speaker_name] = target_contract
@@ -451,9 +454,20 @@ class RoundRobinNegotiationManager:
       target_proposer: str | None,
       proposal_by_proposer: dict[str, str],
       proposals: list[tuple[int, str, str]],
+      agreements: dict[str, str] | None = None,
   ) -> str | None:
     if target_proposer:
-      return proposal_by_proposer.get(target_proposer.strip().lower())
+      key = target_proposer.strip().lower()
+      # Direct proposer lookup first.
+      if key in proposal_by_proposer:
+        return proposal_by_proposer[key]
+      # Transitive: named target agreed to someone else's proposal.
+      if agreements:
+        for agent_name, contract in agreements.items():
+          if agent_name.lower() == key:
+            return contract
+      return None
+    # Bare <AGREE> with no target → latest proposal.
     if not proposals:
       return None
     return proposals[-1][2]

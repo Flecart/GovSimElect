@@ -453,15 +453,15 @@ done
 
   MODEL="openai/gpt-5.4-mini" \
   NAME="sto/gpt-5.4-mini" \
-  GROUP="2-code-law-p4" \
-  PROSOCIAL_COUNT="4" \
+  GROUP="2-code-law-p2" \
+  PROSOCIAL_COUNT="2" \
   bash scripts/stochastic/run_iid_stochastic_code_law.sh
 
  
   MODEL="openai/gpt-4o" \
   NAME="sto/gpt-4o" \
   GROUP="1-nl-ptest" \
-  PROSOCIAL_COUNT="0" \
+  PROSOCIAL_COUNT="" \
   bash scripts/stochastic/run_iid_stochastic_nl.sh
 
 

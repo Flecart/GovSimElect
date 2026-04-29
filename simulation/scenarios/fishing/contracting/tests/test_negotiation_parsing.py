@@ -213,3 +213,69 @@ class TestEnsureTaggedResponse:
         assert has_agree is False
         assert has_disagree is False
         assert has_constitution is True  # skip-condition is satisfied
+
+
+# ---------------------------------------------------------------------------
+# _resolve_agreement_target_contract — transitive resolution
+# ---------------------------------------------------------------------------
+
+class TestResolveAgreementTargetContract:
+    def setup_method(self):
+        self.mgr = _mgr()
+
+    def test_direct_proposer_lookup(self):
+        result = self.mgr._resolve_agreement_target_contract(
+            target_proposer="Jack",
+            proposal_by_proposer={"jack": "cap at 8 tons"},
+            proposals=[(0, "Jack", "cap at 8 tons")],
+        )
+        assert result == "cap at 8 tons"
+
+    def test_bare_agree_falls_back_to_last_proposal(self):
+        # <AGREE> with no target → latest proposal
+        result = self.mgr._resolve_agreement_target_contract(
+            target_proposer=None,
+            proposal_by_proposer={"jack": "cap at 8 tons"},
+            proposals=[(0, "Jack", "cap at 8 tons"), (1, "Emma", "cap at 6 tons")],
+        )
+        assert result == "cap at 6 tons"
+
+    def test_transitive_agree_to_emma_who_agreed_to_jack(self):
+        # Emma agreed to Jack's proposal (Emma not in proposal_by_proposer).
+        # Luke says <AGREE to=Emma> — should resolve to Jack's contract transitively.
+        agreements = {
+            "Jack": "cap at 8 tons",
+            "Emma": "cap at 8 tons",  # Emma already agreed to Jack
+        }
+        result = self.mgr._resolve_agreement_target_contract(
+            target_proposer="Emma",
+            proposal_by_proposer={"jack": "cap at 8 tons"},
+            proposals=[(0, "Jack", "cap at 8 tons")],
+            agreements=agreements,
+        )
+        assert result == "cap at 8 tons"
+
+    def test_unknown_target_returns_none(self):
+        # Target hasn't spoken at all — should not fall back to last proposal.
+        result = self.mgr._resolve_agreement_target_contract(
+            target_proposer="Nobody",
+            proposal_by_proposer={"jack": "cap at 8 tons"},
+            proposals=[(0, "Jack", "cap at 8 tons")],
+            agreements={"Jack": "cap at 8 tons"},
+        )
+        assert result is None
+
+    def test_transitive_chain_produces_original_contract(self):
+        # Full scenario: Jack proposes, Emma agrees to Jack, Luke agrees to Emma.
+        # All three should end up with Jack's contract.
+        agreements = {
+            "Jack": "cap at 8 tons",
+            "Emma": "cap at 8 tons",  # agreed to Jack
+        }
+        luke_result = self.mgr._resolve_agreement_target_contract(
+            target_proposer="Emma",
+            proposal_by_proposer={"jack": "cap at 8 tons"},
+            proposals=[(0, "Jack", "cap at 8 tons")],
+            agreements=agreements,
+        )
+        assert luke_result == "cap at 8 tons"  # Jack's original proposal

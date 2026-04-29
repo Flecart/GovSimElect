@@ -61,6 +61,7 @@ def _deliberation_scope_block(mode: ContractMode) -> str:
   return (
       "DELIBERATION SCOPE:\n"
       "- Negotiate concrete rules for the fishery for the upcoming round: catches, fairness, penalties, and mutual obligations.\n"
+      "- Catches are whole numbers of tons; the minimum any fisher can catch is 1 ton.\n"
       "- Prefer specific numbers and clear conditions over vague slogans.\n"
       "- Judge proposals on clarity, fairness, and workability for fishers.\n"
   )
@@ -309,7 +310,7 @@ def round_robin_prompt(
       f"{history_text}\n"
       "Respond with your next message in the contract negotiation.\n"
       "If there is an active law and you propose to keep it exactly as it is, you can propose the exact word <UNCHANGED>.\n"
-      "Otherwise, if you propose a new contract, include exactly one <constitution>...</constitution> block. Don't add <constitution> if you agree with the current one.\n"
+      "Otherwise, if you propose a new contract, include exactly one <constitution>...</constitution> block. Don't add <constitution> if you agree with any present or proposed one.\n"
       "Only the text inside <constitution>...</constitution> will be voted on as the contract.\n"
       "If you agree with the most recent contract proposal in this thread, you must include <AGREE>.\n"
       "You can also agree with a specific proposer by including <AGREE to=Alice>.\n"
