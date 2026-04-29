@@ -325,7 +325,6 @@ class RoundRobinNegotiationManager:
         if target_contract is not None:
           agreements[speaker_name] = target_contract
     
-      print(f"Agreements: {agreements}")
       consensus = self._check_consensus(agreements)
       if consensus:
         return NLNegotiationResult(
