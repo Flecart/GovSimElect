@@ -1,14 +1,14 @@
-test,regime,metric,direction,T_obs,p_value,n_strata,description
-H1,deterministic,R,1.0,196.29999999999998,0.0,14,Prosociality increases total gain R
-H2,deterministic,m,1.0,4.957142857142856,0.0004,14,Prosociality increases survival months m
-H3,deterministic,o,-1.0,0.4046821428571428,0.0003,14,Prosociality decreases over-usage o
-H4,deterministic,e,1.0,0.055475,0.0044,14,Prosociality increases equality e (reduces inequality)
-H1,stochastic,R,1.0,108.98666666666665,0.0006,15,Prosociality increases total gain R
-H2,stochastic,m,1.0,4.013333333333334,0.0007,15,Prosociality increases survival months m
-H3,stochastic,o,-1.0,0.2586733333333333,0.0016,15,Prosociality decreases over-usage o
-H4,stochastic,e,1.0,0.06928333333333334,0.0006,15,Prosociality increases equality e (reduces inequality)
-H5a,sto,,,12.870555833333338,0.1533,30,"Contracts help vs no-contract on R, stochastic (one-sided)"
-H5b,det,,,-16.160344827586204,0.2383,29,Contracts' R effect in det differs from zero (two-sided)
-H5c,sto-det,,,29.18505775862069,0.092,29,"sto contract effect > det contract effect (DiD, one-sided)"
-D5,deterministic,R_per_m,1.0,8.968540123326365,0.0014,29,NL > code-law on per-month gain R/m (one-sided)
-D5,stochastic,R_per_m,1.0,5.760807701468534,0.0057,30,NL > code-law on per-month gain R/m (one-sided)
+test,regime,metric,direction,T_obs,T_ci_low,T_ci_high,p_value,n_strata,description,T_ci_hw
+H1,deterministic,R,1.0,119.62333333333333,79.87952450980391,161.99126960784315,9.999000099990002e-05,17,Prosociality increases total gain R,41.05587254901962
+H2,deterministic,m,1.0,4.149019607843137,2.6960294117647057,5.741176470588235,0.00019998000199980003,17,Prosociality increases survival months m,1.5225735294117648
+H3,deterministic,o,-1.0,0.31358284313725493,0.18259977941176475,0.4527704779411764,9.999000099990002e-05,17,Prosociality decreases over-usage o,0.13508534926470583
+H4,deterministic,e,1.0,0.06182029411764706,0.0363162549019608,0.08891985049019607,0.00039996000399960006,17,Prosociality increases equality e (reduces inequality),0.026301797794117638
+H1,stochastic,R,1.0,108.98666666666665,63.35966666666666,155.7473333333333,0.0005999400059994001,15,Prosociality increases total gain R,46.193833333333316
+H2,stochastic,m,1.0,4.013333333333334,2.1333333333333333,5.96033333333333,0.0013998600139986002,15,Prosociality increases survival months m,1.9134999999999984
+H3,stochastic,o,-1.0,0.2586733333333333,0.11979316666666669,0.4044466666666667,0.0015998400159984002,15,Prosociality decreases over-usage o,0.14232675
+H4,stochastic,e,1.0,0.06928333333333334,0.032805583333333346,0.11209208333333331,0.0006999300069993001,15,Prosociality increases equality e (reduces inequality),0.039643249999999984
+H5a,sto,,,-4.569999999999998,-28.44008333333333,21.174166666666657,0.6428357164283571,30,"Contracts help vs no-contract on R, stochastic (one-sided)",24.807124999999992
+H5b,det,,,-27.719222222222204,-49.98781666666667,-6.910344444444454,0.019098090190980903,30,Contracts' R effect in det differs from zero (two-sided),21.538736111111106
+H5c,sto-det,,,23.149222222222225,7.616980555555552,39.43637777777778,0.0045995400459954,30,"sto contract effect > det contract effect (DiD, one-sided)",15.909698611111114
+D5,deterministic,R_per_m,1.0,12.883754569280349,9.448170771909936,17.374878845703837,9.999000099990002e-05,36,NL > code-law on per-month gain R/m (one-sided),3.96335403689695
+D5,stochastic,R_per_m,1.0,5.760807701468534,1.395671345404262,11.975892543962976,0.006199380061993801,30,NL > code-law on per-month gain R/m (one-sided),5.290110599279357
