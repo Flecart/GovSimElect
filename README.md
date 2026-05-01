@@ -27,6 +27,41 @@ bash ./setup_cloud.sh
 
 The cloud setup also avoids requiring `sentence_transformers`; if that package is absent, the simulation falls back to a lightweight hash-based embedding for memory retrieval.
 
+## Build `aggregated.csv` from simulation runs
+
+Use this pipeline when your run folders are under `simulation/results`.
+
+1. Aggregate each experiment directory into summary text:
+
+```bash
+bash scripts/run_aggregate_special_all.sh "simulation/results/<your-pattern>" tmp.md
+```
+
+2. Parse the summary text into a single CSV:
+
+```bash
+python3 scripts/logs/parser.py tmp.md aggregated.csv
+```
+
+3. Plot and inspect results in:
+- `playground.ipynb`
+
+4. Run statistical significance tests (permutation tests) on aggregated outputs:
+
+```bash
+python3 scripts/logs/permutation.py
+```
+
+This script uses `aggregated.csv` and `aggregated-sto.csv` and writes `permutation_test_results.csv`.
+
+If you already know the exact results folders you want, just replace `<your-pattern>` with a glob (for example: `simulation/results/gpt-4o-p*-2026-04-*`).
+
+### Optional: run the full pipeline in one command
+
+```bash
+bash scripts/logs/build_aggregated_csv.sh "simulation/results/<your-pattern>" aggregated.csv
+```
+
 ## Frontend
 
 The repo also includes a React frontend for browsing simulation results under [`frontend/`](/home/angeloh/Desktop/work/GovSimElect/frontend).

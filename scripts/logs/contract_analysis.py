@@ -199,7 +199,7 @@ def analyze_run(records: list[Any], *, expected_regen: float = 2.0) -> dict[str,
         # Violations in this round
         round_violations = 0
         for row in rows:
-            c = _safe_float(row.resource_collected) or 0.0
+            c = _safe_float(row.wanted_resource) or 0.0
             violation_denominator += 1
             if c > limit + 1e-9:
                 violation_count += 1
