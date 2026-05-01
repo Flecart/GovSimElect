@@ -567,93 +567,187 @@ def partial_examples():
 
 
 # %% ===================================================================
-# Section 10.  __main__
+# Section 10.  CLI helpers and __main__
 # ======================================================================
 
-if __name__ == "__main__":
-    # ------------------------------------------------------------------
-    # Reference instance, strict + weak iv
-    # ------------------------------------------------------------------
+def linspace(lo: float, hi: float, n: int) -> list:
+    if n == 1:
+        return [lo]
+    step = (hi - lo) / (n - 1)
+    return [lo + step * i for i in range(n)]
+
+
+def run_verify(g: GameParams, mode: str, strict_iv: bool):
+    print("=" * 70)
+    print(f"VERIFY  R={g.R}  S={g.S}  T={g.T}  P={g.P}  "
+          f"delta={g.delta}  eta={g.eta}")
+    print(f"mode={mode}  strict_iv={strict_iv}  eps={g.eps:.4f}")
+    print("=" * 70)
+    print_matrix(g)
+    print()
+    print("Closed-form conditions:")
+    all_conds = {}
+    all_conds.update(conds_2x2(g))
+    all_conds.update(conds_4x4_welfare(g))
+    if mode == "strict":
+        all_conds.update(conds_4x4_dom_strict(g))
+    if strict_iv:
+        all_conds.update(conds_iv_strict(g))
+    for k, v in all_conds.items():
+        print(f"  {'OK' if v else 'FAIL'}  {k}")
+    print()
+    ok = verify(g, mode=mode, strict_iv=strict_iv, verbose=True)
+    print()
+    print(f"OVERALL: {'PASS' if ok else 'FAIL'}")
+
+
+def run_search(R_min, R_max, S_min, S_max, T_min, T_max, P_min, P_max,
+               steps: int, delta: float, eta: float,
+               mode: str, strict_iv: bool):
+    R_grid = linspace(R_min, R_max, steps)
+    S_grid = linspace(S_min, S_max, steps)
+    T_grid = linspace(T_min, T_max, steps)
+    P_grid = linspace(P_min, P_max, steps)
+    total = len(R_grid) * len(S_grid) * len(T_grid) * len(P_grid)
+    print("=" * 70)
+    print(f"GRID SEARCH  mode={mode}  strict_iv={strict_iv}  "
+          f"delta={delta}  eta={eta}")
+    print(f"R=[{R_min},{R_max}]  S=[{S_min},{S_max}]  "
+          f"T=[{T_min},{T_max}]  P=[{P_min},{P_max}]  steps={steps}")
+    print(f"Total candidates: {total}")
+    print("=" * 70)
+    found = search(R_grid, S_grid, T_grid, P_grid,
+                   delta=delta, eta=eta, mode=mode, strict_iv=strict_iv)
+    print(f"Hits: {len(found)} / {total}")
+    for g in found[:10]:
+        print(f"  R={g.R:.3f}  S={g.S:.3f}  T={g.T:.3f}  P={g.P:.3f}")
+    if len(found) > 10:
+        print(f"  ... ({len(found) - 10} more)")
+
+
+def run_demo():
+    """Built-in reference demo (default when no arguments given)."""
     print("=" * 70)
     print("REFERENCE INSTANCE  -  strict (ii), weak (iv)")
     print("=" * 70)
     g_ref = GameParams(R=10, S=-5, T=15, P=0, delta=6, eta=0)
-    print(f"R={g_ref.R}, S={g_ref.S}, T={g_ref.T}, P={g_ref.P}, "
-          f"delta={g_ref.delta}, eps={g_ref.eps:.3f}")
-    print()
-    print_matrix(g_ref)
-    print()
-    print("Closed-form 2x2 conditions:")
-    for k, v in conds_2x2(g_ref).items():
-        print(f"  {v}  {k}")
-    print("Closed-form 4x4 (i) conditions:")
-    for k, v in conds_4x4_welfare(g_ref).items():
-        print(f"  {v}  {k}")
-    print("Closed-form 4x4 (ii_s) conditions:")
-    for k, v in conds_4x4_dom_strict(g_ref).items():
-        print(f"  {v}  {k}")
-    print()
-    verify(g_ref, mode="strict", strict_iv=False, verbose=True)
+    run_verify(g_ref, mode="strict", strict_iv=False)
 
-    # ------------------------------------------------------------------
-    # Same instance with strict iv via eta perturbation
-    # ------------------------------------------------------------------
     print()
     print("=" * 70)
     print("SAME INSTANCE  -  strict (ii), STRICT (iv) via eta = 0.5")
     print("=" * 70)
     g_strict_iv = GameParams(R=10, S=-5, T=15, P=0, delta=6, eta=0.5)
-    print(f"eta = {g_strict_iv.eta}    (must satisfy 0 < eta < (R-P)/3 = "
-          f"{(g_strict_iv.R - g_strict_iv.P) / 3:.3f})")
-    print()
-    print_matrix(g_strict_iv)
-    print()
-    print("Closed-form strict-iv conditions:")
-    for k, v in conds_iv_strict(g_strict_iv).items():
-        print(f"  {v}  {k}")
-    print()
-    verify(g_strict_iv, mode="strict", strict_iv=True, verbose=True)
+    run_verify(g_strict_iv, mode="strict", strict_iv=True)
 
-    # ------------------------------------------------------------------
-    # Cross-check the matrix from scripts/logs/matrix.py (R=18, P=-18,
-    # S=-54, T=30) - it has the (DH,DL)/(DL,DH) typo and fails (i)'s
-    # lower bound. Useful as a regression check.
-    # ------------------------------------------------------------------
     print()
     print("=" * 70)
     print("CROSS-CHECK: matrix.py reference (R=18, S=-54, T=30, P=-18)")
     print("=" * 70)
     g_old = GameParams(R=18, S=-54, T=30, P=-18, delta=6, eta=0)
-    print(f"Should FAIL strict because S+T = {g_old.S + g_old.T} "
-          f"is not > 2P + 3*eps = {2*g_old.P + 3*g_old.eps}")
-    verify(g_old, mode="strict", strict_iv=False, verbose=True)
-
-    # ------------------------------------------------------------------
-    # Grid search demo
-    # ------------------------------------------------------------------
+    print(f"Expect FAIL: S+T = {g_old.S + g_old.T} "
+          f"vs required > {2*g_old.P + 3*g_old.eps:.1f}  "
+          f"(2P + 3eps lower bound)")
     print()
-    print("=" * 70)
-    print("GRID SEARCH  -  R=10, P=0 fixed; vary T, S")
-    print("=" * 70)
-    R_grid = [10.0]
-    P_grid = [0.0]
-    T_grid = [13.5 + 0.5 * i for i in range(10)]   # 13.5 .. 18.0
-    S_grid = [-10.0 + 0.5 * i for i in range(14)]  # -10.0 .. -3.5
-    found = search(R_grid, S_grid, T_grid, P_grid,
-                   delta=6.0, eta=0.0,
-                   mode="strict", strict_iv=False)
-    print(f"Strict + weak iv: {len(found)} hits "
-          f"(of {len(T_grid) * len(S_grid)} candidates).")
-    if found:
-        g0 = found[0]
-        print(f"  example: R={g0.R}, S={g0.S}, T={g0.T}, P={g0.P}")
+    run_verify(g_old, mode="strict", strict_iv=False)
 
-    found_strict_iv = search(R_grid, S_grid, T_grid, P_grid,
-                             delta=6.0, eta=0.5,
-                             mode="strict", strict_iv=True)
-    print(f"Strict + strict iv (eta=0.5): {len(found_strict_iv)} hits.")
+    print()
+    run_search(R_min=10, R_max=10, S_min=-10, S_max=-3.5,
+               T_min=13.5, T_max=18, P_min=0, P_max=0,
+               steps=10, delta=6.0, eta=0.0,
+               mode="strict", strict_iv=False)
 
-    # ------------------------------------------------------------------
-    # Partial-case demo with explanation
-    # ------------------------------------------------------------------
     partial_examples()
+
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Effort-extended PD matrix verifier and searcher.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+examples:
+  # run the built-in demo (default when no args)
+  python matrix_searcher.py
+
+  # verify a specific matrix, strict dominance, weak welfare-max
+  python matrix_searcher.py --R 10 --S -5 --T 15 --P 0
+
+  # same but require strict welfare-max (needs eta > 0)
+  python matrix_searcher.py --R 10 --S -5 --T 15 --P 0 --eta 0.5 --strict-iv
+
+  # verify a partial instance
+  python matrix_searcher.py --R 10 --S -5 --T 10.83 --P 0 --mode partial
+
+  # grid search, strict dominance
+  python matrix_searcher.py --search --R-min 8 --R-max 12 --S-min -8 --S-max -3 \\
+      --T-min 13 --T-max 18 --P-min -1 --P-max 1 --steps 8
+
+  # grid search, partial dominance
+  python matrix_searcher.py --search --mode partial \\
+      --R-min 10 --R-max 10 --S-min -5 --S-max -1 \\
+      --T-min 10 --T-max 12 --P-min 0 --P-max 0 --steps 10
+
+  # show the partial-case demo only
+  python matrix_searcher.py --partial-demo
+        """,
+    )
+
+    # what to do
+    parser.add_argument("--search", action="store_true",
+                        help="run grid search instead of single verify")
+    parser.add_argument("--partial-demo", action="store_true",
+                        help="show the partial (iii_p) demo")
+    parser.add_argument("--demo", action="store_true",
+                        help="run the full built-in demo")
+
+    # single-matrix params
+    parser.add_argument("--R", type=float, help="reward payoff")
+    parser.add_argument("--S", type=float, help="sucker payoff")
+    parser.add_argument("--T", type=float, help="temptation payoff")
+    parser.add_argument("--P", type=float, help="punishment payoff")
+    parser.add_argument("--delta", type=float, default=6.0,
+                        help="effort-cost divisor (default 6)")
+    parser.add_argument("--eta", type=float, default=0.0,
+                        help="strict-iv perturbation (default 0; needs >0 for strict iv)")
+
+    # mode flags
+    parser.add_argument("--mode", choices=["strict", "partial"], default="strict",
+                        help="axiom mode (default strict)")
+    parser.add_argument("--strict-iv", action="store_true",
+                        help="require strictly unique welfare max at CH,CH")
+
+    # search range params
+    for axis in ("R", "S", "T", "P"):
+        parser.add_argument(f"--{axis}-min", type=float,
+                            default={"R": 8.0, "S": -10.0, "T": 12.0, "P": -2.0}[axis])
+        parser.add_argument(f"--{axis}-max", type=float,
+                            default={"R": 12.0, "S": -3.0, "T": 18.0, "P": 2.0}[axis])
+    parser.add_argument("--steps", type=int, default=10,
+                        help="grid steps per axis (default 10)")
+
+    args = parser.parse_args()
+
+    single_provided = any(getattr(args, x) is not None for x in ("R", "S", "T", "P"))
+
+    if args.partial_demo:
+        partial_examples()
+    elif args.search:
+        run_search(
+            R_min=args.R_min, R_max=args.R_max,
+            S_min=args.S_min, S_max=args.S_max,
+            T_min=args.T_min, T_max=args.T_max,
+            P_min=args.P_min, P_max=args.P_max,
+            steps=args.steps, delta=args.delta, eta=args.eta,
+            mode=args.mode, strict_iv=args.strict_iv,
+        )
+    elif single_provided:
+        missing = [x for x in ("R", "S", "T", "P") if getattr(args, x) is None]
+        if missing:
+            parser.error(f"must supply all of --R --S --T --P; missing: {missing}")
+        g = GameParams(R=args.R, S=args.S, T=args.T, P=args.P,
+                       delta=args.delta, eta=args.eta)
+        run_verify(g, mode=args.mode, strict_iv=args.strict_iv)
+    else:
+        run_demo()
