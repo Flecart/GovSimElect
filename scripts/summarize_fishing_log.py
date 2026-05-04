@@ -31,6 +31,20 @@ import numpy as np
 LIMIT_PATTERN = re.compile(r"Detected negotiated resource limit:\s*([0-9]+(?:\.[0-9]+)?)")
 
 
+def full_capacity_sustainable_total_extraction(capacity: float, r_t: float) -> float:
+    """Max lake-wide catch in one round from a full pool so one regeneration returns to capacity.
+
+    One round: harvest from stock ``capacity``, then multiply by ``r_t``; to land back on
+    ``capacity`` requires ``(capacity - catch) * r_t = capacity`` i.e.
+    ``catch = capacity - capacity / r_t = capacity * (1 - 1/r_t)``.
+
+    For ``capacity = 100``: ``r_t = 1.5`` → ``100/3``; ``r_t = 2`` → ``50``; ``r_t = 2.5`` → ``60``.
+    """
+    if capacity <= 0 or r_t <= 0:
+        return 0.0
+    return max(0.0, capacity - capacity / r_t)
+
+
 def approximate_se_pooled_survival_q(q: float, *, k: int, max_rounds: int) -> float | None:
     """Reference-only SE for q under an IID agent-month model (optimistic if violated).
 
@@ -208,7 +222,6 @@ def summarize(
     per_round_limit_hits: dict[int, float] = {}
     regen_by_harvest_round: dict[int, float] = {}
     over_usage_count = 0
-    action_count = 0
 
     # Regen rows are logged at round (harvest_round + 1).
     for row in regen_rows:
@@ -235,14 +248,15 @@ def summarize(
             # Use realized regen for this specific harvest round when available.
             r_t = regen_by_harvest_round.get(round_id, expected_regen)
             threshold = max(0.0, stock_before - stock_before / r_t) if r_t > 0 else 0.0
+            if total_catch > threshold:
+                over_usage_count += len(catches)
             if verbose:
+                cap_bench = full_capacity_sustainable_total_extraction(capacity, r_t)
                 print(
                     f"Round {round_id}: stock_before = {stock_before}, "
-                    f"r_t = {r_t}, threshold = {threshold}, catches = {catches}"
+                    f"r_t = {r_t}, threshold = {threshold}, "
+                    f"full_pool_benchmark = {cap_bench}, catches = {catches}"
                 )
-            total_catches = sum(catches)
-            if total_catches > threshold:
-                over_usage_count += len(catches)
 
         # If framework extracted a numeric resource_limit in this round,
         # keep the latest detected one.
@@ -264,33 +278,44 @@ def summarize(
     total_gain = sum(per_agent_gain.values())
     rounds_played = (max(per_round_total_catch.keys()) + 1) if per_round_total_catch else 0
 
-    # Refined efficiency baseline:
-    # f_t = max(0, h(t) - h(t)/r_t_realized), where r_t_realized is the
-    # actual realized regen factor for this harvest round (read from regen logs).
-    # If a round is missing realized r_t, we fall back to expected_regen.
+    # Efficiency baseline: full-pool sustainable yield per round, H - H/r_t (only H and r_t).
+    # Stock-based f_t = h - h/r is still recorded below for diagnostics / over-usage threshold.
     per_round_sustainable_capacity: dict[int, float] = {}
-    max_possible = 0.0
+    per_round_full_pool_yield: dict[int, float] = {}
+    max_possible_full_pool = 0.0
     for r, stock_before in per_round_stock.items():
         r_t = regen_by_harvest_round.get(r, expected_regen)
+        g_t = full_capacity_sustainable_total_extraction(capacity, r_t)
+        per_round_full_pool_yield[r] = g_t
+        max_possible_full_pool += g_t
         if r_t <= 0:
             f_t = 0.0
         else:
             f_t = max(0.0, stock_before - stock_before / r_t)
         per_round_sustainable_capacity[r] = f_t
-        max_possible += f_t
 
-    if max_possible > 0:
-        efficiency = 1.0 - max(0.0, max_possible - total_gain) / max_possible
+    if max_possible_full_pool > 0:
+        efficiency = 1.0 - max(0.0, max_possible_full_pool - total_gain) / max_possible_full_pool
     else:
         efficiency = 0.0
 
     # e = 1 - Gini(total agent gains)
     equality = 1.0 - gini(list(per_agent_gain.values()))
 
-    # o = (# actions above threshold) / (|I| * m)
     num_agents = len(per_agent_gain)
-    denom = num_agents * max(survival_time, 1)
-    over_usage = (over_usage_count / denom) if denom > 0 else 0.0
+
+    # o = (# agent-harvests in rounds where aggregate catch exceeds stock-based MSY) / (|I| * m)
+    denom_ou = num_agents * max(survival_time, 1)
+    over_usage = (over_usage_count / denom_ou) if denom_ou > 0 else 0.0
+
+    # Optional: total gain vs sum of full-pool benchmarks over survived months (not paper o).
+    over_usage_denominator = 0.0
+    for t in range(survival_time):
+        r_t = regen_by_harvest_round.get(t, expected_regen)
+        over_usage_denominator += full_capacity_sustainable_total_extraction(capacity, r_t)
+    gain_over_full_pool_survival_baseline = (
+        (total_gain / over_usage_denominator) if over_usage_denominator > 0 else 0.0
+    )
 
     # Consistency: how often actual average catch exceeded negotiated limit.
     negotiated_limit_violations = 0
@@ -323,6 +348,7 @@ def summarize(
             "efficiency_u": efficiency,
             "equality_e": equality,
             "over_usage_o": over_usage,
+            "gain_R_over_full_pool_survival_baseline": gain_over_full_pool_survival_baseline,
         },
         "agent_total_gain": dict(sorted(per_agent_gain.items())),
         "round_stock_before_harvest": dict(sorted(per_round_stock.items())),
@@ -332,6 +358,10 @@ def summarize(
         "round_sustainable_capacity_f_t": dict(
             sorted(per_round_sustainable_capacity.items())
         ),
+        "round_full_pool_regen_yield_H_minus_H_over_r": dict(
+            sorted(per_round_full_pool_yield.items())
+        ),
+        "over_usage_capacity_regen_denominator": over_usage_denominator,
         "consistency_checks": {
             "rounds_with_detected_limit_and_harvest": rounds_with_detected_limit,
             "negotiated_limit_violations": negotiated_limit_violations,
@@ -345,14 +375,19 @@ def summarize(
         "assumptions": {
             "capacity": capacity,
             "expected_regen_fallback_for_missing_r_t": expected_regen,
-            "overusage_threshold_formula": (
-                "f_t = max(0, h(t) - h(t)/r_t_realized), with fallback to "
-                "expected_regen when realized r_t is missing"
+            "over_usage_o_formula": (
+                "o = (# harvesting rows in rounds where sum_i catch_i > h(t)-h(t)/r_t) "
+                "/ (|I| * max(m,1)); m = survival_time_m"
+            ),
+            "gain_R_over_full_pool_survival_baseline_note": (
+                "total_gain_R / sum_{t=0}^{m-1} (H - H/r_t) over survived months only; "
+                "not the same as over_usage_o"
             ),
             "collapse_threshold_C": collapse_threshold,
             "efficiency_formula": (
-                "u_refined = 1 - max(0, sum_t f_t - sum_t R^t) / sum_t f_t, "
-                "with f_t = max(0, h(t) - h(t)/r_t_realized)"
+                "u = 1 - max(0, sum_t g_t - total_gain_R) / sum_t g_t, "
+                "g_t = H - H/r_t at carrying capacity H (regen-only), same t as harvest rounds "
+                "with logged stock"
             ),
         },
     }
@@ -374,6 +409,10 @@ def print_human_summary(report: dict[str, Any], source: Path) -> None:
     print(f"- efficiency_u: {m['efficiency_u']:.4f}")
     print(f"- equality_e: {m['equality_e']:.4f}")
     print(f"- over_usage_o: {m['over_usage_o']:.4f}")
+    print(
+        "- gain_R_over_full_pool_survival_baseline: "
+        f"{m.get('gain_R_over_full_pool_survival_baseline', 0.0):.4f}"
+    )
     print()
     print("## Agent gains")
     for agent, gain in report["agent_total_gain"].items():
