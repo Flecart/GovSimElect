@@ -1,0 +1,3 @@
+log_id,model_name,nash_accuracy,utilitarian_accuracy,rawlsian_accuracy,nash_social_welfare_accuracy,utilitarian_efficiency,rawlsian_efficiency,nash_social_welfare_efficiency
+2026-01-10T19-52-12+01-00_coordination-experiment-gpt-4o-mini-2024-07-18_JiWbuwAjzJNSXiJjRxcgyD,gpt-4o-mini-2024-07-18,0.7127272727272728,0.656969696969697,0.656969696969697,0.656969696969697,0.6696666666666667,0.673,0.6643333333333333
+2026-01-10T19-52-12+01-00_coordination-experiment-gpt-5-nano-2025-08-07_7XJh4TQ78VuiG7kaMV6i4u,gpt-5-nano-2025-08-07,0.6950182260024301,0.5978128797083839,0.5978128797083839,0.5978128797083839,0.6916666666666668,0.6973333333333332,0.6833333333333332

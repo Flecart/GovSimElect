@@ -1,0 +1,103 @@
+id,formal_game,story_row,story_col,actions_row,actions_column,1_1_payoff,1_2_payoff,2_1_payoff,2_2_payoff,target_nash_equilibria,target_utility_maximizing,target_rawlsian,target_nash_social_welfare,max_utilitarian,max_rawlsian,nash_social_welfare
+syn_0,Prisoner's Dilemma,"You are the row player. You are playing a Prisoner's Dilemma — a game where each player is individually tempted to defect even though mutual cooperation yields a better collective outcome. A standard scenario uses T=4 (Temptation), R=3 (Reward), P=2 (Punishment), S=1 (Sucker), where T > R > P > S.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (3, 3)
+  (Action 1, Action 2): (1, 4)
+  (Action 2, Action 1): (4, 1)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","You are the column player. You are playing a Prisoner's Dilemma — a game where each player is individually tempted to defect even though mutual cooperation yields a better collective outcome. A standard scenario uses T=4 (Temptation), R=3 (Reward), P=2 (Punishment), S=1 (Sucker), where T > R > P > S.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (3, 3)
+  (Action 1, Action 2): (1, 4)
+  (Action 2, Action 1): (4, 1)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","['Action 1', 'Action 2']","['Action 1', 'Action 2']","[3, 3]","[1, 4]","[4, 1]","[2, 2]","('action 2', 'action 2')","('action 1', 'action 1')","('action 1', 'action 1')","('action 1', 'action 1')",6,3,9
+syn_1,Chicken,"You are the row player. You are playing a Chicken game (also known as Hawk-Dove) — a game where two players choose between an aggressive strategy and backing down. Mutual aggression is the worst outcome; unilateral aggression wins the highest payoff. A standard scenario uses payoffs of 4 for unilateral aggression, 3 for mutual concession, 2 for unilateral concession, and 1 for mutual aggression.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (3, 3)
+  (Action 1, Action 2): (2, 4)
+  (Action 2, Action 1): (4, 2)
+  (Action 2, Action 2): (1, 1)
+
+What is your choice? Answer exactly with the name of the action.","You are the column player. You are playing a Chicken game (also known as Hawk-Dove) — a game where two players choose between an aggressive strategy and backing down. Mutual aggression is the worst outcome; unilateral aggression wins the highest payoff. A standard scenario uses payoffs of 4 for unilateral aggression, 3 for mutual concession, 2 for unilateral concession, and 1 for mutual aggression.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (3, 3)
+  (Action 1, Action 2): (2, 4)
+  (Action 2, Action 1): (4, 2)
+  (Action 2, Action 2): (1, 1)
+
+What is your choice? Answer exactly with the name of the action.","['Action 1', 'Action 2']","['Action 1', 'Action 2']","[3, 3]","[2, 4]","[4, 2]","[1, 1]","('action 1', 'action 2')|('action 2', 'action 1')","('action 1', 'action 1')|('action 1', 'action 2')|('action 2', 'action 1')","('action 1', 'action 1')","('action 1', 'action 1')",6,3,9
+syn_2,Battle of the Sexes,"You are the row player. You are playing a Battle of the Sexes (Bach-or-Stravinski) game — a coordination game where both players must choose the same action to receive a positive payoff, but each prefers a different coordination point. You prefer the outcome where both choose Action 2 (row gets 4, column gets 3); your partner prefers both choosing Action 1 (row gets 3, column gets 4). Any mismatch gives both players 0. A standard scenario uses payoffs of 4 for the preferred coordinator and 3 for the other.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (3, 4)
+  (Action 1, Action 2): (0, 0)
+  (Action 2, Action 1): (0, 0)
+  (Action 2, Action 2): (4, 3)
+
+What is your choice? Answer exactly with the name of the action.","You are the column player. You are playing a Battle of the Sexes (Bach-or-Stravinski) game — a coordination game where both players must choose the same action to receive a positive payoff, but each prefers a different coordination point. You prefer the outcome where both choose Action 1 (row gets 3, column gets 4); your partner prefers both choosing Action 2 (row gets 4, column gets 3). Any mismatch gives both players 0. A standard scenario uses payoffs of 4 for the preferred coordinator and 3 for the other.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (3, 4)
+  (Action 1, Action 2): (0, 0)
+  (Action 2, Action 1): (0, 0)
+  (Action 2, Action 2): (4, 3)
+
+What is your choice? Answer exactly with the name of the action.","['Action 1', 'Action 2']","['Action 1', 'Action 2']","[3, 4]","[0, 0]","[0, 0]","[4, 3]","('action 1', 'action 1')|('action 2', 'action 2')","('action 1', 'action 1')|('action 2', 'action 2')","('action 1', 'action 1')|('action 2', 'action 2')","('action 1', 'action 1')|('action 2', 'action 2')",7,3,12
+syn_3,Coordination,"You are the row player. You are playing a Coordination game — a game where both players benefit from choosing the same action, and both agree that one coordination point is strictly better than the other. A standard scenario uses payoffs of 4 each for the preferred coordination, 2 each for the secondary coordination, and 0 each for any mismatch.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (4, 4)
+  (Action 1, Action 2): (0, 0)
+  (Action 2, Action 1): (0, 0)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","You are the column player. You are playing a Coordination game — a game where both players benefit from choosing the same action, and both agree that one coordination point is strictly better than the other. A standard scenario uses payoffs of 4 each for the preferred coordination, 2 each for the secondary coordination, and 0 each for any mismatch.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (4, 4)
+  (Action 1, Action 2): (0, 0)
+  (Action 2, Action 1): (0, 0)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","['Action 1', 'Action 2']","['Action 1', 'Action 2']","[4, 4]","[0, 0]","[0, 0]","[2, 2]","('action 1', 'action 1')|('action 2', 'action 2')","('action 1', 'action 1')","('action 1', 'action 1')","('action 1', 'action 1')",8,4,16
+syn_4,Stag Hunt,"You are the row player. You are playing a Stag Hunt game — a game where mutual cooperation yields the highest payoff for both, but requires trust: if the other player defects, the cooperator gets the worst outcome. Going alone is safe but yields only a moderate payoff. A standard scenario uses payoffs of 4 for mutual cooperation, 3 for unilateral defection, 2 for mutual defection, and 1 for unilateral cooperation when the partner defects.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (4, 4)
+  (Action 1, Action 2): (1, 3)
+  (Action 2, Action 1): (3, 1)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","You are the column player. You are playing a Stag Hunt game — a game where mutual cooperation yields the highest payoff for both, but requires trust: if the other player defects, the cooperator gets the worst outcome. Going alone is safe but yields only a moderate payoff. A standard scenario uses payoffs of 4 for mutual cooperation, 3 for unilateral defection, 2 for mutual defection, and 1 for unilateral cooperation when the partner defects.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (4, 4)
+  (Action 1, Action 2): (1, 3)
+  (Action 2, Action 1): (3, 1)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","['Action 1', 'Action 2']","['Action 1', 'Action 2']","[4, 4]","[1, 3]","[3, 1]","[2, 2]","('action 1', 'action 1')|('action 2', 'action 2')","('action 1', 'action 1')","('action 1', 'action 1')","('action 1', 'action 1')",8,4,16
+syn_5,No Conflict,"You are the row player. You are playing a No Conflict game — a game where one action strictly dominates the other for both players: each player's best response is the same regardless of what the other player does, so there is no strategic tension. A standard scenario uses a payoff of 4 for the dominant action and 2 for the dominated action, independent of the other player's choice.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (4, 4)
+  (Action 1, Action 2): (4, 2)
+  (Action 2, Action 1): (2, 4)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","You are the column player. You are playing a No Conflict game — a game where one action strictly dominates the other for both players: each player's best response is the same regardless of what the other player does, so there is no strategic tension. A standard scenario uses a payoff of 4 for the dominant action and 2 for the dominated action, independent of the other player's choice.
+
+Payoff matrix (row player's payoff, column player's payoff):
+  (Action 1, Action 1): (4, 4)
+  (Action 1, Action 2): (4, 2)
+  (Action 2, Action 1): (2, 4)
+  (Action 2, Action 2): (2, 2)
+
+What is your choice? Answer exactly with the name of the action.","['Action 1', 'Action 2']","['Action 1', 'Action 2']","[4, 4]","[4, 2]","[2, 4]","[2, 2]","('action 1', 'action 1')","('action 1', 'action 1')","('action 1', 'action 1')","('action 1', 'action 1')",8,4,16

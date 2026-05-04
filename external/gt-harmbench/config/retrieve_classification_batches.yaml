@@ -1,0 +1,27 @@
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+
+# Configuration for scripts/retrieve_classification_batches.py
+# This script retrieves and processes results from a previously submitted batch job.
+
+# Batch ID - provide either batch_id OR batch_id_file
+batch_id: batch_69388af85c448190b87547191e2234b5  # Direct batch ID string (e.g., "batch_abc123xyz")
+batch_id_file: null  # Path to file containing batch ID (e.g., "data/taxonomy_game_fit_batch_id.txt")
+
+# Required paths
+taxonomy_path: assets/taxonomy/taxonomy.md
+template_csv_path: data/game_template.csv
+output_csv_path: data/taxonomy_game_fit.csv
+
+# Example usage:
+# 1. If you have a batch_id file from classify_taxonomy_games.py:
+#    batch_id_file: data/taxonomy_game_fit_batch_id.txt
+#
+# 2. Or provide batch_id directly:
+#    batch_id: batch_abc123xyz
+#
+# 3. Override via command line:
+#    python scripts/retrieve_classification_batches.py batch_id_file=data/taxonomy_game_fit_batch_id.txt
+

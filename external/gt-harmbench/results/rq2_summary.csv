@@ -1,0 +1,15 @@
+test,game,variant,regime,estimate,ci_lower,ci_upper,p_value,headline_test,note,corrected_significant
+Substitutability,pd,2x2,interaction,0.84,0.6,1.0,0.0,False,,
+Substitutability (marginal),pd,2x2,no_comm,1.0,,,,False,,
+Substitutability (marginal),pd,2x2,code_law,0.16000000000000003,,,,False,,
+Substitutability,sh,2x2,interaction,0.5599999999999999,0.15000000000000002,0.8666666666666667,2.0140955204750455e-06,False,,
+Substitutability (marginal),sh,2x2,no_comm,0.6399999999999999,,,,False,,
+Substitutability (marginal),sh,2x2,code_law,0.07999999999999996,,,,False,,
+Persistence,pd,4x4,code-law,0.6,0.4,0.8,0.0,True,,True
+Persistence (marginal),pd,4x4,no_comm,1.0,1.0,1.0,0.0,False,,
+Persistence (marginal),pd,4x4,code_nl,0.88,0.7,1.0,0.0,False,,
+Persistence,sh,4x4,code-law,0.6799999999999999,0.5333333333333333,0.8333333333333334,0.0,True,,True
+Persistence (marginal),sh,4x4,no_comm,0.88,0.7333333333333334,1.0,0.0,False,,
+Persistence (marginal),sh,4x4,code_nl,0.84,0.6599999999999999,1.0,0.0,False,,
+Three-way interaction,pd,both,no-comm vs code-law,0.43999999999999995,-0.15000000000000002,0.8,0.0363,True,LRT p=1.8028e-04,False
+Three-way interaction,sh,both,no-comm vs code-law,0.3599999999999999,-0.17675000000000002,0.81,0.0675,True,LRT p=2.0857e-02,False

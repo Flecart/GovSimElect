@@ -1,0 +1,11 @@
+model,test,game,estimate,ci_lower,p_value
+GPT-5.4 Mini,Irreducibility,pd,0.6,0.6,0.0
+GPT-5.4 Mini,Irreducibility,sh,0.8,0.8,0.0
+GPT-4o,Irreducibility,pd,1.0,1.0,0.0
+GPT-4o,Irreducibility,sh,1.0,1.0,0.0
+Grok 4.1 Fast,Irreducibility,pd,0.4,0.4,0.0
+Grok 4.1 Fast,Irreducibility,sh,0.6,0.6,0.0
+Gemma 4 31B,Irreducibility,pd,0.4,0.4,0.0
+Gemma 4 31B,Irreducibility,sh,0.6,0.6,0.0
+GPT-5.4,Irreducibility,pd,0.6,0.6,0.0
+GPT-5.4,Irreducibility,sh,0.6,0.6,0.0

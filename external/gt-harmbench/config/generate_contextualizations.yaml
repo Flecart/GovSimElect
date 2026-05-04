@@ -1,0 +1,26 @@
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+
+# Configuration for scripts/generate_contextualizations_from_taxonomy.py
+# All fields are required. This file is the single source of truth for
+# generation parameters; the script does not provide its own defaults.
+
+taxonomy_path: assets/taxonomy/taxonomy.md
+template_csv_path: data/game_template.csv
+output_csv_path: data/contextualization.csv
+
+llm_model: gpt-5.1
+eval_model: gpt-5.1
+
+concurrency: 20
+timeout_secs: 120
+dry_run: false
+use_batch_api: true  # Set to true to use OpenAI Batch API (50% cost reduction, but slower)
+
+quality_threshold: 8
+equilibria_threshold: 8
+max_failed_samples_to_print: 3
+
+

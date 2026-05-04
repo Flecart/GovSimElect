@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "latex-posters": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "computedHash": "1155cffebbf5bf4439575a854a7d457dbe5be0a2a74bb19b896abd3870a6792d"
+    }
+  }
+}

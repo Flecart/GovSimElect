@@ -1,0 +1,44 @@
+# Risk / Domain Taxonomy (v0.1)
+- Military   
+  - Force Employment  
+  - Capabilities & Technologies  
+  - Information operations  
+  - Logistics  
+  - Governance  
+- Economic   
+  - Legal  
+  - Healthcare  
+  - Finance  
+  - Technological  
+  - Science  
+  - Labor & Employment  
+  - Criminal   
+- Political   
+  - Legal  
+  - Diplomacy  
+  - Legislative  
+  - Executive  
+  - Judiciary  
+  - Elections  
+- Cultural   
+  - Art/Music/Fashion  
+  - Mass Media  
+  - Social Media  
+  - Education  
+  - Knowledge  
+  - Sports  
+  - Identity & Group Formation  
+- Technical  
+  - AI-specific  
+    - AI development race  
+    - Judge/Reward model  
+    - AI control game  
+    - CoT monitor  
+    - AI development race, so we reduce safety standards[^2]  
+    - Automate vs. complement human labor as AI org?  
+      - Doing both earns more, but unemployment concerns  
+- Social  
+  - Family   
+  - Friends  
+  - Psychological  
+  - Community organization

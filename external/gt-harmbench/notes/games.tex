@@ -1,0 +1,337 @@
+\documentclass[11pt]{amsart}
+\usepackage{bibentry}
+\usepackage{hyperref}
+\usepackage{amsthm, amsmath, amssymb, amsfonts}
+\usepackage{cleveref}
+\usepackage[square, numbers]{natbib}
+\hfuzz=50pt
+\title{Notes on GT-Harmbench}
+\author{}
+\date{\today}
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Selection of games}\label{sec:selection_of_games}
+
+Various attempts have been made at counting the number of fundamentally different $2\times 2$ games between two players which can be represented using payoff matrices. A general $2\times 2$ game can be represented as:
+\[
+\begin{array}{c|c|c}
+  & \text{Column L} & \text{Column R} \\
+\hline
+\text{Row U} & (r_1, c_1) & (r_2, c_2) \\
+\hline
+\text{Row D} & (r_3, c_3) & (r_4, c_4)
+\end{array}
+\]
+where $r_i$ denotes the row player's payoff and $c_i$ denotes the column player's payoff, and the row player can either play `Up' (U) or `Down' (D), while the column player can play `Left' (L) or `Right' (R).
+
+When classifying games, we are primarily interested in their strategic structure rather than the precise numerical values of payoffs. Specifically, we consider two games equivalent if they share the same Nash equilibria and best response structure, since these features determine the fundamental strategic dynamics. This perspective naturally leads us to focus on equivalence classes of games rather than individual instances.
+
+In \cite{top}, Robinson and Goforth provide a comprehensive taxonomy by identifying 144 distinct strictly ordinal games, where two games belong to the same class if they have the same order graph. In their framework, a strictly ordinal game is a game where each player has four distinct preferences. Their notion of equivalence preserves the game-theoretic properties we care about---namely, Nash equilibria and best responses---and we adopt their classification scheme. While it is possible to further reduce the taxonomy to 78 games through additional symmetry considerations, doing so introduces several complications that we prefer to avoid.
+
+Among these 144 games, 12 are \textit{symmetric}: the row player's payoff when choosing action $x$ against the column player's action $y$ equals the column player's payoff when choosing $y$ against $x$. In symbols, we require $r(x, y) = c(y, x)$ where $r$ denotes the row player's payoff function and $c$ denotes the column player's payoff function. Thus a symmetric game has the structure:
+\begin{equation} \label{sym-game}
+\begin{array}{c|c|c}
+  & \text{Column L} & \text{Column R} \\
+\hline
+\text{Row U} & (a, a) & (c, d) \\
+\hline
+\text{Row D} & (d, c) & (b, b)
+\end{array}
+\end{equation}
+where the payoff pairs satisfy the symmetry condition.
+
+We sketch the argument in \cite{top} for counting the number of strictly ordinal symmetric games. Begin by fixing distinct numbers $a$ and $b$. By relabeling the players' actions if needed, we may assume without loss of generality that $a < b$. The game is then completely determined by our choice of $(c, d)$, because of symmetry. The number of ways to pick two distinct numbers $c$ and $d$ from $\{1, 2, 3, 4\}$ is $4 \cdot 3 = 12$, meaning that there are $12$ symmetric games.
+
+As highlighted in \cite{top}, symmetric games serve as natural representatives for broader families of related games. Hence we will restrict our attention to these 12 games. Given a symmetric game of the form \ref{sym-game}, its \textit{anti-game} is the game given by exchanging payoffs between pairs of diagonally opposite cells:
+\[
+\begin{array}{c|c|c}
+  & \text{Column L} & \text{Column R} \\
+\hline
+\text{Row U} & (a, a) & (d, c) \\
+\hline
+\text{Row D} & (c, d) & (b, b).
+\end{array}
+\]
+The 12 symmetric games are: \textit{prisoner's dilemma}, \textit{chicken}, \textit{battle of the sexes}, \textit{no conflict}, \textit{stag and hare}, \textit{coordination} and their anti-games. None of the anti-games are as important as their ordinary counterparts, except for anti-coordination, which also goes under the name of \textit{matching pennies}.
+
+We now present each of the symmetric games in turn, excluding all anti-games except for matching pennies. We present the payoff matrices with labels and payoffs which commonly appear in the literature, which may deviate from the form \ref{sym-game}. However, by relabeling the players' actions and adjusting the numbers, the following payoff matrices can be brought to the form \ref{sym-game} with all payoffs in $\{1, 2, 3, 4\}$. 
+
+\subsection{Essential Symmetric Games}
+
+\subsubsection{Prisoner's dilemma}
+
+Two criminals are arrested and must decide whether to cooperate with each other (stay silent) or defect (betray). Each player's dominant strategy is to defect, leading to a Pareto-inferior outcome where both are worse off than if they had cooperated.
+\[
+\begin{array}{c|c|c}
+  & C & D \\
+\hline
+C & (3, 3) & (0, 5) \\
+\hline
+D & (5, 0) & (1, 1)
+\end{array}
+\]
+
+\subsubsection{Chicken}
+
+Two drivers speed toward each other, and each must decide whether to swerve or stay straight. If both stay straight they crash (worst outcome), but if one swerves while the other doesn't, the one who swerves loses face while the other wins, creating a game of brinkmanship with two pure Nash equilibria.
+\[
+\begin{array}{c|c|c}
+  & \text{Swerve} & \text{Straight} \\
+\hline
+\text{Swerve} & (0, 0) & (-1, 1) \\
+\hline
+\text{Straight} & (1, -1) & (-10, -10)
+\end{array}
+\]
+
+\subsubsection{Battle of the Sexes}
+
+A couple wants to spend the evening together but prefers different activities (e.g., opera vs. football). Both prefer being together at either activity over being apart, but each has a preferred activity, resulting in two asymmetric pure Nash equilibria favoring different players.
+\[
+\begin{array}{c|c|c}
+  & \text{Opera} & \text{Football} \\
+\hline
+\text{Opera} & (2, 1) & (0, 0) \\
+\hline
+\text{Football} & (0, 0) & (1, 2)
+\end{array}
+\]
+
+% \subsubsection{Anti-Battle of the Sexes}
+
+\subsubsection{No conflict}
+
+This reverses the Prisoner's Dilemma incentive structure, creating a game where mutual cooperation is a dominant strategy equilibrium. It represents situations where players naturally align their interests and cooperating is individually rational, such as in mutualistic biological relationships.
+\[
+\begin{array}{c|c|c}
+  & C & D \\
+\hline
+C & (4, 4) & (3, 2) \\
+\hline
+D & (2, 3) & (1, 1)
+\end{array}
+\]
+
+\subsubsection{Stag hunt}
+
+Based on Rousseau's parable, hunters can cooperate to catch a stag (high reward) or individually hunt hares (safe but lower reward). Cooperation yields the best outcome but requires mutual commitment, while hunting hare is the safe, individually rational option that guards against the other's defection.
+\[
+\begin{array}{c|c|c}
+  & \text{Stag} & \text{Hare} \\
+\hline
+\text{Stag} & (5, 5) & (0, 3) \\
+\hline
+\text{Hare} & (3, 0) & (3, 3)
+\end{array}
+\]
+
+\subsubsection{Coordination}
+
+Players want to match their actions but are indifferent about which action they match on, representing pure coordination with symmetric equilibria. This might occur when two people need to meet but care only about meeting, not about the specific location.
+\[
+\begin{array}{c|c|c}
+  & L & R \\
+\hline
+U & (1, 1) & (0, 0) \\
+\hline
+D & (0, 0) & (1, 1)
+\end{array}
+\]
+
+% \subsubsection{Matching pennies}
+
+% Two players simultaneously choose heads or tails, with one player (the "matcher") winning if the choices match and the other player (the "mismatcher") winning if they differ. This zero-sum game has no pure Nash equilibrium, only a mixed strategy equilibrium where each player randomizes 50-50.
+%\[
+%\begin{array}{c|c|c}
+%  & \text{Heads} & \text{Tails} \\
+%\hline
+%\text{Heads} & (1, -1) & (-1, 1) \\
+%\hline
+%\text{Tails} & (-1, 1) & (1, -1)
+%\end{array}
+%\]
+
+\section{Analyzing Game Outcomes}
+
+In a 2×2 game, each outcome cell represents a pair of payoffs $(u_1, u_2)$ for the two players. While game theory typically focuses on predicting which outcomes will occur (e.g., Nash equilibria), we are concerned with a normative question: How should we rank outcomes in a 2×2 game from a social perspective? That is, we seek socially preferable outcomes.
+
+\subsection{Pareto Dominance}
+
+We can establish a partial ordering of outcomes using the concept of Pareto dominance. An outcome $A = (u_1^A, u_2^A)$ \textit{Pareto dominates} outcome $B = (u_1^B, u_2^B)$ if and only if:
+
+\begin{enumerate}
+    \item $u_i^A \geq u_i^B$ for all players $i \in \{1, 2\}$, and
+    \item $u_j^A > u_j^B$ for at least one player $j \in \{1, 2\}$.
+\end{enumerate}
+
+In other words, $A$ Pareto dominates $B$ if at least one player strictly prefers $A$ while no player prefers $B$. An outcome is \textit{Pareto efficient} (or Pareto optimal) if it is not Pareto dominated by any other outcome in the game.
+
+Pareto dominance is a weak but universally accepted criterion: if outcome $A$ Pareto dominates outcome $B$, then $A$ should be ranked above $B$. However, many outcome pairs are \textit{Pareto-incomparable} -- neither dominates the other -- which necessitates additional criteria for complete ranking.
+
+\subsection{Social Welfare Functions}
+
+To rank Pareto-incomparable outcomes, we require additional criteria. \textit{Social welfare functions} take outcomes $(u_1, u_2)$ as inputs and aggregate the individual payoffs $u_1$ and $u_2$ into a single measure of social desirability:
+
+\begin{itemize}
+    \item \textbf{Utilitarian:} $W = u_1 + u_2$. Maximizes total welfare but ignores distributional concerns. This is the most widely used criterion in welfare economics and cost-benefit analysis.
+    
+    \item \textbf{Rawlsian (Maximin):} $W = \min(u_1, u_2)$. Prioritizes the worst-off player, emphasizing fairness over efficiency. This criterion reflects Rawls's difference principle from political philosophy.
+    
+    \item \textbf{Nash Social Welfare:} $W = u_1 \cdot u_2$ (for positive utilities). Balances efficiency and equity by maximizing the product of utilities. This function has gained prominence in fair division and algorithmic game theory due to its strong axiomatic foundations, satisfying scale invariance, Pareto efficiency, and symmetry.
+    
+    \item \textbf{Egalitarian:} $W = (u_1 + u_2) - \alpha|u_1 - u_2|$. Explicitly penalizes inequality, where $\alpha \geq 0$ controls the weight on fairness relative to total welfare.
+    
+    \item \textbf{Generalized Utilitarian:} $W = (u_1^p + u_2^p)^{1/p}$ for $p \neq 0$. Interpolates between different principles: as $p \to -\infty$, approaches maximin; $p = 1$ gives standard utilitarianism; $p = 2$ gives the Euclidean norm.
+\end{itemize}
+
+Each function embodies different ethical principles about the tradeoff between efficiency (maximizing total welfare) and equity (ensuring fair distribution) in social outcomes.
+
+\subsection{A Practical Ranking Methodology} \label{method}
+
+For ranking outcomes in 2×2 games, we propose the following methodology:
+
+\begin{enumerate}
+    \item \textbf{Apply Pareto dominance.} First, eliminate all Pareto-dominated outcomes, as these are unambiguously inferior. The remaining Pareto-efficient outcomes form the set of socially admissible solutions.
+    
+    \item \textbf{Apply Nash Social Welfare.} Among Pareto-incomparable outcomes, use Nash Social Welfare ($W = u_1 \cdot u_2$) as the primary ranking criterion. This function provides a principled middle ground between pure efficiency and pure equity considerations.
+    
+    \item \textbf{Sensitivity analysis.} Compare rankings under maximin ($W = \min(u_1, u_2)$) to assess robustness.
+\end{enumerate}
+
+This approach balances theoretical rigor with practical applicability, beginning with the uncontroversial Pareto criterion and progressively introducing welfare-theoretic considerations for finer distinctions.
+
+\section{Mechanism Design}
+
+\subsection{Framework Overview}
+
+Mechanism design is the study of designing rules and incentives to achieve desired social outcomes when participants act strategically. In our context, we can view mechanism design as a transformation process:
+
+\begin{itemize}
+    \item \textbf{Input:} A probability distribution $p \in \Delta(\mathcal{O})$ over the four outcomes $\mathcal{O} = \{(r_1, c_1), (r_1, c_2), (r_2, c_1), (r_2, c_2)\}$ of a 2×2 game, along with a ranking $\succ$ of these outcomes, as per \Cref{method}.
+    
+    \item \textbf{Intervention:} Application of a mechanism design principle $M$ that modifies the game structure, information, or incentives.
+    
+    \item \textbf{Output:} A new probability distribution $p^M \in \Delta(\mathcal{O})$ over outcomes under mechanism $M$.
+\end{itemize}
+
+Research question: Which mechanisms are the most effective on our dataset?
+
+\subsection{Measuring Mechanism Effectiveness}
+
+To quantify how effectively a mechanism shifts outcomes toward socially preferable states, we can employ two complementary metrics:
+
+\subsubsection{Total Variation Distance}
+
+Let $o^* \in \mathcal{O}$ denote the highest-ranked outcome according to $\succ$. Define the \textit{ideal distribution} $p^*$ as the delta distribution at $o^*$:
+\begin{equation}
+p^*(o) = \begin{cases}
+1 & \text{if } o = o^* \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+
+The \textit{total variation distance} between the observed distribution $p^M$ under mechanism $M$ and the ideal distribution $p^*$ is:
+\begin{equation}
+d_{TV}(p^M, p^*) = \frac{1}{2} \sum_{o \in \mathcal{O}} |p^M(o) - p^*(o)| = 1 - p^M(o^*)
+\end{equation}
+
+A mechanism is more effective when $d_{TV}(p^M, p^*)$ is smaller, indicating that outcomes are concentrated on the socially optimal outcome.
+
+\subsubsection{Expected Social Welfare Improvement}
+
+We can also measure effectiveness through the expected change in social welfare. Let $W: \mathcal{O} \to \mathbb{R}$ be a social welfare function (e.g., Nash Social Welfare). The \textit{expected social welfare improvement} from mechanism $M$ is:
+\begin{equation}
+\Delta W(M) = \mathbb{E}_{o \sim p^M}[W(o)] - \mathbb{E}_{o \sim p}[W(o)] = \sum_{o \in \mathcal{O}} p^M(o) \cdot W(o) - \sum_{o \in \mathcal{O}} p(o) \cdot W(o)
+\end{equation}
+
+This captures both the probability shift toward better outcomes and the welfare differences between outcomes.
+
+\subsection{Five Mechanism Design Principles}
+
+We can easily investigate five classic mechanism design principles. In our implementation with large language models (LLMs), these mechanisms can be operationalised through modifications to the game narratives (i.e. the system prompts). For each design principle, we indicate possible system prompt additions.
+
+\subsubsection{Pre-play Communication}
+
+Players engage in non-binding message exchange before selecting actions. Addition: a sentence corresponding to the other player's message.
+
+\subsubsection{Restriction of Action Space (Commitment)}
+
+One player credibly commits to an action before the other player decides, effectively restricting their own action space. Addition: a sentence informing the agent about the other player's action.
+
+\subsubsection{Mediator (Correlated Recommendations)}
+
+A trusted mediator provides private, correlated action recommendations to both players. Addition: ``A trusted mediator recommends you play [action]. The mediator has also given a (possibly different) private recommendation to your opponent. Do you follow this recommendation?''
+
+\subsubsection{Contracts with Penalties}
+
+Players can sign binding contracts that impose penalties for deviating from specified actions. Addition: a sentence about a punishment (a threat, essentially).
+
+\subsubsection{Side Payments (Transfers)}
+
+Players can negotiate monetary transfers contingent on action profiles. Prompt idea: ``Your opponent offers to pay you a million dollars, contingent on you playing [action].''
+
+\subsection{Analysis}
+
+After running our experiments, we should be able to answer the following questions:
+\begin{enumerate}
+    \item Which mechanisms are most effective (our basic research question)?
+    \item Which games are amenable to mechanism design?
+    \item How do these answers vary between LLMs?
+\end{enumerate}
+
+\section{Overleaf write-ups}
+
+\subsection{Selection of Games}
+
+We focus our analysis on symmetric 2×2 bimatrix games, a well-studied class of two-player strategic interactions. A \textit{2×2 game} involves two players, each selecting between two actions, yielding four possible outcomes. We denote the row player's actions as $\{U, D\}$ (Up, Down) and the column player's actions as $\{L, R\}$ (Left, Right). The general payoff structure is represented as:
+\begin{equation}
+\begin{array}{c|c|c}
+  & L & R \\
+\hline
+U & (r_1, c_1) & (r_2, c_2) \\
+\hline
+D & (r_3, c_3) & (r_4, c_4)
+\end{array}
+\end{equation}
+where $r_i \in \mathbb{R}$ denotes the row player's payoff and $c_i \in \mathbb{R}$ denotes the column player's payoff for outcome $i \in \{1,2,3,4\}$.
+
+\citet{top} identify 144 strategically distinct 2×2 games under the assumption that each player has strict preferences over the four possible outcomes (i.e., no ties in payoffs). These 144 games are grouped into equivalence classes where games in the same class share identical Nash equilibrium structures and best-response dynamics.
+
+A game is \textit{symmetric} if the payoff structure is invariant under role exchange: formally, $r(x, y) = c(y, x)$ for all action pairs $(x,y)$, where $r: \{U,D\} \times \{L,R\} \to \mathbb{R}$ and $c: \{L,R\} \times \{U,D\} \to \mathbb{R}$ denote the row and column players' payoff functions, respectively. Any symmetric 2×2 game admits the canonical form:
+\begin{equation} \label{eq:sym-game}
+\begin{array}{c|c|c}
+  & L & R \\
+\hline
+U & (a, a) & (c, d) \\
+\hline
+D & (d, c) & (b, b)
+\end{array}
+\end{equation}
+with payoff parameters $a, b, c, d \in \mathbb{R}$.
+
+Symmetric games are particularly significant for several reasons. First, they naturally model scenarios where players are ex-ante identical, a common assumption in economic competition, evolutionary biology, and social interactions. Second, symmetric games possess strong equilibrium guarantees: every finite symmetric game admits at least one symmetric Nash equilibrium \citep{nash2024non}. Third, they form the foundation of evolutionary game theory, where populations of strategically identical agents interact \citep{smith1982evolution}. Finally, as noted by \citet{top}, symmetric games serve as canonical representatives for broader families of related asymmetric games, making them efficient focal points for theoretical analysis.
+
+The ordinal classification under symmetry reduces the space from 144 to merely 12 strategically distinct games. Given a symmetric game of the form in Equation~\ref{eq:sym-game}, its \textit{anti-game} is obtained by exchanging payoffs between diagonally opposite off-diagonal cells:
+\begin{equation}
+\begin{array}{c|c|c}
+  & L & R \\
+\hline
+U & (a, a) & (d, c) \\
+\hline
+D & (c, d) & (b, b)
+\end{array}
+\end{equation}
+
+The 12 symmetric games comprise six canonical games and their anti-games: \textit{Prisoner's Dilemma}, \textit{Chicken}, \textit{Battle of the Sexes}, \textit{No Conflict}, \textit{Stag Hunt}, and \textit{Coordination}. Anti-games generally receive less attention in the literature, with anti-Coordination being a notable exception. We therefore restrict our focus to the six primary symmetric games, detailed specifications of which are provided in Appendix.
+
+
+
+\bibliographystyle{abbrvnat}
+\bibliography{references}
+
+\end{document}

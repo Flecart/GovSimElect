@@ -1,0 +1,27 @@
+% Requires: \usepackage{adjustbox}, \usepackage{colortbl}, \usepackage{booktabs}
+% Optional for landscape: \usepackage{lscape} or \usepackage{pdflscape}
+
+\begin{table*}[htbp]
+\centering
+\renewcommand{\arraystretch}{2}
+\footnotesize
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccccccccccccccc|c}
+\toprule
+\textbf{Game} & \textbf{\scriptsize Claude 4.5 Opus} & \textbf{\scriptsize Claude 4.5 Sonnet} & \textbf{\scriptsize GPT-5.2} & \textbf{\scriptsize GPT-5.1} & \textbf{\scriptsize GPT-5 Mini} & \textbf{\scriptsize GPT-5 Nano} & \textbf{\scriptsize GPT-4o} & \textbf{\scriptsize Grok 4.1 Fast} & \textbf{\scriptsize Gemini 3 Pro} & \textbf{\scriptsize Gemini 3 Flash} & \textbf{\scriptsize Llama 3.3 70B} & \textbf{\scriptsize Llama 3.2 3B} & \textbf{\scriptsize Qwen3 30B} & \textbf{\scriptsize Qwen3 8B} & \textbf{\scriptsize Deepseek V3.2} & \textbf{\scriptsize Avg.} \\
+\midrule
+Prisoner's Dilemma & \cellcolor[HTML]{DB4838}0.06 & \cellcolor[HTML]{E1674F}0.13 & \cellcolor[HTML]{E9906D}0.23 & \cellcolor[HTML]{EEAB81}0.30 & \cellcolor[HTML]{E67F61}0.19 & \cellcolor[HTML]{EA936F}0.24 & \cellcolor[HTML]{DE5542}0.09 & \cellcolor[HTML]{41A963}0.91 & \cellcolor[HTML]{88C985}0.76 & \cellcolor[HTML]{CCE8A6}0.61 & \cellcolor[HTML]{E1654E}0.13 & \cellcolor[HTML]{DE5441}0.09 & \cellcolor[HTML]{BBE09E}0.65 & \cellcolor[HTML]{FDF7B9}0.48 & \cellcolor[HTML]{A5D693}0.70 & \cellcolor[HTML]{F4C997}0.37 \\
+Chicken & \cellcolor[HTML]{D8362B}0.01 & \cellcolor[HTML]{DB4738}0.06 & \cellcolor[HTML]{D93F32}0.04 & \cellcolor[HTML]{DB4637}0.06 & \cellcolor[HTML]{D8382D}0.02 & \cellcolor[HTML]{EB9A75}0.26 & \cellcolor[HTML]{DC4D3C}0.07 & \cellcolor[HTML]{F5CB99}0.38 & \cellcolor[HTML]{E26D54}0.15 & \cellcolor[HTML]{D93C30}0.03 & \cellcolor[HTML]{DC4D3C}0.07 & \cellcolor[HTML]{E78364}0.20 & \cellcolor[HTML]{EFB085}0.31 & \cellcolor[HTML]{F0B589}0.32 & \cellcolor[HTML]{DB4536}0.05 & \cellcolor[HTML]{E16750}0.14 \\
+Battle of the Sexes & \cellcolor[HTML]{AEDB98}0.67 & \cellcolor[HTML]{B5DD9B}0.66 & \cellcolor[HTML]{F4C997}0.37 & \cellcolor[HTML]{DFF0AF}0.57 & \cellcolor[HTML]{B4DD9A}0.66 & \cellcolor[HTML]{E9906D}0.23 & \cellcolor[HTML]{FAE9AE}0.45 & \cellcolor[HTML]{FEFDBE}0.50 & \cellcolor[HTML]{E1F1B0}0.56 & \cellcolor[HTML]{B9DF9D}0.65 & \cellcolor[HTML]{FEFABB}0.49 & \cellcolor[HTML]{F6D19D}0.39 & \cellcolor[HTML]{F1B88B}0.33 & \cellcolor[HTML]{F8DCA5}0.42 & \cellcolor[HTML]{FDF5B7}0.48 & \cellcolor[HTML]{FEFDBD}0.50 \\
+Stag hunt & \cellcolor[HTML]{63B973}0.84 & \cellcolor[HTML]{78C27D}0.79 & \cellcolor[HTML]{80C681}0.78 & \cellcolor[HTML]{9BD28E}0.72 & \cellcolor[HTML]{A7D794}0.69 & \cellcolor[HTML]{ACD996}0.68 & \cellcolor[HTML]{70BE79}0.81 & \cellcolor[HTML]{9ED390}0.71 & \cellcolor[HTML]{B2DC9A}0.67 & \cellcolor[HTML]{42AA63}0.91 & \cellcolor[HTML]{41A963}0.91 & \cellcolor[HTML]{4FAF69}0.88 & \cellcolor[HTML]{ABD996}0.68 & \cellcolor[HTML]{50B06A}0.88 & \cellcolor[HTML]{D4EBAA}0.59 & \cellcolor[HTML]{83C783}0.77 \\
+Coordination & \cellcolor[HTML]{39A65F}0.93 & \cellcolor[HTML]{38A55E}0.93 & \cellcolor[HTML]{5BB56F}0.86 & \cellcolor[HTML]{4DAE68}0.89 & \cellcolor[HTML]{3CA760}0.92 & \cellcolor[HTML]{4DAF68}0.89 & \cellcolor[HTML]{A0D491}0.71 & \cellcolor[HTML]{43AA64}0.91 & \cellcolor[HTML]{37A55E}0.94 & \cellcolor[HTML]{30A25A}0.95 & \cellcolor[HTML]{82C682}0.77 & \cellcolor[HTML]{9FD390}0.71 & \cellcolor[HTML]{50B06A}0.88 & \cellcolor[HTML]{64B974}0.84 & \cellcolor[HTML]{49AD67}0.90 & \cellcolor[HTML]{56B36D}0.87 \\
+No conflict & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 & \cellcolor[HTML]{1A9850}1.00 \\
+\midrule
+\textbf{Avg} & \cellcolor[HTML]{D7EDAB}\textbf{0.59} & \cellcolor[HTML]{D2EBA9}\textbf{0.60} & \cellcolor[HTML]{EAF5B4}\textbf{0.55} & \cellcolor[HTML]{D6ECAB}\textbf{0.59} & \cellcolor[HTML]{D9EEAC}\textbf{0.58} & \cellcolor[HTML]{E8F4B3}\textbf{0.55} & \cellcolor[HTML]{F5FABA}\textbf{0.52} & \cellcolor[HTML]{93CE8B}\textbf{0.73} & \cellcolor[HTML]{ACDA97}\textbf{0.68} & \cellcolor[HTML]{A6D794}\textbf{0.69} & \cellcolor[HTML]{E2F2B1}\textbf{0.56} & \cellcolor[HTML]{EAF5B4}\textbf{0.55} & \cellcolor[HTML]{BDE19F}\textbf{0.64} & \cellcolor[HTML]{B7DE9C}\textbf{0.66} & \cellcolor[HTML]{C8E6A4}\textbf{0.62} & \cellcolor[HTML]{CEE9A7}\textbf{0.61} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\caption{Nash Accuracy across models and game types. 
+Cell colors range from \textcolor[HTML]{D73027}{red} (0.0) to \textcolor[HTML]{1A9850}{green} (1.0).}
+\label{tab:accuracy_heatmap}
+\end{table*}
