@@ -1747,3 +1747,2259 @@ Equality e: 0.9893 (95% bootstrap CI for mean: [0.9816, 0.9970])
 Over-usage o: 0.4833 (95% bootstrap CI for mean: [0.3167, 0.6167])
 Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
 Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 368.2000 (95% bootstrap CI for mean: [271.2000, 465.2000])
+Efficiency u: 0.8689 (95% bootstrap CI for mean: [0.7039, 0.9901])
+Equality e: 0.9000 (95% bootstrap CI for mean: [0.8448, 0.9537])
+Over-usage o: 0.3667 (95% bootstrap CI for mean: [0.2667, 0.4500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 317.2000 (95% bootstrap CI for mean: [291.4000, 347.8000])
+Efficiency u: 0.5938 (95% bootstrap CI for mean: [0.5401, 0.6489])
+Equality e: 0.9932 (95% bootstrap CI for mean: [0.9882, 0.9984])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0333, 0.1833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 422.2000 (95% bootstrap CI for mean: [382.4000, 461.2300])
+Efficiency u: 0.9229 (95% bootstrap CI for mean: [0.8514, 0.9875])
+Equality e: 0.8811 (95% bootstrap CI for mean: [0.8238, 0.9341])
+Over-usage o: 0.4833 (95% bootstrap CI for mean: [0.4333, 0.5500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 349.6000 (95% bootstrap CI for mean: [320.6000, 378.6000])
+Efficiency u: 0.6711 (95% bootstrap CI for mean: [0.5842, 0.7822])
+Equality e: 0.9911 (95% bootstrap CI for mean: [0.9853, 0.9972])
+Over-usage o: 0.1500 (95% bootstrap CI for mean: [0.1000, 0.2000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 263.4000 (95% bootstrap CI for mean: [199.1950, 324.0000])
+Efficiency u: 0.4871 (95% bootstrap CI for mean: [0.3641, 0.5984])
+Equality e: 0.9873 (95% bootstrap CI for mean: [0.9828, 0.9916])
+Over-usage o: 0.0833 (95% bootstrap CI for mean: [0.0333, 0.1333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 412.8000 (95% bootstrap CI for mean: [382.3700, 441.8250])
+Efficiency u: 0.8316 (95% bootstrap CI for mean: [0.7086, 0.9207])
+Equality e: 0.9387 (95% bootstrap CI for mean: [0.9022, 0.9751])
+Over-usage o: 0.3167 (95% bootstrap CI for mean: [0.1500, 0.4833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 323.6000 (95% bootstrap CI for mean: [289.4000, 357.8000])
+Efficiency u: 0.6127 (95% bootstrap CI for mean: [0.5468, 0.6653])
+Equality e: 0.9877 (95% bootstrap CI for mean: [0.9820, 0.9925])
+Over-usage o: 0.1500 (95% bootstrap CI for mean: [0.0500, 0.2667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 353.0000 (95% bootstrap CI for mean: [304.2000, 397.6000])
+Efficiency u: 0.8767 (95% bootstrap CI for mean: [0.6476, 1.0000])
+Equality e: 0.8484 (95% bootstrap CI for mean: [0.7733, 0.9339])
+Over-usage o: 0.4000 (95% bootstrap CI for mean: [0.2167, 0.5671])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 428.6000 (95% bootstrap CI for mean: [377.4000, 479.8000])
+Efficiency u: 0.9114 (95% bootstrap CI for mean: [0.8388, 0.9786])
+Equality e: 0.8811 (95% bootstrap CI for mean: [0.8190, 0.9380])
+Over-usage o: 0.4167 (95% bootstrap CI for mean: [0.3000, 0.5333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 328.2000 (95% bootstrap CI for mean: [303.4000, 355.6000])
+Efficiency u: 0.6168 (95% bootstrap CI for mean: [0.5621, 0.6884])
+Equality e: 0.9938 (95% bootstrap CI for mean: [0.9893, 0.9983])
+Over-usage o: 0.1833 (95% bootstrap CI for mean: [0.1333, 0.2333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 342.2000 (95% bootstrap CI for mean: [295.4000, 404.0000])
+Efficiency u: 0.8513 (95% bootstrap CI for mean: [0.7021, 1.0000])
+Equality e: 0.9880 (95% bootstrap CI for mean: [0.9834, 0.9926])
+Over-usage o: 0.3500 (95% bootstrap CI for mean: [0.1667, 0.5333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-it-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 286.0000 (95% bootstrap CI for mean: [217.4000, 345.8000])
+Efficiency u: 0.5225 (95% bootstrap CI for mean: [0.4125, 0.6200])
+Equality e: 0.9866 (95% bootstrap CI for mean: [0.9839, 0.9896])
+Over-usage o: 0.1167 (95% bootstrap CI for mean: [0.0833, 0.1833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-p0-2026-04-19-19:24/0-no-contract-p0
+Mean survival months m: 7.40 (95% bootstrap CI for mean: [4.20, 10.60])
+Pooled survival rate q: 0.6167 (95% bootstrap CI, resample runs: [0.3500, 0.8833])
+Total gain R: 221.4000 (95% bootstrap CI for mean: [164.9450, 277.8650])
+Efficiency u: 0.8883 (95% bootstrap CI for mean: [0.7753, 1.0000])
+Equality e: 0.9713 (95% bootstrap CI for mean: [0.9436, 0.9921])
+Over-usage o: 0.5967 (95% bootstrap CI for mean: [0.3533, 0.8400])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+No log_env.json found under /home/angeloh/Desktop/work/GovSimElect/simulation/results/sto/gemma-4-31b-p0-2026-04-19-19:24/2-code-law-p0 (expected file here or in subdirs).
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 478.2000 (95% bootstrap CI for mean: [426.8000, 535.4000])
+Efficiency u: 0.9540 (95% bootstrap CI for mean: [0.8867, 1.0000])
+Equality e: 0.8581 (95% bootstrap CI for mean: [0.7809, 0.9353])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.1500, 0.4333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 335.0000 (95% bootstrap CI for mean: [321.0000, 355.0000])
+Efficiency u: 0.5583 (95% bootstrap CI for mean: [0.5350, 0.5950])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 11.20 (95% bootstrap CI for mean: [9.60, 12.00])
+Pooled survival rate q: 0.9333 (95% bootstrap CI, resample runs: [0.8000, 1.0000])
+Total gain R: 438.8000 (95% bootstrap CI for mean: [387.2000, 504.4000])
+Efficiency u: 0.8822 (95% bootstrap CI for mean: [0.7942, 0.9533])
+Equality e: 0.8107 (95% bootstrap CI for mean: [0.7431, 0.9058])
+Over-usage o: 0.2333 (95% bootstrap CI for mean: [0.1000, 0.3833])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 300.0000 (95% bootstrap CI for mean: [273.0000, 327.0500])
+Efficiency u: 0.5000 (95% bootstrap CI for mean: [0.4550, 0.5485])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 375.0000 (95% bootstrap CI for mean: [310.9250, 470.0000])
+Efficiency u: 0.6250 (95% bootstrap CI for mean: [0.5132, 0.7800])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 480.4000 (95% bootstrap CI for mean: [410.2000, 543.4000])
+Efficiency u: 0.8469 (95% bootstrap CI for mean: [0.7083, 0.9823])
+Equality e: 0.9285 (95% bootstrap CI for mean: [0.8201, 0.9960])
+Over-usage o: 0.1167 (95% bootstrap CI for mean: [0.0000, 0.3167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 361.0000 (95% bootstrap CI for mean: [324.0000, 404.0750])
+Efficiency u: 0.6017 (95% bootstrap CI for mean: [0.5433, 0.6733])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 532.6000 (95% bootstrap CI for mean: [466.6000, 571.0000])
+Efficiency u: 0.9209 (95% bootstrap CI for mean: [0.8594, 0.9681])
+Equality e: 0.9289 (95% bootstrap CI for mean: [0.8257, 0.9869])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0167, 0.1833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 471.2000 (95% bootstrap CI for mean: [376.8000, 565.6000])
+Efficiency u: 0.9100 (95% bootstrap CI for mean: [0.7300, 1.0000])
+Equality e: 0.8896 (95% bootstrap CI for mean: [0.7586, 1.0000])
+Over-usage o: 0.2000 (95% bootstrap CI for mean: [0.0000, 0.4333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 334.0000 (95% bootstrap CI for mean: [312.0000, 357.0000])
+Efficiency u: 0.5567 (95% bootstrap CI for mean: [0.5200, 0.5933])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 570.8000 (95% bootstrap CI for mean: [543.6000, 598.0000])
+Efficiency u: 0.9513 (95% bootstrap CI for mean: [0.9013, 0.9967])
+Equality e: 0.9837 (95% bootstrap CI for mean: [0.9649, 0.9973])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 358.0000 (95% bootstrap CI for mean: [337.0000, 378.0000])
+Efficiency u: 0.5967 (95% bootstrap CI for mean: [0.5650, 0.6317])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p0-2026-04-19-19:23/0-no-contract-p0
+Mean survival months m: 9.00 (95% bootstrap CI for mean: [5.80, 12.00])
+Pooled survival rate q: 0.7500 (95% bootstrap CI, resample runs: [0.4833, 1.0000])
+Total gain R: 432.4000 (95% bootstrap CI for mean: [286.4000, 583.0000])
+Efficiency u: 0.9717 (95% bootstrap CI for mean: [0.9150, 1.0000])
+Equality e: 0.9286 (95% bootstrap CI for mean: [0.8555, 0.9961])
+Over-usage o: 0.2600 (95% bootstrap CI for mean: [0.0000, 0.5800])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p1-2026-04-19-19:23/0-no-contract-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 497.0000 (95% bootstrap CI for mean: [451.4000, 542.6000])
+Efficiency u: 0.9379 (95% bootstrap CI for mean: [0.8579, 0.9822])
+Equality e: 0.8878 (95% bootstrap CI for mean: [0.8152, 0.9604])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.1333, 0.4833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p2-2026-04-19-19:23/0-no-contract-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 465.4000 (95% bootstrap CI for mean: [354.8000, 576.0000])
+Efficiency u: 0.9001 (95% bootstrap CI for mean: [0.7738, 0.9858])
+Equality e: 0.8986 (95% bootstrap CI for mean: [0.8276, 0.9696])
+Over-usage o: 0.2167 (95% bootstrap CI for mean: [0.0500, 0.4000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p3-2026-04-19-19:23/0-no-contract-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 504.0000 (95% bootstrap CI for mean: [433.6000, 574.4000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8498 (95% bootstrap CI for mean: [0.7351, 0.9646])
+Over-usage o: 0.3000 (95% bootstrap CI for mean: [0.0833, 0.5167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p4-2026-04-19-19:23/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 525.4000 (95% bootstrap CI for mean: [463.6000, 577.0000])
+Efficiency u: 0.9227 (95% bootstrap CI for mean: [0.8329, 0.9963])
+Equality e: 0.8671 (95% bootstrap CI for mean: [0.7939, 0.9390])
+Over-usage o: 0.2000 (95% bootstrap CI for mean: [0.0667, 0.3167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p5-2026-04-19-19:23/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p0-2026-04-15-18:04/0-no-contract-p0
+Mean survival months m: 5.80 (95% bootstrap CI for mean: [1.60, 10.00])
+Pooled survival rate q: 0.4833 (95% bootstrap CI, resample runs: [0.1333, 0.8333])
+Total gain R: 162.2000 (95% bootstrap CI for mean: [106.4000, 235.6000])
+Efficiency u: 0.8316 (95% bootstrap CI for mean: [0.6219, 1.0000])
+Equality e: 0.8729 (95% bootstrap CI for mean: [0.8576, 0.8917])
+Over-usage o: 0.6667 (95% bootstrap CI for mean: [0.3000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p0-2026-04-29-20:21/2-nl-p0
+Mean survival months m: 1.80 (95% bootstrap CI for mean: [1.00, 3.00])
+Pooled survival rate q: 0.1500 (95% bootstrap CI, resample runs: [0.0833, 0.2500])
+Total gain R: 106.2000 (95% bootstrap CI for mean: [100.0000, 112.6000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9517 (95% bootstrap CI for mean: [0.9139, 0.9872])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p0-2026-04-29-20:21/2-code-law-p0
+Mean survival months m: 5.60 (95% bootstrap CI for mean: [1.40, 10.00])
+Pooled survival rate q: 0.4667 (95% bootstrap CI, resample runs: [0.1000, 0.8333])
+Total gain R: 150.2000 (95% bootstrap CI for mean: [102.2000, 200.8000])
+Efficiency u: 0.8412 (95% bootstrap CI for mean: [0.6773, 1.0000])
+Equality e: 0.9265 (95% bootstrap CI for mean: [0.8892, 0.9665])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p1-2026-04-15-18:04/0-no-contract-p1
+Mean survival months m: 8.00 (95% bootstrap CI for mean: [3.60, 12.00])
+Pooled survival rate q: 0.6667 (95% bootstrap CI, resample runs: [0.3000, 1.0000])
+Total gain R: 146.6000 (95% bootstrap CI for mean: [123.1650, 166.0000])
+Efficiency u: 0.6405 (95% bootstrap CI for mean: [0.3804, 0.9019])
+Equality e: 0.9130 (95% bootstrap CI for mean: [0.8838, 0.9385])
+Over-usage o: 0.5167 (95% bootstrap CI for mean: [0.1833, 0.8500])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p1-2026-04-29-20:21/2-nl-p1
+Mean survival months m: 10.20 (95% bootstrap CI for mean: [6.60, 12.00])
+Pooled survival rate q: 0.8500 (95% bootstrap CI, resample runs: [0.5500, 1.0000])
+Total gain R: 243.4000 (95% bootstrap CI for mean: [157.4000, 319.4400])
+Efficiency u: 0.6641 (95% bootstrap CI for mean: [0.4900, 0.8473])
+Equality e: 0.8979 (95% bootstrap CI for mean: [0.8522, 0.9334])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.0833, 0.6500])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p1-2026-04-29-20:21/2-code-law-p1
+Mean survival months m: 10.00 (95% bootstrap CI for mean: [6.00, 12.00])
+Pooled survival rate q: 0.8333 (95% bootstrap CI, resample runs: [0.5000, 1.0000])
+Total gain R: 149.2000 (95% bootstrap CI for mean: [116.4000, 195.8000])
+Efficiency u: 0.4485 (95% bootstrap CI for mean: [0.2416, 0.7394])
+Equality e: 0.9172 (95% bootstrap CI for mean: [0.8931, 0.9523])
+Over-usage o: 0.2667 (95% bootstrap CI for mean: [0.0833, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p2-2026-04-15-18:04/0-no-contract-p2
+Mean survival months m: 10.20 (95% bootstrap CI for mean: [6.60, 12.00])
+Pooled survival rate q: 0.8500 (95% bootstrap CI, resample runs: [0.5500, 1.0000])
+Total gain R: 221.2000 (95% bootstrap CI for mean: [165.0000, 259.8000])
+Efficiency u: 0.6187 (95% bootstrap CI for mean: [0.4455, 0.8250])
+Equality e: 0.8719 (95% bootstrap CI for mean: [0.8177, 0.9274])
+Over-usage o: 0.3333 (95% bootstrap CI for mean: [0.1000, 0.6500])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p2-2026-04-29-20:21/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 172.2000 (95% bootstrap CI for mean: [158.3750, 187.0000])
+Efficiency u: 0.4168 (95% bootstrap CI for mean: [0.3017, 0.5628])
+Equality e: 0.8856 (95% bootstrap CI for mean: [0.8468, 0.9227])
+Over-usage o: 0.1833 (95% bootstrap CI for mean: [0.1000, 0.3000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p2-2026-04-29-20:21/2-nl-p2
+Mean survival months m: 10.60 (95% bootstrap CI for mean: [7.80, 12.00])
+Pooled survival rate q: 0.8833 (95% bootstrap CI, resample runs: [0.6500, 1.0000])
+Total gain R: 223.4000 (95% bootstrap CI for mean: [179.2000, 267.0000])
+Efficiency u: 0.6991 (95% bootstrap CI for mean: [0.4674, 0.9309])
+Equality e: 0.8598 (95% bootstrap CI for mean: [0.7984, 0.9199])
+Over-usage o: 0.3500 (95% bootstrap CI for mean: [0.1333, 0.6833])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p3-2026-04-15-18:04/0-no-contract-p3
+Mean survival months m: 8.80 (95% bootstrap CI for mean: [5.60, 12.00])
+Pooled survival rate q: 0.7333 (95% bootstrap CI, resample runs: [0.4333, 1.0000])
+Total gain R: 249.6000 (95% bootstrap CI for mean: [169.0000, 330.2000])
+Efficiency u: 0.7426 (95% bootstrap CI for mean: [0.5627, 0.9224])
+Equality e: 0.9045 (95% bootstrap CI for mean: [0.8510, 0.9580])
+Over-usage o: 0.4267 (95% bootstrap CI for mean: [0.1000, 0.7767])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p3-2026-04-29-20:21/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 242.6000 (95% bootstrap CI for mean: [168.2000, 317.0000])
+Efficiency u: 0.4309 (95% bootstrap CI for mean: [0.3048, 0.5576])
+Equality e: 0.9310 (95% bootstrap CI for mean: [0.8929, 0.9609])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0833, 0.1333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p3-2026-04-29-20:21/2-nl-p3
+Mean survival months m: 10.40 (95% bootstrap CI for mean: [7.20, 12.00])
+Pooled survival rate q: 0.8667 (95% bootstrap CI, resample runs: [0.6000, 1.0000])
+Total gain R: 295.6000 (95% bootstrap CI for mean: [210.2000, 357.2000])
+Efficiency u: 0.7815 (95% bootstrap CI for mean: [0.6194, 0.9435])
+Equality e: 0.8534 (95% bootstrap CI for mean: [0.7613, 0.9448])
+Over-usage o: 0.4167 (95% bootstrap CI for mean: [0.1333, 0.7333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p4-2026-04-15-18:04/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 332.4000 (95% bootstrap CI for mean: [312.0000, 353.0000])
+Efficiency u: 0.5613 (95% bootstrap CI for mean: [0.5263, 0.5976])
+Equality e: 0.9632 (95% bootstrap CI for mean: [0.9449, 0.9814])
+Over-usage o: 0.0667 (95% bootstrap CI for mean: [0.0333, 0.0833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p4-2026-04-29-20:21/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 438.4000 (95% bootstrap CI for mean: [356.4000, 529.0000])
+Efficiency u: 0.7568 (95% bootstrap CI for mean: [0.6035, 0.9014])
+Equality e: 0.9330 (95% bootstrap CI for mean: [0.8794, 0.9814])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0333, 0.1667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p4-2026-04-29-20:21/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 266.8000 (95% bootstrap CI for mean: [225.5950, 313.4000])
+Efficiency u: 0.4609 (95% bootstrap CI for mean: [0.3950, 0.5273])
+Equality e: 0.9451 (95% bootstrap CI for mean: [0.9201, 0.9675])
+Over-usage o: 0.1167 (95% bootstrap CI for mean: [0.0833, 0.1500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p5-2026-04-15-18:04/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 346.6000 (95% bootstrap CI for mean: [325.0000, 387.8000])
+Efficiency u: 0.5786 (95% bootstrap CI for mean: [0.5417, 0.6447])
+Equality e: 0.9968 (95% bootstrap CI for mean: [0.9927, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p5-2026-04-29-20:21/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 413.0000 (95% bootstrap CI for mean: [320.0000, 509.0000])
+Efficiency u: 0.6900 (95% bootstrap CI for mean: [0.5317, 0.8383])
+Equality e: 0.9932 (95% bootstrap CI for mean: [0.9881, 0.9985])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.0667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p5-2026-04-29-20:21/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 400.6000 (95% bootstrap CI for mean: [349.2000, 452.0000])
+Efficiency u: 0.6689 (95% bootstrap CI for mean: [0.5823, 0.7519])
+Equality e: 0.9875 (95% bootstrap CI for mean: [0.9748, 0.9960])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-19-14:13/0-no-contract-p0
+Mean survival months m: 3.40 (95% bootstrap CI for mean: [1.00, 7.60])
+Pooled survival rate q: 0.2833 (95% bootstrap CI, resample runs: [0.0833, 0.6500])
+Total gain R: 111.0000 (95% bootstrap CI for mean: [100.0000, 129.0000])
+Efficiency u: 0.8586 (95% bootstrap CI for mean: [0.5758, 1.0000])
+Equality e: 0.9730 (95% bootstrap CI for mean: [0.9410, 1.0000])
+Over-usage o: 0.8167 (95% bootstrap CI for mean: [0.4500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-19-14:49/0-no-contract-p0
+Mean survival months m: 3.40 (95% bootstrap CI for mean: [1.00, 7.80])
+Pooled survival rate q: 0.2833 (95% bootstrap CI, resample runs: [0.0833, 0.6500])
+Total gain R: 99.6000 (95% bootstrap CI for mean: [94.0000, 104.8000])
+Efficiency u: 0.8346 (95% bootstrap CI for mean: [0.5038, 1.0000])
+Equality e: 0.9339 (95% bootstrap CI for mean: [0.8841, 0.9837])
+Over-usage o: 0.8167 (95% bootstrap CI for mean: [0.4500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 1.20 (95% bootstrap CI for mean: [1.00, 1.60])
+Pooled survival rate q: 0.1000 (95% bootstrap CI, resample runs: [0.0833, 0.1333])
+Total gain R: 102.0000 (95% bootstrap CI for mean: [100.0000, 106.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8736 (95% bootstrap CI for mean: [0.7936, 0.9392])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 7.60 (95% bootstrap CI for mean: [3.20, 12.00])
+Pooled survival rate q: 0.6333 (95% bootstrap CI, resample runs: [0.2667, 1.0000])
+Total gain R: 169.4000 (95% bootstrap CI for mean: [115.2000, 230.6000])
+Efficiency u: 0.6260 (95% bootstrap CI for mean: [0.3494, 0.9026])
+Equality e: 0.8815 (95% bootstrap CI for mean: [0.8352, 0.9236])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-19-14:13/0-no-contract-p1
+Mean survival months m: 8.00 (95% bootstrap CI for mean: [4.00, 12.00])
+Pooled survival rate q: 0.6667 (95% bootstrap CI, resample runs: [0.3333, 1.0000])
+Total gain R: 111.6000 (95% bootstrap CI for mean: [96.6000, 130.0000])
+Efficiency u: 0.5332 (95% bootstrap CI for mean: [0.2210, 0.8586])
+Equality e: 0.9017 (95% bootstrap CI for mean: [0.8565, 0.9433])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-19-14:49/0-no-contract-p1
+Mean survival months m: 1.20 (95% bootstrap CI for mean: [1.00, 1.60])
+Pooled survival rate q: 0.1000 (95% bootstrap CI, resample runs: [0.0833, 0.1333])
+Total gain R: 104.0000 (95% bootstrap CI for mean: [100.0000, 112.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8320 (95% bootstrap CI for mean: [0.7680, 0.9000])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 4.80 (95% bootstrap CI for mean: [1.60, 8.00])
+Pooled survival rate q: 0.4000 (95% bootstrap CI, resample runs: [0.1333, 0.7337])
+Total gain R: 185.8000 (95% bootstrap CI for mean: [108.0000, 274.6000])
+Efficiency u: 0.9409 (95% bootstrap CI for mean: [0.8226, 1.0000])
+Equality e: 0.8970 (95% bootstrap CI for mean: [0.8611, 0.9329])
+Over-usage o: 0.8500 (95% bootstrap CI for mean: [0.5500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 155.4000 (95% bootstrap CI for mean: [124.1950, 182.6000])
+Efficiency u: 0.5934 (95% bootstrap CI for mean: [0.3165, 0.8703])
+Equality e: 0.8925 (95% bootstrap CI for mean: [0.8656, 0.9195])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-19-14:13/0-no-contract-p2
+Mean survival months m: 5.80 (95% bootstrap CI for mean: [1.60, 10.00])
+Pooled survival rate q: 0.4833 (95% bootstrap CI, resample runs: [0.1333, 0.8333])
+Total gain R: 154.8000 (95% bootstrap CI for mean: [112.0000, 226.8000])
+Efficiency u: 0.7720 (95% bootstrap CI for mean: [0.5125, 1.0000])
+Equality e: 0.9224 (95% bootstrap CI for mean: [0.8924, 0.9510])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-19-14:49/0-no-contract-p2
+Mean survival months m: 10.00 (95% bootstrap CI for mean: [6.00, 12.00])
+Pooled survival rate q: 0.8333 (95% bootstrap CI, resample runs: [0.5000, 1.0000])
+Total gain R: 131.2000 (95% bootstrap CI for mean: [102.2000, 168.0000])
+Efficiency u: 0.5308 (95% bootstrap CI for mean: [0.2093, 0.8523])
+Equality e: 0.9201 (95% bootstrap CI for mean: [0.8868, 0.9529])
+Over-usage o: 0.2667 (95% bootstrap CI for mean: [0.0833, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 7.60 (95% bootstrap CI for mean: [3.20, 12.00])
+Pooled survival rate q: 0.6333 (95% bootstrap CI, resample runs: [0.2667, 1.0000])
+Total gain R: 123.0000 (95% bootstrap CI for mean: [93.5850, 152.4000])
+Efficiency u: 0.5650 (95% bootstrap CI for mean: [0.2671, 0.8629])
+Equality e: 0.8859 (95% bootstrap CI for mean: [0.8008, 0.9585])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 6.00 (95% bootstrap CI for mean: [2.00, 10.00])
+Pooled survival rate q: 0.5000 (95% bootstrap CI, resample runs: [0.1667, 0.8333])
+Total gain R: 176.0000 (95% bootstrap CI for mean: [118.6000, 262.2000])
+Efficiency u: 0.7814 (95% bootstrap CI for mean: [0.5125, 1.0000])
+Equality e: 0.8349 (95% bootstrap CI for mean: [0.7647, 0.9038])
+Over-usage o: 0.5500 (95% bootstrap CI for mean: [0.2000, 0.9000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-19-14:13/0-no-contract-p3
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 147.0000 (95% bootstrap CI for mean: [99.5800, 224.6000])
+Efficiency u: 0.6577 (95% bootstrap CI for mean: [0.3500, 0.9307])
+Equality e: 0.9586 (95% bootstrap CI for mean: [0.9403, 0.9813])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-19-14:49/0-no-contract-p3
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 167.6000 (95% bootstrap CI for mean: [101.6000, 282.0250])
+Efficiency u: 0.6408 (95% bootstrap CI for mean: [0.3208, 0.9374])
+Equality e: 0.9497 (95% bootstrap CI for mean: [0.9180, 0.9848])
+Over-usage o: 0.4833 (95% bootstrap CI for mean: [0.1167, 0.8500])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 10.00 (95% bootstrap CI for mean: [6.00, 12.00])
+Pooled survival rate q: 0.8333 (95% bootstrap CI, resample runs: [0.5000, 1.0000])
+Total gain R: 195.8000 (95% bootstrap CI for mean: [170.4000, 218.8000])
+Efficiency u: 0.5090 (95% bootstrap CI for mean: [0.3538, 0.7624])
+Equality e: 0.9166 (95% bootstrap CI for mean: [0.8973, 0.9368])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.0833, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 6.20 (95% bootstrap CI for mean: [2.00, 10.40])
+Pooled survival rate q: 0.5167 (95% bootstrap CI, resample runs: [0.1667, 0.8667])
+Total gain R: 215.0000 (95% bootstrap CI for mean: [117.2000, 326.2000])
+Efficiency u: 0.8589 (95% bootstrap CI for mean: [0.6537, 1.0000])
+Equality e: 0.9168 (95% bootstrap CI for mean: [0.8693, 0.9665])
+Over-usage o: 0.6500 (95% bootstrap CI for mean: [0.3000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-19-14:13/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 155.6000 (95% bootstrap CI for mean: [122.2000, 189.0000])
+Efficiency u: 0.5788 (95% bootstrap CI for mean: [0.2774, 0.8586])
+Equality e: 0.9518 (95% bootstrap CI for mean: [0.9423, 0.9596])
+Over-usage o: 0.0833 (95% bootstrap CI for mean: [0.0833, 0.0833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-19-14:49/0-no-contract-p4
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 134.0000 (95% bootstrap CI for mean: [106.0000, 169.0000])
+Efficiency u: 0.7065 (95% bootstrap CI for mean: [0.4024, 1.0000])
+Equality e: 0.9488 (95% bootstrap CI for mean: [0.9198, 0.9779])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 5.80 (95% bootstrap CI for mean: [1.60, 10.00])
+Pooled survival rate q: 0.4833 (95% bootstrap CI, resample runs: [0.1333, 0.8333])
+Total gain R: 227.0000 (95% bootstrap CI for mean: [112.0000, 344.6000])
+Efficiency u: 0.9053 (95% bootstrap CI for mean: [0.7750, 1.0000])
+Equality e: 0.9134 (95% bootstrap CI for mean: [0.8580, 0.9666])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 6.00 (95% bootstrap CI for mean: [2.00, 10.00])
+Pooled survival rate q: 0.5000 (95% bootstrap CI, resample runs: [0.1667, 0.8333])
+Total gain R: 142.2000 (95% bootstrap CI for mean: [115.6000, 183.0000])
+Efficiency u: 0.7519 (95% bootstrap CI for mean: [0.5030, 1.0000])
+Equality e: 0.8919 (95% bootstrap CI for mean: [0.8460, 0.9319])
+Over-usage o: 0.6500 (95% bootstrap CI for mean: [0.2833, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-19-14:13/0-no-contract-p5
+Mean survival months m: 6.20 (95% bootstrap CI for mean: [2.20, 10.20])
+Pooled survival rate q: 0.5167 (95% bootstrap CI, resample runs: [0.1833, 0.8500])
+Total gain R: 134.4000 (95% bootstrap CI for mean: [102.8000, 168.0250])
+Efficiency u: 0.7115 (95% bootstrap CI for mean: [0.3831, 1.0000])
+Equality e: 0.9329 (95% bootstrap CI for mean: [0.8998, 0.9697])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-19-14:49/0-no-contract-p5
+Mean survival months m: 8.20 (95% bootstrap CI for mean: [4.20, 12.00])
+Pooled survival rate q: 0.6833 (95% bootstrap CI, resample runs: [0.3500, 1.0000])
+Total gain R: 168.0000 (95% bootstrap CI for mean: [114.0000, 232.0000])
+Efficiency u: 0.6175 (95% bootstrap CI for mean: [0.3332, 0.9018])
+Equality e: 0.9398 (95% bootstrap CI for mean: [0.9233, 0.9562])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 306.6000 (95% bootstrap CI for mean: [222.4000, 394.8000])
+Efficiency u: 0.7802 (95% bootstrap CI for mean: [0.6068, 0.9529])
+Equality e: 0.9175 (95% bootstrap CI for mean: [0.8964, 0.9386])
+Over-usage o: 0.2667 (95% bootstrap CI for mean: [0.1167, 0.4167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 199.2000 (95% bootstrap CI for mean: [134.4000, 259.8000])
+Efficiency u: 0.3593 (95% bootstrap CI for mean: [0.2440, 0.4600])
+Equality e: 0.9262 (95% bootstrap CI for mean: [0.8820, 0.9595])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0833, 0.1333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p0-2026-04-19-18:43/0-no-contract-p0
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8776 (95% bootstrap CI for mean: [0.7856, 0.9488])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p0-2026-04-29-20:21/2-nl-p0
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8528 (95% bootstrap CI for mean: [0.7776, 0.9288])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p0-2026-04-29-20:21/2-code-law-p0
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8080 (95% bootstrap CI for mean: [0.7616, 0.8504])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p1-2026-04-19-18:43/0-no-contract-p1
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7560 (95% bootstrap CI for mean: [0.6968, 0.8048])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p1-2026-04-29-20:21/2-nl-p1
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7592 (95% bootstrap CI for mean: [0.6736, 0.8208])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p1-2026-04-29-20:21/2-code-law-p1
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7560 (95% bootstrap CI for mean: [0.7368, 0.7896])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p2-2026-04-19-18:43/0-no-contract-p2
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7288 (95% bootstrap CI for mean: [0.6840, 0.7680])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p2-2026-04-29-20:21/2-code-law-p2
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6872 (95% bootstrap CI for mean: [0.6496, 0.7264])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p2-2026-04-29-20:21/2-nl-p2
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6704 (95% bootstrap CI for mean: [0.6248, 0.7080])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p3-2026-04-19-18:43/0-no-contract-p3
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6528 (95% bootstrap CI for mean: [0.6216, 0.6824])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p3-2026-04-29-20:21/2-code-law-p3
+Mean survival months m: 3.20 (95% bootstrap CI for mean: [1.00, 7.60])
+Pooled survival rate q: 0.2667 (95% bootstrap CI, resample runs: [0.0833, 0.6333])
+Total gain R: 169.0000 (95% bootstrap CI for mean: [100.0000, 307.0000])
+Efficiency u: 0.9521 (95% bootstrap CI for mean: [0.8564, 1.0000])
+Equality e: 0.6956 (95% bootstrap CI for mean: [0.6120, 0.8372])
+Over-usage o: 0.8167 (95% bootstrap CI for mean: [0.4500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p3-2026-04-29-20:21/2-nl-p3
+Mean survival months m: 1.20 (95% bootstrap CI for mean: [1.00, 1.60])
+Pooled survival rate q: 0.1000 (95% bootstrap CI, resample runs: [0.0833, 0.1333])
+Total gain R: 106.0000 (95% bootstrap CI for mean: [100.0000, 118.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6443 (95% bootstrap CI for mean: [0.6000, 0.7169])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p4-2026-04-19-18:43/0-no-contract-p4
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6000 (95% bootstrap CI for mean: [0.6000, 0.6000])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p4-2026-04-29-20:21/2-nl-p4
+Mean survival months m: 7.60 (95% bootstrap CI for mean: [3.40, 11.80])
+Pooled survival rate q: 0.6333 (95% bootstrap CI, resample runs: [0.2833, 0.9833])
+Total gain R: 308.8000 (95% bootstrap CI for mean: [144.6000, 472.2000])
+Efficiency u: 0.9622 (95% bootstrap CI for mean: [0.9065, 1.0000])
+Equality e: 0.8442 (95% bootstrap CI for mean: [0.7140, 0.9491])
+Over-usage o: 0.4439 (95% bootstrap CI for mean: [0.1333, 0.7818])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p4-2026-04-29-20:21/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 266.0000 (95% bootstrap CI for mean: [140.0000, 395.0000])
+Efficiency u: 0.4449 (95% bootstrap CI for mean: [0.2349, 0.6549])
+Equality e: 0.9943 (95% bootstrap CI for mean: [0.9829, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p5-2026-04-19-18:43/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p5-2026-04-29-20:21/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 420.0000 (95% bootstrap CI for mean: [287.0000, 542.0000])
+Efficiency u: 0.7717 (95% bootstrap CI for mean: [0.5083, 0.9967])
+Equality e: 0.9462 (95% bootstrap CI for mean: [0.8885, 0.9911])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.1000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p5-2026-04-29-20:21/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 321.0000 (95% bootstrap CI for mean: [259.9750, 369.0250])
+Efficiency u: 0.5350 (95% bootstrap CI for mean: [0.4333, 0.6083])
+Equality e: 0.9976 (95% bootstrap CI for mean: [0.9927, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p0-2026-04-17-18:03/0-no-contract-p0
+Mean survival months m: 7.40 (95% bootstrap CI for mean: [4.20, 10.60])
+Pooled survival rate q: 0.6167 (95% bootstrap CI, resample runs: [0.3500, 0.8833])
+Total gain R: 368.0000 (95% bootstrap CI for mean: [210.0000, 526.0000])
+Efficiency u: 0.9967 (95% bootstrap CI for mean: [0.9900, 1.0000])
+Equality e: 0.9973 (95% bootstrap CI for mean: [0.9919, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 597.0000 (95% bootstrap CI for mean: [591.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9973 (95% bootstrap CI for mean: [0.9918, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 358.6000 (95% bootstrap CI for mean: [257.6000, 469.0000])
+Efficiency u: 0.6351 (95% bootstrap CI for mean: [0.4652, 0.8075])
+Equality e: 0.9842 (95% bootstrap CI for mean: [0.9701, 0.9971])
+Over-usage o: 0.0667 (95% bootstrap CI for mean: [0.0167, 0.1167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p1-2026-04-17-18:03/0-no-contract-p1
+Mean survival months m: 7.00 (95% bootstrap CI for mean: [3.60, 10.60])
+Pooled survival rate q: 0.5833 (95% bootstrap CI, resample runs: [0.2833, 0.8833])
+Total gain R: 343.0000 (95% bootstrap CI for mean: [162.0000, 524.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9724 (95% bootstrap CI for mean: [0.9382, 0.9986])
+Over-usage o: 0.1833 (95% bootstrap CI for mean: [0.0333, 0.3500])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 565.2000 (95% bootstrap CI for mean: [496.4000, 600.0000])
+Efficiency u: 0.9871 (95% bootstrap CI for mean: [0.9625, 1.0000])
+Equality e: 0.9817 (95% bootstrap CI for mean: [0.9462, 1.0000])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.1000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 9.80 (95% bootstrap CI for mean: [5.40, 12.00])
+Pooled survival rate q: 0.8167 (95% bootstrap CI, resample runs: [0.4500, 1.0000])
+Total gain R: 335.6000 (95% bootstrap CI for mean: [200.8000, 458.2000])
+Efficiency u: 0.7325 (95% bootstrap CI for mean: [0.5721, 0.8956])
+Equality e: 0.9044 (95% bootstrap CI for mean: [0.7503, 0.9887])
+Over-usage o: 0.2500 (95% bootstrap CI for mean: [0.0333, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p2-2026-04-17-18:03/0-no-contract-p2
+Mean survival months m: 10.20 (95% bootstrap CI for mean: [6.60, 12.00])
+Pooled survival rate q: 0.8500 (95% bootstrap CI, resample runs: [0.5500, 1.0000])
+Total gain R: 505.0000 (95% bootstrap CI for mean: [337.0000, 600.0000])
+Efficiency u: 0.9909 (95% bootstrap CI for mean: [0.9727, 1.0000])
+Equality e: 0.9610 (95% bootstrap CI for mean: [0.9120, 1.0000])
+Over-usage o: 0.1667 (95% bootstrap CI for mean: [0.0000, 0.4333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 509.2000 (95% bootstrap CI for mean: [442.2000, 562.2400])
+Efficiency u: 0.8487 (95% bootstrap CI for mean: [0.7417, 0.9407])
+Equality e: 0.9759 (95% bootstrap CI for mean: [0.9346, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 10.60 (95% bootstrap CI for mean: [7.80, 12.00])
+Pooled survival rate q: 0.8833 (95% bootstrap CI, resample runs: [0.6500, 1.0000])
+Total gain R: 522.6000 (95% bootstrap CI for mean: [367.8000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9463 (95% bootstrap CI for mean: [0.8389, 1.0000])
+Over-usage o: 0.1200 (95% bootstrap CI for mean: [0.0000, 0.3600])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p3-2026-04-17-18:03/0-no-contract-p3
+Mean survival months m: 9.80 (95% bootstrap CI for mean: [5.40, 12.00])
+Pooled survival rate q: 0.8167 (95% bootstrap CI, resample runs: [0.4500, 1.0000])
+Total gain R: 500.0000 (95% bootstrap CI for mean: [300.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9200 (95% bootstrap CI for mean: [0.7600, 1.0000])
+Over-usage o: 0.2000 (95% bootstrap CI for mean: [0.0000, 0.6000])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 419.0000 (95% bootstrap CI for mean: [340.0000, 516.0000])
+Efficiency u: 0.7023 (95% bootstrap CI for mean: [0.5724, 0.8502])
+Equality e: 0.9908 (95% bootstrap CI for mean: [0.9807, 1.0000])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.0667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 518.8000 (95% bootstrap CI for mean: [401.2000, 600.0000])
+Efficiency u: 0.9980 (95% bootstrap CI for mean: [0.9939, 1.0000])
+Equality e: 0.8710 (95% bootstrap CI for mean: [0.7092, 1.0000])
+Over-usage o: 0.1333 (95% bootstrap CI for mean: [0.0000, 0.2667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p4-2026-04-17-18:03/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 578.8000 (95% bootstrap CI for mean: [536.4000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9524 (95% bootstrap CI for mean: [0.8572, 1.0000])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0000, 0.3000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 381.4000 (95% bootstrap CI for mean: [323.4000, 441.0000])
+Efficiency u: 0.6398 (95% bootstrap CI for mean: [0.5400, 0.7395])
+Equality e: 0.9766 (95% bootstrap CI for mean: [0.9299, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p5-2026-04-17-18:03/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 401.0000 (95% bootstrap CI for mean: [330.0000, 466.0750])
+Efficiency u: 0.6683 (95% bootstrap CI for mean: [0.5500, 0.7867])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 478.2000 (95% bootstrap CI for mean: [426.8000, 535.4000])
+Efficiency u: 0.7970 (95% bootstrap CI for mean: [0.7113, 0.8907])
+Equality e: 0.8581 (95% bootstrap CI for mean: [0.7809, 0.9353])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.1500, 0.4333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 335.0000 (95% bootstrap CI for mean: [321.0000, 355.0000])
+Efficiency u: 0.5583 (95% bootstrap CI for mean: [0.5350, 0.5950])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 11.20 (95% bootstrap CI for mean: [9.60, 12.00])
+Pooled survival rate q: 0.9333 (95% bootstrap CI, resample runs: [0.8000, 1.0000])
+Total gain R: 438.8000 (95% bootstrap CI for mean: [387.2000, 504.4000])
+Efficiency u: 0.7963 (95% bootstrap CI for mean: [0.6766, 0.9183])
+Equality e: 0.8107 (95% bootstrap CI for mean: [0.7431, 0.9058])
+Over-usage o: 0.2333 (95% bootstrap CI for mean: [0.1000, 0.3833])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 300.0000 (95% bootstrap CI for mean: [273.0000, 327.0500])
+Efficiency u: 0.5000 (95% bootstrap CI for mean: [0.4550, 0.5485])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 375.0000 (95% bootstrap CI for mean: [310.9250, 470.0000])
+Efficiency u: 0.6250 (95% bootstrap CI for mean: [0.5132, 0.7800])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 480.4000 (95% bootstrap CI for mean: [410.2000, 543.4000])
+Efficiency u: 0.8007 (95% bootstrap CI for mean: [0.6837, 0.9080])
+Equality e: 0.9285 (95% bootstrap CI for mean: [0.8201, 0.9960])
+Over-usage o: 0.1167 (95% bootstrap CI for mean: [0.0000, 0.3167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 361.0000 (95% bootstrap CI for mean: [324.0000, 404.0750])
+Efficiency u: 0.6017 (95% bootstrap CI for mean: [0.5433, 0.6733])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 532.6000 (95% bootstrap CI for mean: [466.6000, 571.0000])
+Efficiency u: 0.8877 (95% bootstrap CI for mean: [0.7816, 0.9517])
+Equality e: 0.9289 (95% bootstrap CI for mean: [0.8257, 0.9869])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0167, 0.1833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 471.2000 (95% bootstrap CI for mean: [376.8000, 565.6000])
+Efficiency u: 0.7853 (95% bootstrap CI for mean: [0.6280, 0.9427])
+Equality e: 0.8896 (95% bootstrap CI for mean: [0.7586, 1.0000])
+Over-usage o: 0.2000 (95% bootstrap CI for mean: [0.0000, 0.4333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 334.0000 (95% bootstrap CI for mean: [312.0000, 357.0000])
+Efficiency u: 0.5567 (95% bootstrap CI for mean: [0.5200, 0.5933])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 570.8000 (95% bootstrap CI for mean: [543.6000, 598.0000])
+Efficiency u: 0.9513 (95% bootstrap CI for mean: [0.9013, 0.9967])
+Equality e: 0.9837 (95% bootstrap CI for mean: [0.9649, 0.9973])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-it-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 358.0000 (95% bootstrap CI for mean: [337.0000, 378.0000])
+Efficiency u: 0.5967 (95% bootstrap CI for mean: [0.5650, 0.6317])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p0-2026-04-19-19:23/0-no-contract-p0
+Mean survival months m: 9.00 (95% bootstrap CI for mean: [5.80, 12.00])
+Pooled survival rate q: 0.7500 (95% bootstrap CI, resample runs: [0.4833, 1.0000])
+Total gain R: 432.4000 (95% bootstrap CI for mean: [286.4000, 583.0000])
+Efficiency u: 0.9413 (95% bootstrap CI for mean: [0.8805, 1.0000])
+Equality e: 0.9286 (95% bootstrap CI for mean: [0.8555, 0.9961])
+Over-usage o: 0.2600 (95% bootstrap CI for mean: [0.0000, 0.5800])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p1-2026-04-19-19:23/0-no-contract-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 497.0000 (95% bootstrap CI for mean: [451.4000, 542.6000])
+Efficiency u: 0.8283 (95% bootstrap CI for mean: [0.7523, 0.9043])
+Equality e: 0.8878 (95% bootstrap CI for mean: [0.8152, 0.9604])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.1333, 0.4833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p2-2026-04-19-19:23/0-no-contract-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 465.4000 (95% bootstrap CI for mean: [354.8000, 576.0000])
+Efficiency u: 0.7757 (95% bootstrap CI for mean: [0.5913, 0.9600])
+Equality e: 0.8986 (95% bootstrap CI for mean: [0.8276, 0.9696])
+Over-usage o: 0.2167 (95% bootstrap CI for mean: [0.0500, 0.4000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p3-2026-04-19-19:23/0-no-contract-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 504.0000 (95% bootstrap CI for mean: [433.6000, 574.4000])
+Efficiency u: 0.8400 (95% bootstrap CI for mean: [0.7227, 0.9573])
+Equality e: 0.8498 (95% bootstrap CI for mean: [0.7351, 0.9646])
+Over-usage o: 0.3000 (95% bootstrap CI for mean: [0.0833, 0.5167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p4-2026-04-19-19:23/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 525.4000 (95% bootstrap CI for mean: [463.6000, 577.0000])
+Efficiency u: 0.8757 (95% bootstrap CI for mean: [0.7743, 0.9523])
+Equality e: 0.8671 (95% bootstrap CI for mean: [0.7939, 0.9390])
+Over-usage o: 0.2000 (95% bootstrap CI for mean: [0.0667, 0.3167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gemma-4-31b-p5-2026-04-19-19:23/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p0-2026-04-15-18:04/0-no-contract-p0
+Mean survival months m: 5.80 (95% bootstrap CI for mean: [1.60, 10.00])
+Pooled survival rate q: 0.4833 (95% bootstrap CI, resample runs: [0.1333, 0.8333])
+Total gain R: 162.2000 (95% bootstrap CI for mean: [106.4000, 235.6000])
+Efficiency u: 0.7633 (95% bootstrap CI for mean: [0.4940, 1.0000])
+Equality e: 0.8729 (95% bootstrap CI for mean: [0.8576, 0.8917])
+Over-usage o: 0.6667 (95% bootstrap CI for mean: [0.3000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p0-2026-04-29-20:21/2-nl-p0
+Mean survival months m: 1.80 (95% bootstrap CI for mean: [1.00, 3.00])
+Pooled survival rate q: 0.1500 (95% bootstrap CI, resample runs: [0.0833, 0.2500])
+Total gain R: 106.2000 (95% bootstrap CI for mean: [100.0000, 112.6000])
+Efficiency u: 0.9210 (95% bootstrap CI for mean: [0.7630, 1.0000])
+Equality e: 0.9517 (95% bootstrap CI for mean: [0.9139, 0.9872])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p0-2026-04-29-20:21/2-code-law-p0
+Mean survival months m: 5.60 (95% bootstrap CI for mean: [1.40, 10.00])
+Pooled survival rate q: 0.4667 (95% bootstrap CI, resample runs: [0.1000, 0.8333])
+Total gain R: 150.2000 (95% bootstrap CI for mean: [102.2000, 200.8000])
+Efficiency u: 0.7467 (95% bootstrap CI for mean: [0.4853, 1.0000])
+Equality e: 0.9265 (95% bootstrap CI for mean: [0.8892, 0.9665])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p1-2026-04-15-18:04/0-no-contract-p1
+Mean survival months m: 8.00 (95% bootstrap CI for mean: [3.60, 12.00])
+Pooled survival rate q: 0.6667 (95% bootstrap CI, resample runs: [0.3000, 1.0000])
+Total gain R: 146.6000 (95% bootstrap CI for mean: [123.1650, 166.0000])
+Efficiency u: 0.5500 (95% bootstrap CI for mean: [0.2727, 0.8420])
+Equality e: 0.9130 (95% bootstrap CI for mean: [0.8838, 0.9385])
+Over-usage o: 0.5167 (95% bootstrap CI for mean: [0.1833, 0.8500])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p1-2026-04-29-20:21/2-nl-p1
+Mean survival months m: 10.20 (95% bootstrap CI for mean: [6.60, 12.00])
+Pooled survival rate q: 0.8500 (95% bootstrap CI, resample runs: [0.5500, 1.0000])
+Total gain R: 243.4000 (95% bootstrap CI for mean: [157.4000, 319.4400])
+Efficiency u: 0.5187 (95% bootstrap CI for mean: [0.3737, 0.6500])
+Equality e: 0.8979 (95% bootstrap CI for mean: [0.8522, 0.9334])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.0833, 0.6500])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p1-2026-04-29-20:21/2-code-law-p1
+Mean survival months m: 10.00 (95% bootstrap CI for mean: [6.00, 12.00])
+Pooled survival rate q: 0.8333 (95% bootstrap CI, resample runs: [0.5000, 1.0000])
+Total gain R: 149.2000 (95% bootstrap CI for mean: [116.4000, 195.8000])
+Efficiency u: 0.4133 (95% bootstrap CI for mean: [0.2160, 0.7185])
+Equality e: 0.9172 (95% bootstrap CI for mean: [0.8931, 0.9523])
+Over-usage o: 0.2667 (95% bootstrap CI for mean: [0.0833, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p2-2026-04-15-18:04/0-no-contract-p2
+Mean survival months m: 10.20 (95% bootstrap CI for mean: [6.60, 12.00])
+Pooled survival rate q: 0.8500 (95% bootstrap CI, resample runs: [0.5500, 1.0000])
+Total gain R: 221.2000 (95% bootstrap CI for mean: [165.0000, 259.8000])
+Efficiency u: 0.4857 (95% bootstrap CI for mean: [0.3850, 0.6397])
+Equality e: 0.8719 (95% bootstrap CI for mean: [0.8177, 0.9274])
+Over-usage o: 0.3333 (95% bootstrap CI for mean: [0.1000, 0.6500])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p2-2026-04-29-20:21/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 172.2000 (95% bootstrap CI for mean: [158.3750, 187.0000])
+Efficiency u: 0.2870 (95% bootstrap CI for mean: [0.2617, 0.3093])
+Equality e: 0.8856 (95% bootstrap CI for mean: [0.8468, 0.9227])
+Over-usage o: 0.1833 (95% bootstrap CI for mean: [0.1000, 0.3000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p2-2026-04-29-20:21/2-nl-p2
+Mean survival months m: 10.60 (95% bootstrap CI for mean: [7.80, 12.00])
+Pooled survival rate q: 0.8833 (95% bootstrap CI, resample runs: [0.6500, 1.0000])
+Total gain R: 223.4000 (95% bootstrap CI for mean: [179.2000, 267.0000])
+Efficiency u: 0.4409 (95% bootstrap CI for mean: [0.3593, 0.5243])
+Equality e: 0.8598 (95% bootstrap CI for mean: [0.7984, 0.9199])
+Over-usage o: 0.3500 (95% bootstrap CI for mean: [0.1333, 0.6833])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p3-2026-04-15-18:04/0-no-contract-p3
+Mean survival months m: 8.80 (95% bootstrap CI for mean: [5.60, 12.00])
+Pooled survival rate q: 0.7333 (95% bootstrap CI, resample runs: [0.4333, 1.0000])
+Total gain R: 249.6000 (95% bootstrap CI for mean: [169.0000, 330.2000])
+Efficiency u: 0.6234 (95% bootstrap CI for mean: [0.5067, 0.7797])
+Equality e: 0.9045 (95% bootstrap CI for mean: [0.8510, 0.9580])
+Over-usage o: 0.4267 (95% bootstrap CI for mean: [0.1000, 0.7767])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p3-2026-04-29-20:21/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 242.6000 (95% bootstrap CI for mean: [168.2000, 317.0000])
+Efficiency u: 0.4043 (95% bootstrap CI for mean: [0.2803, 0.5283])
+Equality e: 0.9310 (95% bootstrap CI for mean: [0.8929, 0.9609])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0833, 0.1333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p3-2026-04-29-20:21/2-nl-p3
+Mean survival months m: 10.40 (95% bootstrap CI for mean: [7.20, 12.00])
+Pooled survival rate q: 0.8667 (95% bootstrap CI, resample runs: [0.6000, 1.0000])
+Total gain R: 295.6000 (95% bootstrap CI for mean: [210.2000, 357.2000])
+Efficiency u: 0.5880 (95% bootstrap CI for mean: [0.5097, 0.6590])
+Equality e: 0.8534 (95% bootstrap CI for mean: [0.7613, 0.9448])
+Over-usage o: 0.4167 (95% bootstrap CI for mean: [0.1333, 0.7333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p4-2026-04-15-18:04/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 332.4000 (95% bootstrap CI for mean: [312.0000, 353.0000])
+Efficiency u: 0.5540 (95% bootstrap CI for mean: [0.5200, 0.5873])
+Equality e: 0.9632 (95% bootstrap CI for mean: [0.9449, 0.9814])
+Over-usage o: 0.0667 (95% bootstrap CI for mean: [0.0333, 0.0833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p4-2026-04-29-20:21/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 438.4000 (95% bootstrap CI for mean: [356.4000, 529.0000])
+Efficiency u: 0.7307 (95% bootstrap CI for mean: [0.5939, 0.8747])
+Equality e: 0.9330 (95% bootstrap CI for mean: [0.8794, 0.9814])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0333, 0.1667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p4-2026-04-29-20:21/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 266.8000 (95% bootstrap CI for mean: [225.5950, 313.4000])
+Efficiency u: 0.4447 (95% bootstrap CI for mean: [0.3663, 0.5133])
+Equality e: 0.9451 (95% bootstrap CI for mean: [0.9201, 0.9675])
+Over-usage o: 0.1167 (95% bootstrap CI for mean: [0.0833, 0.1500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p5-2026-04-15-18:04/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 346.6000 (95% bootstrap CI for mean: [325.0000, 387.8000])
+Efficiency u: 0.5777 (95% bootstrap CI for mean: [0.5417, 0.6447])
+Equality e: 0.9968 (95% bootstrap CI for mean: [0.9927, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p5-2026-04-29-20:21/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 413.0000 (95% bootstrap CI for mean: [320.0000, 509.0000])
+Efficiency u: 0.6883 (95% bootstrap CI for mean: [0.5283, 0.8383])
+Equality e: 0.9932 (95% bootstrap CI for mean: [0.9881, 0.9985])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.0667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-4o-p5-2026-04-29-20:21/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 400.6000 (95% bootstrap CI for mean: [349.2000, 452.0000])
+Efficiency u: 0.6677 (95% bootstrap CI for mean: [0.5810, 0.7501])
+Equality e: 0.9875 (95% bootstrap CI for mean: [0.9748, 0.9960])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-19-14:13/0-no-contract-p0
+Mean survival months m: 3.40 (95% bootstrap CI for mean: [1.00, 7.60])
+Pooled survival rate q: 0.2833 (95% bootstrap CI, resample runs: [0.0833, 0.6500])
+Total gain R: 111.0000 (95% bootstrap CI for mean: [100.0000, 129.0000])
+Efficiency u: 0.8483 (95% bootstrap CI for mean: [0.5450, 1.0000])
+Equality e: 0.9730 (95% bootstrap CI for mean: [0.9410, 1.0000])
+Over-usage o: 0.8167 (95% bootstrap CI for mean: [0.4500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-19-14:49/0-no-contract-p0
+Mean survival months m: 3.40 (95% bootstrap CI for mean: [1.00, 7.80])
+Pooled survival rate q: 0.2833 (95% bootstrap CI, resample runs: [0.0833, 0.6500])
+Total gain R: 99.6000 (95% bootstrap CI for mean: [94.0000, 104.8000])
+Efficiency u: 0.8300 (95% bootstrap CI for mean: [0.4900, 1.0000])
+Equality e: 0.9339 (95% bootstrap CI for mean: [0.8841, 0.9837])
+Over-usage o: 0.8167 (95% bootstrap CI for mean: [0.4500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 1.20 (95% bootstrap CI for mean: [1.00, 1.60])
+Pooled survival rate q: 0.1000 (95% bootstrap CI, resample runs: [0.0833, 0.1333])
+Total gain R: 102.0000 (95% bootstrap CI for mean: [100.0000, 106.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8736 (95% bootstrap CI for mean: [0.7936, 0.9392])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 7.60 (95% bootstrap CI for mean: [3.20, 12.00])
+Pooled survival rate q: 0.6333 (95% bootstrap CI, resample runs: [0.2667, 1.0000])
+Total gain R: 169.4000 (95% bootstrap CI for mean: [115.2000, 230.6000])
+Efficiency u: 0.6157 (95% bootstrap CI for mean: [0.3343, 0.8970])
+Equality e: 0.8815 (95% bootstrap CI for mean: [0.8352, 0.9236])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-19-14:13/0-no-contract-p1
+Mean survival months m: 8.00 (95% bootstrap CI for mean: [4.00, 12.00])
+Pooled survival rate q: 0.6667 (95% bootstrap CI, resample runs: [0.3333, 1.0000])
+Total gain R: 111.6000 (95% bootstrap CI for mean: [96.6000, 130.0000])
+Efficiency u: 0.5100 (95% bootstrap CI for mean: [0.1867, 0.8483])
+Equality e: 0.9017 (95% bootstrap CI for mean: [0.8565, 0.9433])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-19-14:49/0-no-contract-p1
+Mean survival months m: 1.20 (95% bootstrap CI for mean: [1.00, 1.60])
+Pooled survival rate q: 0.1000 (95% bootstrap CI, resample runs: [0.0833, 0.1333])
+Total gain R: 104.0000 (95% bootstrap CI for mean: [100.0000, 112.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8320 (95% bootstrap CI for mean: [0.7680, 0.9000])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 4.80 (95% bootstrap CI for mean: [1.60, 8.00])
+Pooled survival rate q: 0.4000 (95% bootstrap CI, resample runs: [0.1333, 0.7337])
+Total gain R: 185.8000 (95% bootstrap CI for mean: [108.0000, 274.6000])
+Efficiency u: 0.8799 (95% bootstrap CI for mean: [0.6546, 1.0000])
+Equality e: 0.8970 (95% bootstrap CI for mean: [0.8611, 0.9329])
+Over-usage o: 0.8500 (95% bootstrap CI for mean: [0.5500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 155.4000 (95% bootstrap CI for mean: [124.1950, 182.6000])
+Efficiency u: 0.5823 (95% bootstrap CI for mean: [0.3010, 0.8637])
+Equality e: 0.8925 (95% bootstrap CI for mean: [0.8656, 0.9195])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-19-14:13/0-no-contract-p2
+Mean survival months m: 5.80 (95% bootstrap CI for mean: [1.60, 10.00])
+Pooled survival rate q: 0.4833 (95% bootstrap CI, resample runs: [0.1333, 0.8333])
+Total gain R: 154.8000 (95% bootstrap CI for mean: [112.0000, 226.8000])
+Efficiency u: 0.7447 (95% bootstrap CI for mean: [0.4407, 1.0000])
+Equality e: 0.9224 (95% bootstrap CI for mean: [0.8924, 0.9510])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-19-14:49/0-no-contract-p2
+Mean survival months m: 10.00 (95% bootstrap CI for mean: [6.00, 12.00])
+Pooled survival rate q: 0.8333 (95% bootstrap CI, resample runs: [0.5000, 1.0000])
+Total gain R: 131.2000 (95% bootstrap CI for mean: [102.2000, 168.0000])
+Efficiency u: 0.3783 (95% bootstrap CI for mean: [0.1750, 0.6935])
+Equality e: 0.9201 (95% bootstrap CI for mean: [0.8868, 0.9529])
+Over-usage o: 0.2667 (95% bootstrap CI for mean: [0.0833, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 7.60 (95% bootstrap CI for mean: [3.20, 12.00])
+Pooled survival rate q: 0.6333 (95% bootstrap CI, resample runs: [0.2667, 1.0000])
+Total gain R: 123.0000 (95% bootstrap CI for mean: [93.5850, 152.4000])
+Efficiency u: 0.5480 (95% bootstrap CI for mean: [0.2383, 0.8577])
+Equality e: 0.8859 (95% bootstrap CI for mean: [0.8008, 0.9585])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 6.00 (95% bootstrap CI for mean: [2.00, 10.00])
+Pooled survival rate q: 0.5000 (95% bootstrap CI, resample runs: [0.1667, 0.8333])
+Total gain R: 176.0000 (95% bootstrap CI for mean: [118.6000, 262.2000])
+Efficiency u: 0.7733 (95% bootstrap CI for mean: [0.4927, 1.0000])
+Equality e: 0.8349 (95% bootstrap CI for mean: [0.7647, 0.9038])
+Over-usage o: 0.5500 (95% bootstrap CI for mean: [0.2000, 0.9000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-19-14:13/0-no-contract-p3
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 147.0000 (95% bootstrap CI for mean: [99.5800, 224.6000])
+Efficiency u: 0.5770 (95% bootstrap CI for mean: [0.2553, 0.8467])
+Equality e: 0.9586 (95% bootstrap CI for mean: [0.9403, 0.9813])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-19-14:49/0-no-contract-p3
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 167.6000 (95% bootstrap CI for mean: [101.6000, 282.0250])
+Efficiency u: 0.6067 (95% bootstrap CI for mean: [0.2700, 0.9317])
+Equality e: 0.9497 (95% bootstrap CI for mean: [0.9180, 0.9848])
+Over-usage o: 0.4833 (95% bootstrap CI for mean: [0.1167, 0.8500])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 10.00 (95% bootstrap CI for mean: [6.00, 12.00])
+Pooled survival rate q: 0.8333 (95% bootstrap CI, resample runs: [0.5000, 1.0000])
+Total gain R: 195.8000 (95% bootstrap CI for mean: [170.4000, 218.8000])
+Efficiency u: 0.4767 (95% bootstrap CI for mean: [0.3296, 0.7417])
+Equality e: 0.9166 (95% bootstrap CI for mean: [0.8973, 0.9368])
+Over-usage o: 0.2833 (95% bootstrap CI for mean: [0.0833, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 6.20 (95% bootstrap CI for mean: [2.00, 10.40])
+Pooled survival rate q: 0.5167 (95% bootstrap CI, resample runs: [0.1667, 0.8667])
+Total gain R: 215.0000 (95% bootstrap CI for mean: [117.2000, 326.2000])
+Efficiency u: 0.8057 (95% bootstrap CI for mean: [0.6017, 0.9740])
+Equality e: 0.9168 (95% bootstrap CI for mean: [0.8693, 0.9665])
+Over-usage o: 0.6500 (95% bootstrap CI for mean: [0.3000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-19-14:13/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 155.6000 (95% bootstrap CI for mean: [122.2000, 189.0000])
+Efficiency u: 0.2593 (95% bootstrap CI for mean: [0.2037, 0.3150])
+Equality e: 0.9518 (95% bootstrap CI for mean: [0.9423, 0.9596])
+Over-usage o: 0.0833 (95% bootstrap CI for mean: [0.0833, 0.0833])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-19-14:49/0-no-contract-p4
+Mean survival months m: 7.80 (95% bootstrap CI for mean: [3.40, 12.00])
+Pooled survival rate q: 0.6500 (95% bootstrap CI, resample runs: [0.2833, 1.0000])
+Total gain R: 134.0000 (95% bootstrap CI for mean: [106.0000, 169.0000])
+Efficiency u: 0.5500 (95% bootstrap CI for mean: [0.2333, 0.8667])
+Equality e: 0.9488 (95% bootstrap CI for mean: [0.9198, 0.9779])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 5.80 (95% bootstrap CI for mean: [1.60, 10.00])
+Pooled survival rate q: 0.4833 (95% bootstrap CI, resample runs: [0.1333, 0.8333])
+Total gain R: 227.0000 (95% bootstrap CI for mean: [112.0000, 344.6000])
+Efficiency u: 0.8650 (95% bootstrap CI for mean: [0.7257, 1.0000])
+Equality e: 0.9134 (95% bootstrap CI for mean: [0.8580, 0.9666])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 6.00 (95% bootstrap CI for mean: [2.00, 10.00])
+Pooled survival rate q: 0.5000 (95% bootstrap CI, resample runs: [0.1667, 0.8333])
+Total gain R: 142.2000 (95% bootstrap CI for mean: [115.6000, 183.0000])
+Efficiency u: 0.7207 (95% bootstrap CI for mean: [0.4407, 1.0000])
+Equality e: 0.8919 (95% bootstrap CI for mean: [0.8460, 0.9319])
+Over-usage o: 0.6500 (95% bootstrap CI for mean: [0.2833, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-19-14:13/0-no-contract-p5
+Mean survival months m: 6.20 (95% bootstrap CI for mean: [2.20, 10.20])
+Pooled survival rate q: 0.5167 (95% bootstrap CI, resample runs: [0.1833, 0.8500])
+Total gain R: 134.4000 (95% bootstrap CI for mean: [102.8000, 168.0250])
+Efficiency u: 0.6690 (95% bootstrap CI for mean: [0.3563, 0.9733])
+Equality e: 0.9329 (95% bootstrap CI for mean: [0.8998, 0.9697])
+Over-usage o: 0.6333 (95% bootstrap CI for mean: [0.2667, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-19-14:49/0-no-contract-p5
+Mean survival months m: 8.20 (95% bootstrap CI for mean: [4.20, 12.00])
+Pooled survival rate q: 0.6833 (95% bootstrap CI, resample runs: [0.3500, 1.0000])
+Total gain R: 168.0000 (95% bootstrap CI for mean: [114.0000, 232.0000])
+Efficiency u: 0.5800 (95% bootstrap CI for mean: [0.2900, 0.8700])
+Equality e: 0.9398 (95% bootstrap CI for mean: [0.9233, 0.9562])
+Over-usage o: 0.4500 (95% bootstrap CI for mean: [0.0833, 0.8167])
+Survival decomposition: full horizon (n ≥ max_rounds)=3, below horizon=2
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 306.6000 (95% bootstrap CI for mean: [222.4000, 394.8000])
+Efficiency u: 0.5110 (95% bootstrap CI for mean: [0.3707, 0.6513])
+Equality e: 0.9175 (95% bootstrap CI for mean: [0.8964, 0.9386])
+Over-usage o: 0.2667 (95% bootstrap CI for mean: [0.1167, 0.4167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-mini-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 199.2000 (95% bootstrap CI for mean: [134.4000, 259.8000])
+Efficiency u: 0.3320 (95% bootstrap CI for mean: [0.2240, 0.4380])
+Equality e: 0.9262 (95% bootstrap CI for mean: [0.8820, 0.9595])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0833, 0.1333])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p0-2026-04-19-18:43/0-no-contract-p0
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8776 (95% bootstrap CI for mean: [0.7856, 0.9488])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p0-2026-04-29-20:21/2-nl-p0
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8528 (95% bootstrap CI for mean: [0.7776, 0.9288])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p0-2026-04-29-20:21/2-code-law-p0
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.8080 (95% bootstrap CI for mean: [0.7616, 0.8504])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p1-2026-04-19-18:43/0-no-contract-p1
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7560 (95% bootstrap CI for mean: [0.6968, 0.8048])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p1-2026-04-29-20:21/2-nl-p1
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7592 (95% bootstrap CI for mean: [0.6736, 0.8208])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p1-2026-04-29-20:21/2-code-law-p1
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7560 (95% bootstrap CI for mean: [0.7368, 0.7896])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p2-2026-04-19-18:43/0-no-contract-p2
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.7288 (95% bootstrap CI for mean: [0.6840, 0.7680])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p2-2026-04-29-20:21/2-code-law-p2
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6872 (95% bootstrap CI for mean: [0.6496, 0.7264])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p2-2026-04-29-20:21/2-nl-p2
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6704 (95% bootstrap CI for mean: [0.6248, 0.7080])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p3-2026-04-19-18:43/0-no-contract-p3
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6528 (95% bootstrap CI for mean: [0.6216, 0.6824])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p3-2026-04-29-20:21/2-code-law-p3
+Mean survival months m: 3.20 (95% bootstrap CI for mean: [1.00, 7.60])
+Pooled survival rate q: 0.2667 (95% bootstrap CI, resample runs: [0.0833, 0.6333])
+Total gain R: 169.0000 (95% bootstrap CI for mean: [100.0000, 307.0000])
+Efficiency u: 0.9483 (95% bootstrap CI for mean: [0.8450, 1.0000])
+Equality e: 0.6956 (95% bootstrap CI for mean: [0.6120, 0.8372])
+Over-usage o: 0.8167 (95% bootstrap CI for mean: [0.4500, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=1, below horizon=4
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p3-2026-04-29-20:21/2-nl-p3
+Mean survival months m: 1.20 (95% bootstrap CI for mean: [1.00, 1.60])
+Pooled survival rate q: 0.1000 (95% bootstrap CI, resample runs: [0.0833, 0.1333])
+Total gain R: 106.0000 (95% bootstrap CI for mean: [100.0000, 118.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6443 (95% bootstrap CI for mean: [0.6000, 0.7169])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p4-2026-04-19-18:43/0-no-contract-p4
+Mean survival months m: 1.00 (95% bootstrap CI for mean: [1.00, 1.00])
+Pooled survival rate q: 0.0833 (95% bootstrap CI, resample runs: [0.0833, 0.0833])
+Total gain R: 100.0000 (95% bootstrap CI for mean: [100.0000, 100.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.6000 (95% bootstrap CI for mean: [0.6000, 0.6000])
+Over-usage o: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=0, below horizon=5
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p4-2026-04-29-20:21/2-nl-p4
+Mean survival months m: 7.60 (95% bootstrap CI for mean: [3.40, 11.80])
+Pooled survival rate q: 0.6333 (95% bootstrap CI, resample runs: [0.2833, 0.9833])
+Total gain R: 308.8000 (95% bootstrap CI for mean: [144.6000, 472.2000])
+Efficiency u: 0.8381 (95% bootstrap CI for mean: [0.6103, 0.9900])
+Equality e: 0.8442 (95% bootstrap CI for mean: [0.7140, 0.9491])
+Over-usage o: 0.4439 (95% bootstrap CI for mean: [0.1333, 0.7818])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p4-2026-04-29-20:21/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 266.0000 (95% bootstrap CI for mean: [140.0000, 395.0000])
+Efficiency u: 0.4433 (95% bootstrap CI for mean: [0.2333, 0.6533])
+Equality e: 0.9943 (95% bootstrap CI for mean: [0.9829, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p5-2026-04-19-18:43/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p5-2026-04-29-20:21/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 420.0000 (95% bootstrap CI for mean: [287.0000, 542.0000])
+Efficiency u: 0.7000 (95% bootstrap CI for mean: [0.4783, 0.9183])
+Equality e: 0.9462 (95% bootstrap CI for mean: [0.8885, 0.9911])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.1000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/gpt-5.4-p5-2026-04-29-20:21/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 321.0000 (95% bootstrap CI for mean: [259.9750, 369.0250])
+Efficiency u: 0.5350 (95% bootstrap CI for mean: [0.4333, 0.6083])
+Equality e: 0.9976 (95% bootstrap CI for mean: [0.9927, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p0-2026-04-17-18:03/0-no-contract-p0
+Mean survival months m: 7.40 (95% bootstrap CI for mean: [4.20, 10.60])
+Pooled survival rate q: 0.6167 (95% bootstrap CI, resample runs: [0.3500, 0.8833])
+Total gain R: 368.0000 (95% bootstrap CI for mean: [210.0000, 526.0000])
+Efficiency u: 0.9967 (95% bootstrap CI for mean: [0.9900, 1.0000])
+Equality e: 0.9973 (95% bootstrap CI for mean: [0.9919, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p0-2026-04-29-17:03/2-nl-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 597.0000 (95% bootstrap CI for mean: [591.0000, 600.0000])
+Efficiency u: 0.9950 (95% bootstrap CI for mean: [0.9850, 1.0000])
+Equality e: 0.9973 (95% bootstrap CI for mean: [0.9918, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p0-2026-04-29-17:03/2-code-law-p0
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 358.6000 (95% bootstrap CI for mean: [257.6000, 469.0000])
+Efficiency u: 0.5977 (95% bootstrap CI for mean: [0.4387, 0.7843])
+Equality e: 0.9842 (95% bootstrap CI for mean: [0.9701, 0.9971])
+Over-usage o: 0.0667 (95% bootstrap CI for mean: [0.0167, 0.1167])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p1-2026-04-17-18:03/0-no-contract-p1
+Mean survival months m: 7.00 (95% bootstrap CI for mean: [3.60, 10.60])
+Pooled survival rate q: 0.5833 (95% bootstrap CI, resample runs: [0.2833, 0.8833])
+Total gain R: 343.0000 (95% bootstrap CI for mean: [162.0000, 524.0000])
+Efficiency u: 0.9650 (95% bootstrap CI for mean: [0.9300, 0.9950])
+Equality e: 0.9724 (95% bootstrap CI for mean: [0.9382, 0.9986])
+Over-usage o: 0.1833 (95% bootstrap CI for mean: [0.0333, 0.3500])
+Survival decomposition: full horizon (n ≥ max_rounds)=2, below horizon=3
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p1-2026-04-29-17:03/2-nl-p1
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 565.2000 (95% bootstrap CI for mean: [496.4000, 600.0000])
+Efficiency u: 0.9420 (95% bootstrap CI for mean: [0.8273, 1.0000])
+Equality e: 0.9817 (95% bootstrap CI for mean: [0.9462, 1.0000])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.1000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p1-2026-04-29-17:03/2-code-law-p1
+Mean survival months m: 9.80 (95% bootstrap CI for mean: [5.40, 12.00])
+Pooled survival rate q: 0.8167 (95% bootstrap CI, resample runs: [0.4500, 1.0000])
+Total gain R: 335.6000 (95% bootstrap CI for mean: [200.8000, 458.2000])
+Efficiency u: 0.7260 (95% bootstrap CI for mean: [0.5647, 0.8910])
+Equality e: 0.9044 (95% bootstrap CI for mean: [0.7503, 0.9887])
+Over-usage o: 0.2500 (95% bootstrap CI for mean: [0.0333, 0.6333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p2-2026-04-17-18:03/0-no-contract-p2
+Mean survival months m: 10.20 (95% bootstrap CI for mean: [6.60, 12.00])
+Pooled survival rate q: 0.8500 (95% bootstrap CI, resample runs: [0.5500, 1.0000])
+Total gain R: 505.0000 (95% bootstrap CI for mean: [337.0000, 600.0000])
+Efficiency u: 0.9817 (95% bootstrap CI for mean: [0.9450, 1.0000])
+Equality e: 0.9610 (95% bootstrap CI for mean: [0.9120, 1.0000])
+Over-usage o: 0.1667 (95% bootstrap CI for mean: [0.0000, 0.4333])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p2-2026-04-29-17:03/2-code-law-p2
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 509.2000 (95% bootstrap CI for mean: [442.2000, 562.2400])
+Efficiency u: 0.8487 (95% bootstrap CI for mean: [0.7417, 0.9407])
+Equality e: 0.9759 (95% bootstrap CI for mean: [0.9346, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p2-2026-04-29-17:03/2-nl-p2
+Mean survival months m: 10.60 (95% bootstrap CI for mean: [7.80, 12.00])
+Pooled survival rate q: 0.8833 (95% bootstrap CI, resample runs: [0.6500, 1.0000])
+Total gain R: 522.6000 (95% bootstrap CI for mean: [367.8000, 600.0000])
+Efficiency u: 0.9704 (95% bootstrap CI for mean: [0.9112, 1.0000])
+Equality e: 0.9463 (95% bootstrap CI for mean: [0.8389, 1.0000])
+Over-usage o: 0.1200 (95% bootstrap CI for mean: [0.0000, 0.3600])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p3-2026-04-17-18:03/0-no-contract-p3
+Mean survival months m: 9.80 (95% bootstrap CI for mean: [5.40, 12.00])
+Pooled survival rate q: 0.8167 (95% bootstrap CI, resample runs: [0.4500, 1.0000])
+Total gain R: 500.0000 (95% bootstrap CI for mean: [300.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 0.9200 (95% bootstrap CI for mean: [0.7600, 1.0000])
+Over-usage o: 0.2000 (95% bootstrap CI for mean: [0.0000, 0.6000])
+Survival decomposition: full horizon (n ≥ max_rounds)=4, below horizon=1
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p3-2026-04-29-17:03/2-code-law-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 419.0000 (95% bootstrap CI for mean: [340.0000, 516.0000])
+Efficiency u: 0.6983 (95% bootstrap CI for mean: [0.5667, 0.8501])
+Equality e: 0.9908 (95% bootstrap CI for mean: [0.9807, 1.0000])
+Over-usage o: 0.0333 (95% bootstrap CI for mean: [0.0000, 0.0667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p3-2026-04-29-17:03/2-nl-p3
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 518.8000 (95% bootstrap CI for mean: [401.2000, 600.0000])
+Efficiency u: 0.8647 (95% bootstrap CI for mean: [0.7060, 1.0000])
+Equality e: 0.8710 (95% bootstrap CI for mean: [0.7092, 1.0000])
+Over-usage o: 0.1333 (95% bootstrap CI for mean: [0.0000, 0.2667])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p4-2026-04-17-18:03/0-no-contract-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p4-2026-04-29-17:03/2-nl-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 578.8000 (95% bootstrap CI for mean: [536.4000, 600.0000])
+Efficiency u: 0.9647 (95% bootstrap CI for mean: [0.8940, 1.0000])
+Equality e: 0.9524 (95% bootstrap CI for mean: [0.8572, 1.0000])
+Over-usage o: 0.1000 (95% bootstrap CI for mean: [0.0000, 0.3000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p4-2026-04-29-17:03/2-code-law-p4
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 381.4000 (95% bootstrap CI for mean: [323.4000, 441.0000])
+Efficiency u: 0.6357 (95% bootstrap CI for mean: [0.5390, 0.7340])
+Equality e: 0.9766 (95% bootstrap CI for mean: [0.9299, 1.0000])
+Over-usage o: 0.0167 (95% bootstrap CI for mean: [0.0000, 0.0500])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p5-2026-04-17-18:03/0-no-contract-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p5-2026-04-29-17:03/2-nl-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 600.0000 (95% bootstrap CI for mean: [600.0000, 600.0000])
+Efficiency u: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0
+
+--- Summary ---
+Directory: /home/angeloh/Desktop/work/GovSimElect/simulation/results/std/grok-4.1-fast-p5-2026-04-29-17:03/2-code-law-p5
+Mean survival months m: 12.00 (95% bootstrap CI for mean: [12.00, 12.00])
+Pooled survival rate q: 1.0000 (95% bootstrap CI, resample runs: [1.0000, 1.0000])
+Total gain R: 401.0000 (95% bootstrap CI for mean: [330.0000, 466.0750])
+Efficiency u: 0.6683 (95% bootstrap CI for mean: [0.5500, 0.7867])
+Equality e: 1.0000 (95% bootstrap CI for mean: [1.0000, 1.0000])
+Over-usage o: 0.0000 (95% bootstrap CI for mean: [0.0000, 0.0000])
+Survival decomposition: full horizon (n ≥ max_rounds)=5, below horizon=0
+Bootstrap params: n=1000, alpha=0.05, seed_base=0

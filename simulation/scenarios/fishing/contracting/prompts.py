@@ -241,7 +241,6 @@ def mayor_proposal_prompt(
       f"{_resource_report(agent_resource_num)}\n\n"
       f"{memory_prompt_text}\n"
       "Propose one clear contract for the next round in plain English.\n"
-      "If there is already an active law and you want to keep it exactly as it is without any changes,\n"
       "When proposing a new law, include exactly one <constitution>...</constitution> block with the declared new constitution."
       "If you agree with the current one, add <constitution> <UNCHANGED> </constitution>."
       " The important part is that you add the <constitution> tags and the word <UNCHANGED> in between.\n"
