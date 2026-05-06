@@ -11,7 +11,6 @@ mit = pd.read_csv("data/mit.csv")
 
 # DEPRECATED: This script is no longer in active use, as the domain assignment
 # has been integrated into other parts of the pipeline. However, it is kept here
-# to check with Angelo.
 
 
 # 1. Define the worker function at the top level so it can be pickled

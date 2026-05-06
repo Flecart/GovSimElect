@@ -1,10 +1,10 @@
-# GovSimElect + GT-HarmBench
+# AgentElect + GT-HarmBench
 
 This repository bundles **two groups of experiments** in a single tree (so the anonymization platform can ingest everything in one shot). Each group has its own setup procedure — pick the one you need.
 
 | Group | What it studies | Where it lives | Setup |
 |---|---|---|---|
-| **1. GovSimElect** | Governance of the commons under elections (extends [GovSim](https://github.com/giorgiopiatti/GovSim) with leader selection, SVO, stochastic regeneration, contracting). | this repo's root | [Group 1 setup](#group-1-setup--govsimelect) |
+| **1. AgentElect** | Governance of the commons under elections (extends [GovSim](https://github.com/giorgiopiatti/GovSim) with leader selection, SVO, stochastic regeneration, contracting). | this repo's root | [Group 1 setup](#group-1-setup--agentelect) |
 | **2. GT-HarmBench** | Game-theoretic AI safety benchmark (Prisoner's Dilemma / Stag Hunt / Coordination, with contracting and moral-hazard variants). | `external/gt-harmbench/` (vendored subtree) | [Group 2 setup](#group-2-setup--gt-harmbench) |
 
 The two groups are independent — you do not need to set up both to run either one.
@@ -13,13 +13,13 @@ The two groups are independent — you do not need to set up both to run either 
 
 ---
 
-## Group 1 setup — GovSimElect
+## Group 1 setup — AgentElect
 
 Clone and enter the repo:
 
 ```bash
 git clone <this-repo-url>
-cd GovSimElect
+cd AgentElect
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -27,8 +27,6 @@ pip install -r requirements.txt
 
 ### Configuration update (important)
 
-- This repo was recently slimmed down: several legacy setup/utility files were removed.
-- `setup.sh`, `setup_cloud.sh`, `requirements_cloud.txt`, and `requirements_DRAC.txt` are no longer part of the supported flow.
 - Use `requirements.txt` as the source of truth for dependencies.
 - Some older scripts or notebooks that depended on removed files may no longer run without manual patching.
 - For API-backed runs:

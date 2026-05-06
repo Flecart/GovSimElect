@@ -14,7 +14,6 @@ model_display = {
 }
 # Table row order: for each model, we iterate p0..p5 and within each p, conditions in order
 # "Selfish/Prosocial" maps to prosocial count (p0 = fully selfish, p5 = fully prosocial).
-# But Angelo has 6 prosocial levels here, so the description "Selfish/Prosocial" doesn't work.
 # Instead we label by prosocial count.
 cond_order = ['no-contract', 'nl', 'code-law']
 cond_label = {
