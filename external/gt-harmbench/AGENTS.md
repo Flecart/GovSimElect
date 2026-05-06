@@ -55,7 +55,7 @@ pprint(parse_response(logs.samples[2000].scores["all_strategies_scorer"].answer)
 ```
 
 
-### TODO List Angelo
+### TODO List anonymous
 -[] Add on experiments how we are doing the evaluations.
 -[] Find a way to present the current results
 -[] FInd conclusions for the results.

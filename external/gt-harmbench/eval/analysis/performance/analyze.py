@@ -60,7 +60,7 @@ def main():
     args = parser.parse_args()
 
     # Setup paths
-    base_dir = "/home/angeloh/Desktop/work/gt-harmbench"
+    base_dir = "/home/anonymous/Desktop/work/gt-harmbench"
     csv_path = os.path.join(base_dir, "data", "gt-harmbench.csv")
     log_dir = os.path.join(base_dir, "logs")
     
