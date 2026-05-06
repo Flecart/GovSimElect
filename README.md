@@ -20,21 +20,65 @@ Clone and enter the repo:
 ```bash
 git clone <this-repo-url>
 cd GovSimElect
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Full local-model stack:
+### Configuration update (important)
+
+- This repo was recently slimmed down: several legacy setup/utility files were removed.
+- `setup.sh`, `setup_cloud.sh`, `requirements_cloud.txt`, and `requirements_DRAC.txt` are no longer part of the supported flow.
+- Use `requirements.txt` as the source of truth for dependencies.
+- Some older scripts or notebooks that depended on removed files may no longer run without manual patching.
+- For API-backed runs:
+  - OpenAI models use `OPENAI_API_KEY`
+  - OpenRouter models use `OPENROUTER_API_KEY`
+
+Example:
 
 ```bash
-bash ./setup.sh
+export OPENAI_API_KEY="..."
+export OPENROUTER_API_KEY="..."
 ```
 
-Lighter cloud-only setup (OpenAI / OpenRouter, no local LLM stack):
+### Full reproducibility model sweeps (OpenAI + OpenRouter)
+
+Use `scripts/standard/examples_models.sh` to run the 3 contract conditions
+(`code_nl`, `code_law`, `no_contract`) across:
+
+- fixed seeds (`0 1 2 3 4`)
+- prosocial counts (`0..5`)
+- one selected model
+
+Examples:
 
 ```bash
-bash ./setup_cloud.sh
+# OpenAI example
+MODEL="openai/gpt-4o" \
+NAME="gpt-4o" \
+GROUP_PREFIX="repro_openai_gpt4o" \
+bash scripts/standard/examples_models.sh
 ```
 
-The cloud setup also avoids requiring `sentence_transformers`; if that package is absent, the simulation falls back to a lightweight hash-based embedding for memory retrieval.
+```bash
+# OpenRouter example (non-openai/ prefix routes to OpenRouter backend)
+MODEL="anthropic/claude-sonnet-4.5" \
+NAME="claude-sonnet-4.5" \
+GROUP_PREFIX="repro_openrouter_claude45" \
+bash scripts/standard/examples_models.sh
+```
+
+You can also switch script family:
+
+```bash
+# Use stochastic script family instead of standard
+SCRIPT_FAMILY="stochastic" \
+MODEL="x-ai/grok-4.1-fast" \
+NAME="grok-4.1-fast" \
+GROUP_PREFIX="repro_stochastic_grok41" \
+bash scripts/standard/examples_models.sh
+```
 
 ### Build `aggregated.csv` from simulation runs
 
