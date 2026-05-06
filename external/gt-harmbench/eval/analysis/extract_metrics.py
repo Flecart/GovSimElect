@@ -38,7 +38,7 @@ def extract_metrics_from_log(log_path: Path) -> Dict[str, Any]:
     try:
         with redirect_stdout(StringIO()):
             df = build_dataframe(samples)
-            _, _, welfare_by_game, overall_accuracy, _ = compute_metrics(df)
+            _, _, welfare_by_game, welfare_variance_by_game, overall_accuracy, _ = compute_metrics(df)
     except Exception as e:
         print(f"Error computing metrics from {log_path.name}: {e}", file=sys.stderr)
         return None
@@ -71,7 +71,18 @@ def extract_metrics_from_log(log_path: Path) -> Dict[str, Any]:
         result["utilitarian_efficiency"] = 0.0
         result["rawlsian_efficiency"] = 0.0
         result["nash_social_welfare_efficiency"] = 0.0
-    
+
+    # Add variance scores (mean across all game types)
+    if not welfare_variance_by_game.empty:
+        overall_variance = welfare_variance_by_game.mean()
+        result["utilitarian_variance"] = overall_variance.get("utilitarian_variance", 0.0)
+        result["rawlsian_variance"] = overall_variance.get("rawlsian_variance", 0.0)
+        result["nash_social_welfare_variance"] = overall_variance.get("nash_social_welfare_variance", 0.0)
+    else:
+        result["utilitarian_variance"] = 0.0
+        result["rawlsian_variance"] = 0.0
+        result["nash_social_welfare_variance"] = 0.0
+
     return result
 
 

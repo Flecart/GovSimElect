@@ -74,7 +74,7 @@ def main():
             if df.empty:
                 continue
                 
-            metrics_df, accuracy_by_game, welfare_by_game, overall_accuracy, refusal_ratio = compute_metrics(df)
+            metrics_df, accuracy_by_game, welfare_by_game, _, overall_accuracy, refusal_ratio = compute_metrics(df)
             
             if accuracy_by_game.empty:
                 print(f"    No valid accuracy data for group {group}")

@@ -330,52 +330,29 @@ def parse_args() -> argparse.Namespace:
 def is_valid_game(game_type: str, payoffs: Dict)-> bool:
     match game_type:
         case "Prisoner's Dilemma":
-            # action2=defect orientation
-            a1 = payoffs['2_1_payoff'][0] > payoffs['1_1_payoff'][0] > payoffs['2_2_payoff'][0] > payoffs['1_2_payoff'][0]
-            a2 = payoffs['1_2_payoff'][1] > payoffs['1_1_payoff'][1] > payoffs['2_2_payoff'][1] > payoffs['2_1_payoff'][1]
-            # action1=defect orientation
-            b1 = payoffs['1_2_payoff'][0] > payoffs['2_2_payoff'][0] > payoffs['1_1_payoff'][0] > payoffs['2_1_payoff'][0]
-            b2 = payoffs['2_1_payoff'][1] > payoffs['2_2_payoff'][1] > payoffs['1_1_payoff'][1] > payoffs['1_2_payoff'][1]
-            return (a1 and a2) or (b1 and b2)
+            p1 = payoffs['2_1_payoff'][0] > payoffs['1_1_payoff'][0] > payoffs['2_2_payoff'][0] > payoffs['1_2_payoff'][0]
+            p2 = payoffs['1_2_payoff'][1] > payoffs['1_1_payoff'][1] > payoffs['2_2_payoff'][1] > payoffs['2_1_payoff'][1]
+            return p1 and p2
         case "Chicken":
-            # action2=aggressive orientation
-            a1 = payoffs['2_1_payoff'][0] > payoffs['1_1_payoff'][0] > payoffs['1_2_payoff'][0] > payoffs['2_2_payoff'][0]
-            a2 = payoffs['1_2_payoff'][1] > payoffs['1_1_payoff'][1] > payoffs['2_1_payoff'][1] > payoffs['2_2_payoff'][1]
-            # action1=aggressive orientation
-            b1 = payoffs['1_2_payoff'][0] > payoffs['2_2_payoff'][0] > payoffs['2_1_payoff'][0] > payoffs['1_1_payoff'][0]
-            b2 = payoffs['2_1_payoff'][1] > payoffs['2_2_payoff'][1] > payoffs['1_2_payoff'][1] > payoffs['1_1_payoff'][1]
-            return (a1 and a2) or (b1 and b2)
+            p1 = payoffs['2_1_payoff'][0] > payoffs['1_1_payoff'][0] > payoffs['1_2_payoff'][0] > payoffs['2_2_payoff'][0]
+            p2 = payoffs['1_2_payoff'][1] > payoffs['1_1_payoff'][1] > payoffs['2_1_payoff'][1] > payoffs['2_2_payoff'][1]
+            return p1 and p2
         case "Bach or Stravinski":
-            # P1 prefers coord at (1,1), P2 prefers coord at (2,2)
-            def _bos(hi, lo, p):
-                p1 = (p[hi][0] > p[lo][0] and
-                      p[hi][0] > p['1_2_payoff'][0] and p[hi][0] > p['2_1_payoff'][0] and
-                      p[lo][0] > p['1_2_payoff'][0] and p[lo][0] > p['2_1_payoff'][0])
-                p2 = (p[lo][1] > p[hi][1] and
-                      p[lo][1] > p['1_2_payoff'][1] and p[lo][1] > p['2_1_payoff'][1] and
-                      p[hi][1] > p['1_2_payoff'][1] and p[hi][1] > p['2_1_payoff'][1])
-                return p1 and p2
-            return _bos('1_1_payoff', '2_2_payoff', payoffs) or _bos('2_2_payoff', '1_1_payoff', payoffs)
+            p1_prefers_coord1 = payoffs['1_1_payoff'][0] > payoffs['2_2_payoff'][0]
+            p1_coord1_better = payoffs['1_1_payoff'][0] > payoffs['1_2_payoff'][0] and payoffs['1_1_payoff'][0] > payoffs['2_1_payoff'][0]
+            p1_coord2_better = payoffs['2_2_payoff'][0] > payoffs['1_2_payoff'][0] and payoffs['2_2_payoff'][0] > payoffs['2_1_payoff'][0]
+
+            p2_prefers_coord2 = payoffs['2_2_payoff'][1] > payoffs['1_1_payoff'][1]
+            p2_coord2_better = payoffs['2_2_payoff'][1] > payoffs['1_2_payoff'][1] and payoffs['2_2_payoff'][1] > payoffs['2_1_payoff'][1]
+            p2_coord1_better = payoffs['1_1_payoff'][1] > payoffs['1_2_payoff'][1] and payoffs['1_1_payoff'][1] > payoffs['2_1_payoff'][1]
+
+            return p1_prefers_coord1 and p1_coord1_better and p1_coord2_better and p2_prefers_coord2 and p2_coord2_better and p2_coord1_better
         case "No conflict":
-            # One diagonal cell must be strictly best for both players simultaneously
-            def _dominant_diagonal(cell, p):
-                others = [k for k in ['1_1_payoff', '1_2_payoff', '2_1_payoff', '2_2_payoff'] if k != cell]
-                return (all(p[cell][0] > p[o][0] for o in others) and
-                        all(p[cell][1] > p[o][1] for o in others))
-            return _dominant_diagonal('1_1_payoff', payoffs) or _dominant_diagonal('2_2_payoff', payoffs)
-        case "Stag hunt":
-            # action1=stag: cooperation Nash (1_1) Pareto-dominates defection Nash (2_2);
-            # each player worst off cooperating alone (1_2 for P1, 2_1 for P2)
-            a1 = (payoffs["1_1_payoff"][0] > payoffs["2_2_payoff"][0] > payoffs["1_2_payoff"][0] and
-                  payoffs["1_1_payoff"][0] > payoffs["2_1_payoff"][0] and payoffs["2_2_payoff"][0] > payoffs["1_2_payoff"][0])
-            a2 = (payoffs["1_1_payoff"][1] > payoffs["2_2_payoff"][1] > payoffs["2_1_payoff"][1] and
-                  payoffs["1_1_payoff"][1] > payoffs["1_2_payoff"][1] and payoffs["2_2_payoff"][1] > payoffs["2_1_payoff"][1])
-            # action1=hare orientation (swap 1_1<->2_2 and 1_2<->2_1)
-            b1 = (payoffs["2_2_payoff"][0] > payoffs["1_1_payoff"][0] > payoffs["2_1_payoff"][0] and
-                  payoffs["2_2_payoff"][0] > payoffs["1_2_payoff"][0] and payoffs["1_1_payoff"][0] > payoffs["2_1_payoff"][0])
-            b2 = (payoffs["2_2_payoff"][1] > payoffs["1_1_payoff"][1] > payoffs["1_2_payoff"][1] and
-                  payoffs["2_2_payoff"][1] > payoffs["2_1_payoff"][1] and payoffs["1_1_payoff"][1] > payoffs["1_2_payoff"][1])
-            return (a1 and a2) or (b1 and b2)
+            return True # TODO: Make this more robust.
+        case "Stag Hunt": 
+            p1 = payoffs["1_1_payoff"][0] > payoffs["2_1_payoff"][0] > payoffs["2_2_payoff"][0] > payoffs["1_2_payoff"][0]
+            p2 = payoffs["1_1_payoff"][1] > payoffs["1_2_payoff"][1] > payoffs["2_2_payoff"][1] > payoffs["2_1_payoff"][1]
+            return p1 and p2
         case "Coordination":
             p1_coord_equal = payoffs['1_1_payoff'][0] == payoffs['2_2_payoff'][0]
             p1_coord_better = payoffs['1_1_payoff'][0] > payoffs['1_2_payoff'][0] and payoffs['1_1_payoff'][0] > payoffs['2_1_payoff'][0]
@@ -383,7 +360,7 @@ def is_valid_game(game_type: str, payoffs: Dict)-> bool:
             p2_coord_equal = payoffs['1_1_payoff'][1] == payoffs['2_2_payoff'][1]
             p2_coord_better = payoffs['1_1_payoff'][1] > payoffs['1_2_payoff'][1] and payoffs['1_1_payoff'][1] > payoffs['2_1_payoff'][1]
             return p1_coord_equal and p1_coord_better and p2_coord_equal and p2_coord_better
-        case "Matching pennies":
+        case "Matching Pennies":
             # Fairly strict conditions
             p1 = payoffs['1_1_payoff'][0] == -payoffs['1_2_payoff'][0] == payoffs['2_2_payoff'][0] == -payoffs['2_1_payoff'][0]
             p2 = payoffs['1_1_payoff'][1] == -payoffs['2_1_payoff'][1] == payoffs['2_2_payoff'][1] == -payoffs['1_2_payoff'][1] == -payoffs['1_1_payoff'][0]

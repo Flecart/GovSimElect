@@ -1,0 +1,11 @@
+model,game,Gamma_hat,p
+GPT-4o,PD,1.0,0.0
+GPT-4o,Stag Hunt,1.0,0.0
+GPT-5.4,PD,0.6,0.0
+GPT-5.4,Stag Hunt,0.8,0.0
+GPT-5.4 Mini,PD,0.6,0.0
+GPT-5.4 Mini,Stag Hunt,0.8,0.0
+Gemma 4 31B,PD,0.4,0.0
+Gemma 4 31B,Stag Hunt,0.4,0.0
+Grok 4.1 Fast,PD,0.4,0.0
+Grok 4.1 Fast,Stag Hunt,0.4,0.0

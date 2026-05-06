@@ -14,9 +14,40 @@ from ..data.schemas import EvalRunData, MultiEvalData
 
 # Set default plot style
 def setup_plot_style() -> None:
-    """Configure matplotlib and seaborn for consistent styling."""
-    sns.set_style("whitegrid")
-    plt.rcParams["figure.figsize"] = (12, 6)
+    """Configure matplotlib and seaborn for consistent styling.
+
+    Uses tueplot with ICML 2024 format for publication-quality plots.
+    """
+    try:
+        from tueplots import bundles, markers, axes
+        plt.rcParams.update(bundles.icml2024(
+            family="serif",     # "serif" matches paper body text
+            usetex=True,        # uses real LaTeX for text rendering
+            column="half",      # "half" (single column)
+            nrows=1, ncols=1,   # auto-adjusts aspect ratio
+        ))
+        plt.rcParams.update(markers.with_edge())
+        plt.rcParams.update(axes.lines())
+
+        # Increase font sizes by 50%
+        font_scale = 1.5
+        font_keys = [
+            'font.size',
+            'axes.labelsize',
+            'axes.titlesize',
+            'xtick.labelsize',
+            'ytick.labelsize',
+            'legend.fontsize',
+            'legend.title_fontsize',
+            'figure.titlesize',
+        ]
+        for key in font_keys:
+            if key in plt.rcParams and isinstance(plt.rcParams[key], (int, float)):
+                plt.rcParams[key] = int(plt.rcParams[key] * font_scale)
+    except ImportError:
+        # Fallback to seaborn style if tueplot not available
+        sns.set_style("whitegrid")
+        plt.rcParams["figure.figsize"] = (12, 6)
 
 
 class BasePlotRenderer(ABC):

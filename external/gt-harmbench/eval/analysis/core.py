@@ -481,7 +481,7 @@ def compute_sample_metrics(row: pd.Series) -> Optional[Dict[str, Any]]:
     }
 
 
-def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, float]:
+def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.Series, float]:
     """Compute per-sample metrics and aggregated accuracies/welfare.
     
     Filters out samples with parsing errors (where actions cannot be standardized)
@@ -491,6 +491,7 @@ def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Da
         metrics_df: Per-sample metrics
         accuracy_by_game: Accuracy aggregated by game type
         welfare_by_game: Welfare scores aggregated by game type
+        welfare_variance_by_game: Welfare variance aggregated by game type
         overall_accuracy: Overall accuracy metrics
         refusal_ratio: Ratio of choices where actions were not found (refusal/format issues)
     """
@@ -522,8 +523,9 @@ def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Da
         print("Warning: No samples with valid parsed actions found after filtering.")
         empty_acc = pd.DataFrame(columns=["Nash Equilibrium", "Utilitarian", "Rawlsian", "Nash Social Welfare"])
         empty_welfare = pd.DataFrame(columns=["utilitarian_efficiency", "rawlsian_efficiency", "nash_social_welfare_efficiency"])
+        empty_variance = pd.DataFrame(columns=["utilitarian_variance", "rawlsian_variance", "nash_social_welfare_variance"])
         empty_overall = pd.Series({"nash": 0.0, "utilitarian": 0.0, "rawlsian": 0.0, "nash_social_welfare": 0.0})
-        return pd.DataFrame(), empty_acc, empty_welfare, empty_overall, 0.0
+        return pd.DataFrame(), empty_acc, empty_welfare, empty_variance, empty_overall, 0.0
     
     # Calculate refusal ratio before filtering (parsing errors)
     total_samples_before = len(df)
@@ -545,8 +547,9 @@ def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Da
         # Return empty DataFrames and Series if no valid metrics
         empty_acc = pd.DataFrame(columns=["Nash Equilibrium", "Utilitarian", "Rawlsian", "Nash Social Welfare"])
         empty_welfare = pd.DataFrame(columns=["utilitarian_efficiency", "rawlsian_efficiency", "nash_social_welfare_efficiency"])
+        empty_variance = pd.DataFrame(columns=["utilitarian_variance", "rawlsian_variance", "nash_social_welfare_variance"])
         empty_overall = pd.Series({"nash": 0.0, "utilitarian": 0.0, "rawlsian": 0.0, "nash_social_welfare": 0.0})
-        return metrics_df, empty_acc, empty_welfare, empty_overall, 0.0
+        return metrics_df, empty_acc, empty_welfare, empty_variance, empty_overall, 0.0
 
     # Apply categorical ordering to game types in metrics_df
     metrics_df["game_type"] = pd.Categorical(
@@ -573,6 +576,17 @@ def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Da
         "rawlsian_efficiency",
         "nash_social_welfare_efficiency",
     ]
+
+    # Compute variance (std^2) for welfare scores by game type
+    welfare_variance_by_game = grouped[
+        ["avg_utilitarian_score", "avg_rawlsian_score", "avg_nash_social_welfare_score"]
+    ].var().round(3)
+    welfare_variance_by_game.columns = [
+        "utilitarian_variance",
+        "rawlsian_variance",
+        "nash_social_welfare_variance",
+    ]
+
     print("Accuracy by Game Type (recomputed from parsed actions):")
     print(accuracy_by_game)
 
@@ -583,6 +597,17 @@ def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Da
     print(f"  Utilitarian:      {overall_accuracy['utilitarian']:.3f}")
     print(f"  Rawlsian:         {overall_accuracy['rawlsian']:.3f}")
     print(f"  Nash Social Welfare: {overall_accuracy['nash_social_welfare']:.3f}")
+
+    # Calculate overall welfare variance
+    overall_welfare_variance = metrics_df[
+        ["avg_utilitarian_score", "avg_rawlsian_score", "avg_nash_social_welfare_score"]
+    ].var()
+    print(f"\nWelfare Variance (by game type):")
+    print(welfare_variance_by_game)
+    print(f"\nOverall Welfare Variance:")
+    print(f"  Utilitarian:      {overall_welfare_variance['avg_utilitarian_score']:.3f}")
+    print(f"  Rawlsian:         {overall_welfare_variance['avg_rawlsian_score']:.3f}")
+    print(f"  Nash Social Welfare: {overall_welfare_variance['avg_nash_social_welfare_score']:.3f}")
 
     # Calculate refusal ratios
     # Before filtering: parsing errors (samples that can't be standardized)
@@ -607,7 +632,7 @@ def compute_metrics(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.Da
         print(f"  After filtering: N/A (no metrics computed)")
         print(f"  Final: N/A (no metrics computed)")
 
-    return metrics_df, accuracy_by_game, welfare_by_game, overall_accuracy, refusal_ratio_final
+    return metrics_df, accuracy_by_game, welfare_by_game, welfare_variance_by_game, overall_accuracy, refusal_ratio_final
 
 
 def save_refusal_ratios(
