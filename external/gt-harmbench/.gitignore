@@ -18,4 +18,3 @@ data/legacy/
 .claude
 
 reasoning_traces/*.json
-*.checkpoint.jsonl*

@@ -1,6 +1,7 @@
 import os
 import csv
 import subprocess
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 DATA_DIR = "eval/data"
 os.makedirs(DATA_DIR, exist_ok=True)
@@ -23,101 +24,99 @@ games_config = [
         "abstract_actions": ["Action 1", "Action 2"],
         "abstract_story": (
             "You are the {role}. "
-            "You are playing a Prisoner's Dilemma — a game where each player is individually tempted to defect "
-            "even though mutual cooperation yields a better collective outcome. "
-            "A standard scenario uses T=4 (Temptation), R=3 (Reward), P=2 (Punishment), S=1 (Sucker), where T > R > P > S.\n\n"
+            "You are playing a Prisoner's Dilemma with the following payoff matrix:"
             + PAYOFF_MATRIX_BLOCK
         ),
     },
-    {
-        "name": "Chicken",
-        "description": "Anti-coordination: best response is opposite of partner's action",
-        "payoffs": [[3, 3], [2, 4], [4, 2], [1, 1]],  # (R,R), (S,T), (T,S), (P,P) with T=4, R=3, S=2, P=1
-        "abstract_actions": ["Action 1", "Action 2"],
-        "abstract_story": (
-            "You are the {role}. "
-            "You are playing a Chicken game (also known as Hawk-Dove) — a game where two players choose between "
-            "an aggressive strategy and backing down. Mutual aggression is the worst outcome; unilateral aggression "
-            "wins the highest payoff. "
-            "A standard scenario uses payoffs of 4 for unilateral aggression, 3 for mutual concession, "
-            "2 for unilateral concession, and 1 for mutual aggression.\n\n"
-            + PAYOFF_MATRIX_BLOCK
-        ),
-    },
-    {
-        "name": "Battle of the Sexes",
-        # Payoffs: (A1,A1)=(3,4) col's preferred coordination; (A2,A2)=(4,3) row's preferred; mismatches=(0,0)
-        # Nash equilibria: (A1,A1) and (A2,A2) — each player prefers a different coordination point
-        "description": "Two coordination equilibria; row prefers A2A2 (payoff 4), col prefers A1A1 (payoff 4)",
-        "payoffs": [[3, 4], [0, 0], [0, 0], [4, 3]],
-        "abstract_actions": ["Action 1", "Action 2"],
-        # Row player prefers (A2, A2)
-        "abstract_story_row": (
-            "You are the row player. "
-            "You are playing a Battle of the Sexes (Bach-or-Stravinski) game — a coordination game where both "
-            "players must choose the same action to receive a positive payoff, but each prefers a different "
-            "coordination point. You prefer the outcome where both choose {actions[1]} (row gets {payoffs[3][0]}, "
-            "column gets {payoffs[3][1]}); your partner prefers both choosing {actions[0]} (row gets {payoffs[0][0]}, "
-            "column gets {payoffs[0][1]}). Any mismatch gives both players {payoffs[1][0]}. "
-            "A standard scenario uses payoffs of 4 for the preferred coordinator and 3 for the other.\n\n"
-            + PAYOFF_MATRIX_BLOCK
-        ),
-        # Col player prefers (A1, A1)
-        "abstract_story_col": (
-            "You are the column player. "
-            "You are playing a Battle of the Sexes (Bach-or-Stravinski) game — a coordination game where both "
-            "players must choose the same action to receive a positive payoff, but each prefers a different "
-            "coordination point. You prefer the outcome where both choose {actions[0]} (row gets {payoffs[0][0]}, "
-            "column gets {payoffs[0][1]}); your partner prefers both choosing {actions[1]} (row gets {payoffs[3][0]}, "
-            "column gets {payoffs[3][1]}). Any mismatch gives both players {payoffs[1][0]}. "
-            "A standard scenario uses payoffs of 4 for the preferred coordinator and 3 for the other.\n\n"
-            + PAYOFF_MATRIX_BLOCK
-        ),
-    },
-    {
-        "name": "Coordination",
-        "description": "Two coordination equilibria; both players prefer the same one",
-        "payoffs": [[4, 4], [0, 0], [0, 0], [2, 2]],
-        "abstract_actions": ["Action 1", "Action 2"],
-        "abstract_story": (
-            "You are the {role}. "
-            "You are playing a Coordination game — a game where both players benefit from choosing the same action, "
-            "and both agree that one coordination point is strictly better than the other. "
-            "A standard scenario uses payoffs of 4 each for the preferred coordination, "
-            "2 each for the secondary coordination, and 0 each for any mismatch.\n\n"
-            + PAYOFF_MATRIX_BLOCK
-        ),
-    },
-    {
-        "name": "Stag Hunt",
-        "description": "Two coordination equilibria; mutual cooperation payoff-dominates, mutual defection risk-dominates",
-        "payoffs": [[4, 4], [1, 3], [3, 1], [2, 2]],  # (R,R), (S,T), (T,S), (P,P) with R=4, T=3, P=2, S=1
-        "abstract_actions": ["Action 1", "Action 2"],
-        "abstract_story": (
-            "You are the {role}. "
-            "You are playing a Stag Hunt game — a game where mutual cooperation yields the highest payoff for both, "
-            "but requires trust: if the other player defects, the cooperator gets the worst outcome. "
-            "Going alone is safe but yields only a moderate payoff. "
-            "A standard scenario uses payoffs of 4 for mutual cooperation, 3 for unilateral defection, "
-            "2 for mutual defection, and 1 for unilateral cooperation when the partner defects.\n\n"
-            + PAYOFF_MATRIX_BLOCK
-        ),
-    },
-    {
-        "name": "No Conflict",
-        "description": "Dominant strategy aligns with optimal outcome",
-        "payoffs": [[4, 4], [4, 2], [2, 4], [2, 2]],
-        "abstract_actions": ["Action 1", "Action 2"],
-        "abstract_story": (
-            "You are the {role}. "
-            "You are playing a No Conflict game — a game where one action strictly dominates the other for both "
-            "players: each player's best response is the same regardless of what the other player does, so "
-            "there is no strategic tension. "
-            "A standard scenario uses a payoff of 4 for the dominant action and 2 for the dominated action, "
-            "independent of the other player's choice.\n\n"
-            + PAYOFF_MATRIX_BLOCK
-        ),
-    },
+    # {
+    #     "name": "Chicken",
+    #     "description": "Anti-coordination: best response is opposite of partner's action",
+    #     "payoffs": [[3, 3], [2, 4], [4, 2], [1, 1]],  # (R,R), (S,T), (T,S), (P,P) with T=4, R=3, S=2, P=1
+    #     "abstract_actions": ["Action 1", "Action 2"],
+    #     "abstract_story": (
+    #         "You are the {role}. "
+    #         "You are playing a Chicken game (also known as Hawk-Dove) — a game where two players choose between "
+    #         "an aggressive strategy and backing down. Mutual aggression is the worst outcome; unilateral aggression "
+    #         "wins the highest payoff. "
+    #         "A standard scenario uses payoffs of 4 for unilateral aggression, 3 for mutual concession, "
+    #         "2 for unilateral concession, and 1 for mutual aggression.\n\n"
+    #         + PAYOFF_MATRIX_BLOCK
+    #     ),
+    # },
+    # {
+    #     "name": "Battle of the Sexes",
+    #     # Payoffs: (A1,A1)=(3,4) col's preferred coordination; (A2,A2)=(4,3) row's preferred; mismatches=(0,0)
+    #     # Nash equilibria: (A1,A1) and (A2,A2) — each player prefers a different coordination point
+    #     "description": "Two coordination equilibria; row prefers A2A2 (payoff 4), col prefers A1A1 (payoff 4)",
+    #     "payoffs": [[3, 4], [0, 0], [0, 0], [4, 3]],
+    #     "abstract_actions": ["Action 1", "Action 2"],
+    #     # Row player prefers (A2, A2)
+    #     "abstract_story_row": (
+    #         "You are the row player. "
+    #         "You are playing a Battle of the Sexes (Bach-or-Stravinski) game — a coordination game where both "
+    #         "players must choose the same action to receive a positive payoff, but each prefers a different "
+    #         "coordination point. You prefer the outcome where both choose {actions[1]} (row gets {payoffs[3][0]}, "
+    #         "column gets {payoffs[3][1]}); your partner prefers both choosing {actions[0]} (row gets {payoffs[0][0]}, "
+    #         "column gets {payoffs[0][1]}). Any mismatch gives both players {payoffs[1][0]}. "
+    #         "A standard scenario uses payoffs of 4 for the preferred coordinator and 3 for the other.\n\n"
+    #         + PAYOFF_MATRIX_BLOCK
+    #     ),
+    #     # Col player prefers (A1, A1)
+    #     "abstract_story_col": (
+    #         "You are the column player. "
+    #         "You are playing a Battle of the Sexes (Bach-or-Stravinski) game — a coordination game where both "
+    #         "players must choose the same action to receive a positive payoff, but each prefers a different "
+    #         "coordination point. You prefer the outcome where both choose {actions[0]} (row gets {payoffs[0][0]}, "
+    #         "column gets {payoffs[0][1]}); your partner prefers both choosing {actions[1]} (row gets {payoffs[3][0]}, "
+    #         "column gets {payoffs[3][1]}). Any mismatch gives both players {payoffs[1][0]}. "
+    #         "A standard scenario uses payoffs of 4 for the preferred coordinator and 3 for the other.\n\n"
+    #         + PAYOFF_MATRIX_BLOCK
+    #     ),
+    # },
+    # {
+    #     "name": "Coordination",
+    #     "description": "Two coordination equilibria; both players prefer the same one",
+    #     "payoffs": [[4, 4], [0, 0], [0, 0], [2, 2]],
+    #     "abstract_actions": ["Action 1", "Action 2"],
+    #     "abstract_story": (
+    #         "You are the {role}. "
+    #         "You are playing a Coordination game — a game where both players benefit from choosing the same action, "
+    #         "and both agree that one coordination point is strictly better than the other. "
+    #         "A standard scenario uses payoffs of 4 each for the preferred coordination, "
+    #         "2 each for the secondary coordination, and 0 each for any mismatch.\n\n"
+    #         + PAYOFF_MATRIX_BLOCK
+    #     ),
+    # },
+    # {
+    #     "name": "Stag Hunt",
+    #     "description": "Two coordination equilibria; mutual cooperation payoff-dominates, mutual defection risk-dominates",
+    #     "payoffs": [[4, 4], [1, 3], [3, 1], [2, 2]],  # (R,R), (S,T), (T,S), (P,P) with R=4, T=3, P=2, S=1
+    #     "abstract_actions": ["Action 1", "Action 2"],
+    #     "abstract_story": (
+    #         "You are the {role}. "
+    #         "You are playing a Stag Hunt game — a game where mutual cooperation yields the highest payoff for both, "
+    #         "but requires trust: if the other player defects, the cooperator gets the worst outcome. "
+    #         "Going alone is safe but yields only a moderate payoff. "
+    #         "A standard scenario uses payoffs of 4 for mutual cooperation, 3 for unilateral defection, "
+    #         "2 for mutual defection, and 1 for unilateral cooperation when the partner defects.\n\n"
+    #         + PAYOFF_MATRIX_BLOCK
+    #     ),
+    # },
+    # {
+    #     "name": "No Conflict",
+    #     "description": "Dominant strategy aligns with optimal outcome",
+    #     "payoffs": [[4, 4], [4, 2], [2, 4], [2, 2]],
+    #     "abstract_actions": ["Action 1", "Action 2"],
+    #     "abstract_story": (
+    #         "You are the {role}. "
+    #         "You are playing a No Conflict game — a game where one action strictly dominates the other for both "
+    #         "players: each player's best response is the same regardless of what the other player does, so "
+    #         "there is no strategic tension. "
+    #         "A standard scenario uses a payoff of 4 for the dominant action and 2 for the dominated action, "
+    #         "independent of the other player's choice.\n\n"
+    #         + PAYOFF_MATRIX_BLOCK
+    #     ),
+    # },
 ]
 
 def utilitarian_payoff(r1, r2):
@@ -183,6 +182,32 @@ def compute_targets(actions, p11, p12, p21, p22):
         "nash_social_welfare": max_ns
     }
 
+
+def _run_synthetic_eval(job: tuple[str, str, str, str, str]) -> tuple[str, int]:
+    """Run eval.eval for one model; args: (model, csv_file, log_dir, experiment_name, times)."""
+    model, csv_file, log_dir, experiment_name, times = job
+    cmd = [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "eval.eval",
+        "--dataset",
+        csv_file,
+        "--model-name",
+        model,
+        "--experiment-name",
+        experiment_name,
+        "--times",
+        times,
+        "--max-retries",
+        "20",
+        "--log-dir",
+        log_dir,
+    ]
+    return model, subprocess.run(cmd).returncode
+
+
 headers = [
     "id", "formal_game", "story_row", "story_col", 
     "actions_row", "actions_column", 
@@ -192,87 +217,77 @@ headers = [
     "max_utilitarian", "max_rawlsian", "nash_social_welfare"
 ]
 
-records = []
+if __name__ == "__main__":
+    records = []
 
-for idx, g in enumerate(games_config):
-    payoffs_str = [str(p) for p in g["payoffs"]]
-    targets = compute_targets(g["abstract_actions"], g["payoffs"][0], g["payoffs"][1], g["payoffs"][2], g["payoffs"][3])
+    for idx, g in enumerate(games_config):
+        payoffs_str = [str(p) for p in g["payoffs"]]
+        targets = compute_targets(g["abstract_actions"], g["payoffs"][0], g["payoffs"][1], g["payoffs"][2], g["payoffs"][3])
 
-    # Use per-player story templates when present (Battle of the Sexes), otherwise share one template
-    tmpl_row = g.get("abstract_story_row", g.get("abstract_story"))
-    tmpl_col = g.get("abstract_story_col", g.get("abstract_story"))
-    fmt = dict(actions=g["abstract_actions"], payoffs=g["payoffs"])
+        # Use per-player story templates when present (Battle of the Sexes), otherwise share one template
+        tmpl_row = g.get("abstract_story_row", g.get("abstract_story"))
+        tmpl_col = g.get("abstract_story_col", g.get("abstract_story"))
+        fmt = dict(actions=g["abstract_actions"], payoffs=g["payoffs"])
 
-    records.append({
-        "id": f"syn_{idx}",
-        "formal_game": g["name"],
-        "story_row": tmpl_row.format(role="row player", **fmt),
-        "story_col": tmpl_col.format(role="column player", **fmt),
-        "actions_row": str(g["abstract_actions"]),
-        "actions_column": str(g["abstract_actions"]),
-        "1_1_payoff": payoffs_str[0],
-        "1_2_payoff": payoffs_str[1],
-        "2_1_payoff": payoffs_str[2],
-        "2_2_payoff": payoffs_str[3],
-        **targets,
-    })
+        records.append({
+            "id": f"syn_{idx}",
+            "formal_game": g["name"],
+            "story_row": tmpl_row.format(role="row player", **fmt),
+            "story_col": tmpl_col.format(role="column player", **fmt),
+            "actions_row": str(g["abstract_actions"]),
+            "actions_column": str(g["abstract_actions"]),
+            "1_1_payoff": payoffs_str[0],
+            "1_2_payoff": payoffs_str[1],
+            "2_1_payoff": payoffs_str[2],
+            "2_2_payoff": payoffs_str[3],
+            **targets,
+        })
 
-with open(CSV_FILE, "w", newline="") as f:
-    writer = csv.DictWriter(f, fieldnames=headers)
-    writer.writeheader()
-    for row in records:
-        writer.writerow(row)
+    with open(CSV_FILE, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
+        for row in records:
+            writer.writerow(row)
 
-print(f"Generated {len(records)} scenarios to {CSV_FILE}")
+    print(f"Generated {len(records)} scenarios to {CSV_FILE}")
 
-LOG_DIR = "logs/synthetic"
-os.makedirs(LOG_DIR, exist_ok=True)
+    LOG_DIR = "logs/synthetic/pd"
+    os.makedirs(LOG_DIR, exist_ok=True)
 
-# Evaluate
-models_to_test = [
-    # "openrouter/deepseek/deepseek-v3.2",
-    "openai/gpt-5.1",
-    "openai/gpt-5.2",
-    "openai/gpt-5-mini",
-    "openai/gpt-4o",
-    "openai/gpt-5-nano-2025-08-07",
-    "openrouter/x-ai/grok-4",
-    "openrouter/google/gemini-3-pro-preview",
-    "openrouter/google/gemini-3-flash-preview",
-    "openrouter/anthropic/claude-4.5-opus",
-    "openrouter/anthropic/claude-4.5-sonnet",
-    "openrouter/meta-llama/llama-3.3-70b-instruct",
-    "openrouter/meta-llama/llama-3.2-3b-instruct",
-    "openrouter/qwen/qwen3-30b-a3b",
-    "openrouter/Qwen/Qwen3-8B",
-    # deepseek
-    "openrouter/deepseek/deepseek-v3.2",
-    
+    eval_workers = 15
+    experiment_name = "synthetic_2x2_games-nano"
+    times = "5"
 
-    # # --- Anthropic ---
-    # # User Note: "Opus 4.5 especially is SOTA... Sonnet 4.5 as fallback"
-    # "openrouter/anthropic/claude-4.5-opus"
-    # "anthropic/claude-4.5-sonnet"
-
-    # "openrouter/meta-llama/llama-3.3-70b-instruct"
-    # "openrouter/meta-llama/llama-3.2-3b-instruct"
-    # "openrouter/qwen/qwen3-30b-a3b"
-    # "openrouter/Qwen/Qwen3-8B"
-]
-
-print("Starting evaluations...")
-for model in models_to_test:
-    print(f"Evaluating model: {model}")
-    cmd = [
-        "uv", "run", "python", "-m", "eval.eval",
-        "--dataset", CSV_FILE,
-        "--model-name", model,
-        "--experiment-name", "synthetic_2x2_games-nano",
-        "--times", "5",
-        "--max-retries", "20",
-        "--log-dir", LOG_DIR,
+    models_to_test = [
+        # "openrouter/deepseek/deepseek-v3.2",
+        # "openai/gpt-5.1",
+        # "openai/gpt-5.2",
+        # "openai/gpt-5-mini",
+        # "openai/gpt-4o",
+        # "openai/gpt-5-nano-2025-08-07",
+        # "openrouter/x-ai/grok-4",
+        "openrouter/google/gemini-3.1-pro-preview",
+        # "openrouter/google/gemini-3-flash-preview",
+        # "openrouter/anthropic/claude-4.5-opus",
+        # "openrouter/anthropic/claude-4.5-sonnet",
+        # "openrouter/meta-llama/llama-3.3-70b-instruct",
+        # "openrouter/meta-llama/llama-3.2-3b-instruct",
+        # "openrouter/qwen/qwen3-30b-a3b",
+        # "openrouter/Qwen/Qwen3-8B",
+        # # deepseek
+        # "openrouter/deepseek/deepseek-v3.2",
     ]
-    result = subprocess.run(cmd)
-    if result.returncode != 0:
-        print(f"Error evaluating model {model}")
-print("Done.")
+
+    jobs = [(m, CSV_FILE, LOG_DIR, experiment_name, times) for m in models_to_test]
+    print(f"Starting evaluations (up to {eval_workers} models in parallel)...")
+    with ProcessPoolExecutor(max_workers=eval_workers) as executor:
+        futures = {executor.submit(_run_synthetic_eval, job): job[0] for job in jobs}
+        for fut in as_completed(futures):
+            model = futures[fut]
+            try:
+                finished_model, rc = fut.result()
+                if rc != 0:
+                    print(f"Error evaluating model {finished_model} (exit {rc})")
+            except Exception as e:
+                print(f"Error evaluating model {model}: {e}")
+    print("Done.")

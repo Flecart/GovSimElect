@@ -7,10 +7,6 @@ import re
 # Model name mapping: full name -> short display name
 MODEL_NAME_MAP: dict[str, str] = {
     # OpenAI models
-    "gpt-5.4-mini": "GPT-5.4 Mini",
-    "openai-gpt-5.4-mini": "GPT-5.4 Mini",
-    "gpt-5.4": "GPT-5.4",
-    "openai-gpt-5.4": "GPT-5.4",
     "gpt-5-mini": "GPT-5 Mini",
     "gpt-5-nano": "GPT-5 Nano",
     "gpt-5.1": "GPT-5.1",
@@ -34,16 +30,12 @@ MODEL_NAME_MAP: dict[str, str] = {
     "llama-3": "Llama 3",
     
     # Google models
-    "gemma-4-31b-it": "Gemma 4 31B",
-    "openrouter-google-gemma-4-31b-it": "Gemma 4 31B",
     "gemini-flash": "Gemini Flash",
     "gemini-3-flash-preview": "Gemi 3 Flash",
     "gemini-pro": "Gemini Pro",
     
     # Other models
-    "grok": "Grok 4.1 Fast",
-    "grok-4.1-fast": "Grok 4.1 Fast",
-    "openrouter-x-ai-grok-4.1-fast": "Grok 4.1 Fast",
+    "grok": "Grok 4.1 fast",
     "qwen3-30b-a3b": "Qwen 30B",
     "qwen-qwen3-8b": "Qwen 8B",
     "qwen-qwen3-30b": "Qwen 30B",

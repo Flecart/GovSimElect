@@ -207,7 +207,7 @@ def plot_welfare_heatmap(
 
         df = build_dataframe(samples)
         try:
-            _, accuracy_by_game, _, _, _, _ = compute_metrics(df)
+            _, accuracy_by_game, _, _, _ = compute_metrics(df)
             if accuracy_by_game.empty or welfare_metric not in accuracy_by_game.columns:
                 continue
         except (KeyError, ValueError, IndexError, AttributeError) as e:
@@ -472,7 +472,7 @@ def plot_historical_trends(
 
         df = build_dataframe(samples)
         try:
-            _, _, _, _, overall_accuracy, _ = compute_metrics(df)
+            _, _, _, overall_accuracy, _ = compute_metrics(df)
             # Check if we got valid metrics (overall_accuracy is a Series)
             required_keys = ["utilitarian", "rawlsian", "nash"]
             if len(overall_accuracy) == 0 or any(k not in overall_accuracy.index for k in required_keys):
@@ -631,7 +631,7 @@ def plot_math_rank_vs_accuracy(
         
         df = build_dataframe(samples)
         try:
-            _, _, _, _, overall_accuracy, _ = compute_metrics(df)
+            _, _, _, overall_accuracy, _ = compute_metrics(df)
             required_keys = ["utilitarian", "rawlsian", "nash"]
             if len(overall_accuracy) == 0 or any(k not in overall_accuracy.index for k in required_keys):
                 continue
@@ -746,7 +746,7 @@ def plot_math_rank_vs_avg_scores(
         
         df = build_dataframe(samples)
         try:
-            _, _, welfare_by_game, _, _, _ = compute_metrics(df)
+            _, _, welfare_by_game, _, _ = compute_metrics(df)
             # Get overall welfare scores (mean across all game types)
             if welfare_by_game.empty:
                 continue
@@ -865,7 +865,7 @@ def plot_epoch_score_vs_accuracy(
         
         df = build_dataframe(samples)
         try:
-            _, _, _, _, overall_accuracy, _ = compute_metrics(df)
+            _, _, _, overall_accuracy, _ = compute_metrics(df)
             required_keys = ["utilitarian", "rawlsian", "nash"]
             if len(overall_accuracy) == 0 or any(k not in overall_accuracy.index for k in required_keys):
                 continue
@@ -978,7 +978,7 @@ def plot_epoch_score_vs_avg_scores(
         
         df = build_dataframe(samples)
         try:
-            _, _, welfare_by_game, _, _, _ = compute_metrics(df)
+            _, _, welfare_by_game, _, _ = compute_metrics(df)
             # Get overall welfare scores (mean across all game types)
             if welfare_by_game.empty:
                 continue

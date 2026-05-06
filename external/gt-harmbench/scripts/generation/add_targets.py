@@ -2,13 +2,6 @@
 This script is used to add the targets to a given csv file in the format produced by the contextualizations.
 This is done such that at the end we can have better downstream evaluation.
 """
-import sys
-from pathlib import Path
-
-# Add project root to Python path
-project_root = Path(__file__).parent.parent.parent
-sys.path.insert(0, str(project_root))
-
 import click
 import pandas as pd
 from src.utils import find_nash_equilibria, find_utility_maximizing, find_Rawlsian_actions, find_nash_social_welfare

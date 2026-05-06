@@ -365,7 +365,7 @@ def collect_model_game_actions(
             # Extract action pairs
             action_pairs = []
             for _, row in game_df.iterrows():
-                if pd.notna(row["std_row"]) and pd.notna(row["std_col"]):
+                if row["std_row"] and row["std_col"]:
                     action_pairs.append((row["std_row"], row["std_col"]))
 
             if action_pairs:

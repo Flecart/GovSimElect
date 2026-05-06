@@ -152,7 +152,7 @@ def process_single_log_analysis(
 ) -> None:
     """Process a single log: build dataframe, compute metrics, and generate plots."""
     df = build_dataframe(samples)
-    _, accuracy_by_game, welfare_by_game, _, _, _ = compute_metrics(df)
+    _, accuracy_by_game, welfare_by_game, _, _ = compute_metrics(df)
     actions_df = build_actions_df(df)
 
     if "accuracy" in plot_kinds:
