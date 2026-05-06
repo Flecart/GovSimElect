@@ -266,6 +266,9 @@ class ContractingOrchestrator:
         else:
           summary = "No formal contract was adopted for the next round."
 
+
+
+
     transcript = self._build_transcript(self._manager._conversation)
     html_interactions = [turn.get("html", "") for turn in self._manager._conversation]
     transcript.append((self.framework_identity, summary))
