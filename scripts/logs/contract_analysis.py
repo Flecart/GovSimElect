@@ -154,7 +154,7 @@ def analyze_run(records: list[Any], *, expected_regen: float = 2.0) -> dict[str,
         elif isinstance(r, ConversationResourceLimitRecord):
             # Only store if a numeric limit was detected (not N/A)
             if r.resource_limit is not None:
-                limit_rows[r.round] = r.resource_limit
+                limit_rows[r.round] = 3 #r.resource_limit
 
     # Determine number of agents from first harvest round
     n_agents = max((len(v) for v in harvest_rows.values()), default=1)
