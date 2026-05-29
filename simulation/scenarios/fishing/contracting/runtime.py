@@ -22,7 +22,12 @@ from .contract import (
     FishingContractState,
     NegotiationProtocol,
 )
-from .managers import LawContractManager, NLContractManager, NoCommsManager
+from .managers import (
+    DDLContractManager,
+    LawContractManager,
+    NLContractManager,
+    NoCommsManager,
+)
 from .negotiation import (
     FreeChatNegotiationManager,
     MayoralVotingNegotiationManager,
@@ -103,6 +108,7 @@ class ContractingOrchestrator:
   def enabled(self) -> bool:
     return self.cfg.enabled and self.mode in {
         ContractMode.CODE_LAW,
+        ContractMode.CODE_DDL,
         ContractMode.CODE_NL,
         ContractMode.FREE_CHAT,
     }
@@ -132,6 +138,11 @@ class ContractingOrchestrator:
       sustainability_threshold: int,
       agent_resource_num: dict[str, int],
   ) -> tuple[list[tuple[PersonaIdentity, str]], str, int | None, list[str]]:
+    # code_ddl: the statute is fixed top-down (no negotiation/coding). Ensure it
+    # is installed, inform the fishers, and skip the LLM negotiation entirely.
+    if self.mode == ContractMode.CODE_DDL:
+      return self._conduct_ddl_statute(personas, int(sustainability_threshold))
+
     named_resource_num = self._normalize_agent_resource_num(personas, agent_resource_num)
     existing_contract = self._manager.get_contract()
     active_law_text = ""
@@ -377,6 +388,8 @@ class ContractingOrchestrator:
   def _build_manager(self):
     if self.mode == ContractMode.CODE_LAW:
       return LawContractManager()
+    if self.mode == ContractMode.CODE_DDL:
+      return DDLContractManager()
     if self.mode == ContractMode.CODE_NL:
       return NLContractManager()
     return NoCommsManager()
@@ -528,8 +541,65 @@ class ContractingOrchestrator:
         "        return dict(submissions)\n"
     )
 
+  def _render_statute_nl(self, threshold: int | None) -> str:
+    share = (f"about {threshold} tons" if threshold is not None
+             else "your per-capita sustainable share")
+    return (
+        "A binding COMMONS STATUTE is in force (issued by the regulator, "
+        "automatically enforced by a formal legal reasoner each month):\n"
+        f"  1. Your sustainable share this month is {share}. You shall not catch "
+        "more than your share (the duty of restraint).\n"
+        "  2. Any unlawful surplus you take is confiscated, and you are fined an "
+        "equal amount — over-harvesting never pays.\n"
+        "  3. Carve-out: when the lake is at its healthy maximum, a one-off "
+        "surplus take is permitted.\n"
+        "  4. Emergency brake: when the lake is depleted, the limit is absolute "
+        "and the carve-out does not apply.\n"
+        "  5. Compensation: if you took a surplus last month, you must under-fish "
+        "this month so the stock recovers; shirking that duty is fined."
+    )
+
+  def _conduct_ddl_statute(
+      self,
+      personas: list[PersonaAgent],
+      sustainability_threshold: int,
+  ) -> tuple[list[tuple[PersonaIdentity, str]], str, int | None, list[str]]:
+    """No-negotiation path for code_ddl: (re)affirm the fixed statute, inform the
+    fishers, and report the per-capita limit. Enforcement happens at harvest."""
+    if not self._manager.has_contract():
+      self._install_default_contract()
+    nl_text = self._render_statute_nl(sustainability_threshold)
+    contract = self._manager.get_contract()
+    if contract is not None:
+      contract.metadata["nl_contract"] = nl_text
+    self._sync_persona_contract_state(personas, nl_text)
+    summary = ("The binding commons statute remains in force (fixed by the "
+               f"regulator; per-capita limit {sustainability_threshold} tons). "
+               "It is adjudicated by a formal deontic-logic reasoner each month.")
+    return [(self.framework_identity, summary)], summary, sustainability_threshold, []
+
   def _install_default_contract(self) -> None:
     if self.mode in {ContractMode.NO_COMMUNICATION, ContractMode.FREE_CHAT}:
+      return
+    # code_ddl: install the fixed deontic statute up-front so the very first
+    # round's harvest is already adjudicated (harvest precedes the restaurant).
+    if self.mode == ContractMode.CODE_DDL:
+      from .deontic_enforcer import load_statute
+
+      self._manager.set_contract(
+          content=load_statute(), agreed_at_round=-1, agent_names=[],
+      )
+      contract = self._manager.get_contract()
+      if contract is not None:
+        contract.proposer = self.framework_identity.name
+        contract.enforcement_status = "active"
+        contract.passed = True
+        contract.metadata.update({
+            "mode": self.mode.value,
+            "nl_contract": self._render_statute_nl(None),
+            "default_contract": True,
+        })
+        self._record_contract_history(contract, contract.metadata["nl_contract"])
       return
     default_nl_law = self._default_nl_law()
     if self.mode == ContractMode.CODE_LAW:

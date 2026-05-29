@@ -303,6 +303,45 @@ class LawContractManager(ContractManager):
     return LawEnforcer()
 
 
+class DDLContractManager(ContractManager):
+  """Fixed defeasible-deontic statute, adjudicated by the `deontic` reasoner.
+
+  No negotiation/coding: the institution is authored top-down. The statute text
+  is installed once as the active contract; ``enforce`` (inherited) routes to the
+  ``DeonticLawEnforcer`` and threads ``execution_state`` (the per-fisher
+  ``over_prev`` memory the compensatory duty needs) across rounds.
+  """
+
+  def extract_from_message(
+      self,
+      message: str,
+      require_agree_tag: bool = True,
+  ) -> str | None:
+    return None  # statute is fixed; nothing is extracted from agent chat
+
+  def set_contract(
+      self,
+      content: str,
+      agreed_at_round: int,
+      agent_names: list[str],
+  ) -> None:
+    self._execution_state = {}
+    self._contract = FormalContract(
+        contract_type=ContractType.DDL_LAW,
+        content=content,
+        proposer="regulator",
+        round_created=agreed_at_round,
+        enforcement_status="active",
+        agent_names=agent_names,
+        conversation_history=list(self._conversation),
+    )
+
+  def get_enforcer(self) -> ContractEnforcer:
+    from .deontic_enforcer import DeonticLawEnforcer
+
+    return DeonticLawEnforcer()
+
+
 class NoCommsManager(ContractManager):
   def extract_from_message(
       self,

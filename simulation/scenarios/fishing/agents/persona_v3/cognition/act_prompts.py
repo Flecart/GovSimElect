@@ -47,6 +47,7 @@ async def aprompt_action_choose_amount_of_fish_to_catch(
   #   contract_mode = {
   mode_text = {
       "code_law": "The constitution describes specific rules for the community. It will be enforced at its best effort.",
+      "code_ddl": "The constitution is a binding statute, automatically and strictly enforced each month by a formal legal reasoner: any catch above your share is confiscated and fined, and repeat offenders owe a heightened duty of restraint.",
       "code_nl": "The constitution describes general rules of the community. It won't be enforced.",
   }
 #   svo_prompt, _, leader_prompt = leaders_lib.get_leader_persona_prompts(agent)

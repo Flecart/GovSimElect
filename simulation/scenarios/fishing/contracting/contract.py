@@ -7,6 +7,7 @@ from typing import Any
 
 class ContractMode(str, Enum):
   CODE_LAW = "code_law"
+  CODE_DDL = "code_ddl"  # fixed defeasible-deontic statute, adjudicated by `deontic`
   CODE_NL = "code_nl"
   FREE_CHAT = "free_chat"
   GOVSIM = "govsim"
@@ -21,6 +22,7 @@ class NegotiationProtocol(str, Enum):
 class ContractType(str, Enum):
   NATURAL_LANGUAGE = "nl"
   PYTHON_LAW = "python_law"
+  DDL_LAW = "ddl_law"  # defeasible-deontic statute (.ddl), adjudicated by `deontic`
   NO_CONTRACT = "no_contract"
 
 
