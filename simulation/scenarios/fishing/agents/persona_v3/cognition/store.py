@@ -1,6 +1,6 @@
 from simulation.persona.cognition import StoreComponent
 from simulation.persona.common import ChatObservation, PersonaIdentity
-from simulation.persona.memory.associative_memory import AssociativeMemory
+from simulation.persona.memory import MemoryBackend
 from simulation.utils import ModelWandbWrapper
 
 from .store_prompts import (
@@ -22,10 +22,10 @@ class FishingStoreComponent(StoreComponent):
         self,
         model: ModelWandbWrapper,
         model_framework: ModelWandbWrapper,
-        associative_memory: AssociativeMemory,
+        memory_backend: MemoryBackend,
         cfg,
     ) -> None:
-        super().__init__(model, model_framework, associative_memory, cfg)
+        super().__init__(model, model_framework, memory_backend, cfg)
         self.prompt_importance_thought = prompt_importance_thought
         self.prompt_importance_chat = prompt_importance_chat
         self.prompt_importance_event = prompt_importance_event

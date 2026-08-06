@@ -2,6 +2,8 @@ code_version: v7.0
 group_name: ''
 
 llm:
+  # openai uses the direct SDK; openai_agents uses the OpenAI Agents SDK.
+  runtime: openai
   path: openai/gpt-4o-mini
   backend: OpenRouter
   render: false

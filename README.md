@@ -1,10 +1,10 @@
-# AgentElect + GT-HarmBench
+# GovSim + GT-HarmBench
 
 This repository bundles **two groups of experiments** in a single tree (so the anonymization platform can ingest everything in one shot). Each group has its own setup procedure — pick the one you need.
 
 | Group | What it studies | Where it lives | Setup |
 |---|---|---|---|
-| **1. AgentElect** | Governance of the commons under elections (extends [GovSim](https://github.com/giorgiopiatti/GovSim) with leader selection, SVO, stochastic regeneration, contracting). | this repo's root | [Group 1 setup](#group-1-setup--agentelect) |
+| **1. GovSim** | Governance of the commons with private persona memory, SVO, stochastic regeneration, and contracting. | this repo's root | [Group 1 setup](#group-1-setup--govsim) |
 | **2. GT-HarmBench** | Game-theoretic AI safety benchmark (Prisoner's Dilemma / Stag Hunt / Coordination, with contracting and moral-hazard variants). | `external/gt-harmbench/` (vendored subtree) | [Group 2 setup](#group-2-setup--gt-harmbench) |
 
 The two groups are independent — you do not need to set up both to run either one.
@@ -13,13 +13,13 @@ The two groups are independent — you do not need to set up both to run either 
 
 ---
 
-## Group 1 setup — AgentElect
+## Group 1 setup — GovSim
 
 Clone and enter the repo:
 
 ```bash
 git clone <this-repo-url>
-cd AgentElect
+cd GovSim
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -32,6 +32,7 @@ pip install -r requirements.txt
 - For API-backed runs:
   - OpenAI models use `OPENAI_API_KEY`
   - OpenRouter models use `OPENROUTER_API_KEY`
+  - Mem0 Platform memory uses `MEM0_API_KEY`
 
 Example:
 
@@ -39,6 +40,25 @@ Example:
 export OPENAI_API_KEY="..."
 export OPENROUTER_API_KEY="..."
 ```
+
+### Agent runtime and memory
+
+The simulation has four environment phases: harvest, post-harvest pool,
+restaurant, and home. The election runner has been removed.
+
+Persona memory is backed by Mem0 and isolated with a different run-scoped
+`user_id` for every persona. The default uses local Mem0. Select Mem0 Platform
+or the OpenAI Agents SDK with Hydra overrides:
+
+```bash
+python -m simulation.main \
+  llm.runtime=openai_agents \
+  llm.backend=OpenAI \
+  experiment.agent.memory.mode=platform
+```
+
+`llm.runtime=openai` keeps the direct SDK path. `openai_agents` currently
+requires the OpenAI backend.
 
 ### Full reproducibility model sweeps (OpenAI + OpenRouter)
 

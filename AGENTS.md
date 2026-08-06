@@ -3,7 +3,6 @@
 ## Repo overview
 - `simulation/`: main GovSim and GovSimElect execution paths, Hydra configs, scenario logic, persona code, analysis helpers, and model wrappers.
 - `simulation/main.py`: baseline multi-scenario entrypoint.
-- `simulation/main_elect.py`: election-focused entrypoint; currently wired to the fishing election scenario.
 - `simulation/scenarios/`: scenario-specific configs and runtime logic.
 - `llm_judge/`: separate judging/classification utility package.
 - `subskills/`: older scenario-specific runners and analysis scripts.
@@ -18,7 +17,6 @@
 - Install baseline deps: `bash setup.sh`
 - Install vLLM variant: `bash setup_vllm.sh`
 - Run baseline simulation: `python -m simulation.main`
-- Run election simulation: `python -m simulation.main_elect`
 
 ## Validation guidance
 - For changes under `simulation/utils/` or shared experiment plumbing, prefer `python3 -m compileall simulation subskills` unless a narrower check is more appropriate.

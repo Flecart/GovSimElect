@@ -8,7 +8,7 @@ from simulation.persona.common import PersonaAction
 from simulation.persona.common import PersonaActionChat
 from simulation.persona.common import PersonaActionHarvesting
 from simulation.persona.common import PersonaIdentity
-from simulation.persona.memory import AssociativeMemory
+from simulation.persona.memory import build_memory
 from simulation.scenarios.common.environment import HarvestingObs
 from simulation.scenarios.fishing.agents.persona_v3.cognition import FishingActComponent
 from simulation.scenarios.fishing.agents.persona_v3.cognition import FishingConverseComponent
@@ -35,7 +35,7 @@ class FishingPersona(PersonaAgent):
       model: ModelWandbWrapper,
       framework_model: ModelWandbWrapper,
       base_path: str,
-      memory_cls: type[AssociativeMemory] = AssociativeMemory,
+      memory_factory=build_memory,
       perceive_cls: type[PerceiveComponent] = PerceiveComponent,
       retrieve_cls: type[RetrieveComponent] = RetrieveComponent,
       store_cls: type[FishingStoreComponent] = FishingStoreComponent,
@@ -55,7 +55,7 @@ class FishingPersona(PersonaAgent):
         model,
         framework_model,
         base_path,
-        memory_cls,
+        memory_factory,
         perceive_cls,
         retrieve_cls,
         store_cls,

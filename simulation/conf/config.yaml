@@ -3,6 +3,8 @@ group_name: ''
 seed: 0
 
 llm:
+  # openai uses the direct SDK; openai_agents uses the OpenAI Agents SDK.
+  runtime: openai
   path: openai/gpt-4o
   backend: OpenAI
   render: false

@@ -164,6 +164,7 @@ class ModelWandbWrapper:
         top_p,
         seed,
         is_api=False,
+        runtime="openai",
     ) -> None:
         self.base_lm = base_lm
         self.render = render
@@ -175,6 +176,7 @@ class ModelWandbWrapper:
         self.top_p = top_p
         self.seed = seed
         self.is_api = is_api
+        self.runtime = runtime
         self.model_name = getattr(base_lm, "model_name", None)
         self.backend_name = getattr(base_lm, "backend_name", "OpenAI")
         self._async_client = None
@@ -235,6 +237,16 @@ class ModelWandbWrapper:
         top_p: float,
         stop: list[str] | str | None = None,
     ) -> tuple[str, int, int]:
+        if self.runtime == "openai_agents":
+            return await self._aagents_completion(
+                messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                stop=stop,
+            )
+        if self.runtime != "openai":
+            raise ValueError("llm.runtime must be 'openai' or 'openai_agents'")
         async with self._get_openai_semaphore():
             length_kwargs = self._completion_length_param(max_tokens)
             out = await self._get_async_client().chat.completions.create(
@@ -259,6 +271,59 @@ class ModelWandbWrapper:
         completion_tokens = (
             getattr(getattr(out, "usage", None), "completion_tokens", 0) or 0
         )
+        return response_text, prompt_tokens, completion_tokens
+
+    async def _aagents_completion(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        max_tokens: int,
+        temperature: float,
+        top_p: float,
+        stop: list[str] | str | None = None,
+    ) -> tuple[str, int, int]:
+        if (self.backend_name or "").lower() != "openai":
+            raise ValueError("The openai_agents runtime requires the OpenAI backend")
+        try:
+            from agents import Agent, ModelSettings, Runner
+        except ImportError as exc:
+            raise RuntimeError(
+                "The OpenAI Agents SDK runtime requires the 'openai-agents' package. "
+                "Install dependencies from requirements.txt."
+            ) from exc
+
+        instructions = "\n\n".join(
+            message["content"] for message in messages if message["role"] == "system"
+        ) or "Follow the supplied simulation prompt exactly."
+        agent_input = [
+            message for message in messages if message["role"] != "system"
+        ]
+        if not agent_input:
+            agent_input = [{"role": "user", "content": "Continue."}]
+
+        agent = Agent(
+            name="GovSim persona",
+            instructions=instructions,
+            model=self.model_name,
+            model_settings=ModelSettings(
+                temperature=temperature,
+                top_p=top_p,
+                max_tokens=max_tokens,
+            ),
+        )
+        async with self._get_openai_semaphore():
+            result = await Runner.run(agent, input=agent_input, max_turns=1)
+        response_text = str(result.final_output or "")
+        if stop:
+            stop_values = [stop] if isinstance(stop, str) else stop
+            indexes = [response_text.find(value) for value in stop_values]
+            indexes = [index for index in indexes if index >= 0]
+            if indexes:
+                response_text = response_text[:min(indexes)]
+
+        usage = getattr(getattr(result, "context_wrapper", None), "usage", None)
+        prompt_tokens = getattr(usage, "input_tokens", 0) or 0
+        completion_tokens = getattr(usage, "output_tokens", 0) or 0
         return response_text, prompt_tokens, completion_tokens
 
     def _complete_chain_sync(

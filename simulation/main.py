@@ -50,6 +50,7 @@ def main(cfg: DictConfig):
             top_p=llm_cfg.top_p,
             seed=cfg.seed,
             is_api=True,
+            runtime=OmegaConf.select(llm_cfg, "runtime", default="openai"),
         )
 
     if len(cfg.mix_llm) == 0:
@@ -69,6 +70,7 @@ def main(cfg: DictConfig):
             config_key = (
                 llm_config.path,
                 llm_config.backend,
+                OmegaConf.select(llm_config, "runtime", default="openai"),
                 llm_config.temperature,
                 llm_config.top_p,
             )
@@ -81,6 +83,7 @@ def main(cfg: DictConfig):
         config_key = (
             llm_framework_config.path,
             llm_framework_config.backend,
+            OmegaConf.select(llm_framework_config, "runtime", default="openai"),
             llm_framework_config.temperature,
             llm_framework_config.top_p,
         )

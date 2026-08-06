@@ -40,6 +40,13 @@ personas:
     name: Luke
 
 agent:
+  memory:
+    provider: mem0
+    mode: local  # local or platform (MEM0_API_KEY)
+    infer: false  # preserve the simulation's authored memory text
+    user_id_prefix: govsim
+    search_limit_multiplier: 4
+    config: {}
   agent_package: persona_v3
   system_prompt: v3
   cot_prompt: think_step_by_step

@@ -1,7 +1,7 @@
 import asyncio
 
 from simulation.persona.common import PersonaIdentity
-from simulation.persona.memory.associative_memory import Action, Chat, Event, Thought
+from simulation.persona.memory import MemoryRecord
 from simulation.utils import ModelWandbWrapper
 
 from .utils import extract_first_match
@@ -14,7 +14,7 @@ def _parse_significance(response: str, default: int = 5) -> int:
 
 
 async def aprompt_importance_chat(
-    model: ModelWandbWrapper, persona: PersonaIdentity, chat: Chat
+    model: ModelWandbWrapper, persona: PersonaIdentity, chat: MemoryRecord
 ):
     session = model.start_prompt(
         persona.name, "cognition_retrieve", "prompt_importance_chat"
@@ -37,13 +37,13 @@ async def aprompt_importance_chat(
 
 
 def prompt_importance_chat(
-    model: ModelWandbWrapper, persona: PersonaIdentity, chat: Chat
+    model: ModelWandbWrapper, persona: PersonaIdentity, chat: MemoryRecord
 ):
     return asyncio.run(aprompt_importance_chat(model, persona, chat))
 
 
 async def aprompt_importance_event(
-    model: ModelWandbWrapper, persona: PersonaIdentity, event: Event
+    model: ModelWandbWrapper, persona: PersonaIdentity, event: MemoryRecord
 ):
     session = model.start_prompt(persona.name, "cognition_perceive", "relevancy_event")
     session.add_user(
@@ -64,13 +64,13 @@ async def aprompt_importance_event(
 
 
 def prompt_importance_event(
-    model: ModelWandbWrapper, persona: PersonaIdentity, event: Event
+    model: ModelWandbWrapper, persona: PersonaIdentity, event: MemoryRecord
 ):
     return asyncio.run(aprompt_importance_event(model, persona, event))
 
 
 async def aprompt_importance_thought(
-    model: ModelWandbWrapper, persona: PersonaIdentity, thought: Thought
+    model: ModelWandbWrapper, persona: PersonaIdentity, thought: MemoryRecord
 ):
     session = model.start_prompt(
         persona.name, "cognition_retrieve", "prompt_importance_thought"
@@ -93,13 +93,13 @@ async def aprompt_importance_thought(
 
 
 def prompt_importance_thought(
-    model: ModelWandbWrapper, persona: PersonaIdentity, thought: Thought
+    model: ModelWandbWrapper, persona: PersonaIdentity, thought: MemoryRecord
 ):
     return asyncio.run(aprompt_importance_thought(model, persona, thought))
 
 
 async def aprompt_importance_action(
-    model: ModelWandbWrapper, persona: PersonaIdentity, action: Action
+    model: ModelWandbWrapper, persona: PersonaIdentity, action: MemoryRecord
 ):
     session = model.start_prompt(
         persona.name, "cognition_retrieve", "prompt_importance_action"
@@ -122,7 +122,7 @@ async def aprompt_importance_action(
 
 
 def prompt_importance_action(
-    model: ModelWandbWrapper, persona: PersonaIdentity, action: Action
+    model: ModelWandbWrapper, persona: PersonaIdentity, action: MemoryRecord
 ):
     return asyncio.run(aprompt_importance_action(model, persona, action))
 

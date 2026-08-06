@@ -5,6 +5,8 @@ import enum
 import os
 from typing import Any
 
+from omegaconf import OmegaConf
+
 from simulation.persona.common import (
     ChatObservation,
     PersonaAction,
@@ -22,7 +24,7 @@ from .cognition import (
     RetrieveComponent,
     StoreComponent,
 )
-from .memory import AssociativeMemory, Scratch
+from .memory import MemoryBackend, Scratch, build_memory
 
 
 # SVO Persona Types.
@@ -50,7 +52,7 @@ class PersonaAgent:
       model: ModelWandbWrapper,
       model_framework: ModelWandbWrapper,
       base_path: str,
-      memory_cls: type[AssociativeMemory] = AssociativeMemory,
+      memory_factory=build_memory,
       perceive_cls: type[PerceiveComponent] = PerceiveComponent,
       retrieve_cls: type[RetrieveComponent] = RetrieveComponent,
       store_cls: type[StoreComponent] = StoreComponent,
@@ -64,7 +66,12 @@ class PersonaAgent:
     os.makedirs(base_path, exist_ok=True)
 
     self.current_time = datetime.now()
-    self.memory = memory_cls(base_path)
+    memory_cfg = OmegaConf.select(
+        self.cfg,
+        "memory",
+        default={"provider": "mem0", "mode": "local", "config": {}},
+    )
+    self.memory: MemoryBackend = memory_factory(base_path, memory_cfg)
     self.perceive = perceive_cls(model, model_framework)
     self.retrieve = retrieve_cls(model, model_framework, self.memory)
     self.store = store_cls(
