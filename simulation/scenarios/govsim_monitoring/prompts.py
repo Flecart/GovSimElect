@@ -115,4 +115,4 @@ Proposed community norms:
 {proposals}
 
 Task: Vote for the proposal that should become the shared community norm.
-Return only the exact proposal text."""
+Return only its proposal number, with no other text."""

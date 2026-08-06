@@ -77,6 +77,15 @@ def parse_norms(response: str, current: str, group: str) -> tuple[str, str]:
   )
 
 
+def parse_proposal_vote(response: str, proposal_count: int, default: int = 0) -> int:
+  """Parse a one-based proposal number into a bounded zero-based index."""
+  match = re.search(r"\b(\d+)\b", response)
+  if not match:
+    return default
+  selected = int(match.group(1)) - 1
+  return selected if 0 <= selected < proposal_count else default
+
+
 def choose_winner(votes: dict[str, str], proposals: list[str], rng: random.Random) -> str:
   counts = collections.Counter(v for v in votes.values() if v in proposals)
   if not counts:
@@ -442,7 +451,9 @@ class GovSimMonitoringExperiment:
       proposals[fisher.name] = community
 
     unique = list(dict.fromkeys(proposals.values()))
-    proposal_block = "\n".join(f"- {proposal}" for proposal in unique)
+    proposal_block = "\n".join(
+        f"{index}. {proposal}" for index, proposal in enumerate(unique, start=1)
+    )
 
     async def vote(fisher: Fisher):
       prompt = VOTE_PROMPT.format(
@@ -452,10 +463,9 @@ class GovSimMonitoringExperiment:
           proposals=proposal_block,
       )
       response = await self._ask(
-          fisher, round_id, "community_vote", prompt, max_tokens=700, default=unique[0]
+          fisher, round_id, "community_vote", prompt, max_tokens=32, default="1"
       )
-      normalized = response.strip(" \"“”")
-      selected = next((proposal for proposal in unique if normalized == proposal), unique[0])
+      selected = unique[parse_proposal_vote(response, len(unique))]
       return fisher.name, selected
 
     votes = dict(await asyncio.gather(*(vote(fisher) for fisher in self.fishers)))

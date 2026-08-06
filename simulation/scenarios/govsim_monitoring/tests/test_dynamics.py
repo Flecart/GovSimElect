@@ -9,6 +9,7 @@ from simulation.scenarios.govsim_monitoring.run import (
     choose_winner,
     parse_harvest_choice,
     parse_norms,
+    parse_proposal_vote,
     parse_unit,
     parse_yes_no,
     update_efficiency,
@@ -53,7 +54,7 @@ class FakeWrapper:
             "Personal: Contribute fairly and harvest modestly.\n"
             "Community: Everyone contributes 0.2 and uses effort 0.2."
         ),
-        "community_vote": "Everyone contributes 0.2 and uses effort 0.2.",
+        "community_vote": "1",
     }
     response = responses[session.phase_name]
     session.add_assistant(response)
@@ -90,6 +91,13 @@ def test_long_personal_norm_preserves_following_community_norm():
   parsed_personal, parsed_community = parse_norms(response, "old personal", "old community")
   assert parsed_personal == personal
   assert parsed_community == "Everyone contributes at least 0.2."
+
+
+def test_proposal_votes_use_bounded_one_based_numbers():
+  assert parse_proposal_vote("2", 3) == 1
+  assert parse_proposal_vote("Proposal 3", 3) == 2
+  assert parse_proposal_vote("9", 3) == 0
+  assert parse_proposal_vote("no selection", 3) == 0
 
 
 def test_seeded_tie_breaking_is_reproducible():
