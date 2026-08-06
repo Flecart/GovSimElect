@@ -428,7 +428,7 @@ class GovSimMonitoringExperiment:
       )
       default = f"Personal: {fisher.norm}\nCommunity: {self.group_norm}"
       response = await self._ask(
-          fisher, round_id, "norm_proposal", prompt, max_tokens=350, default=default
+          fisher, round_id, "norm_proposal", prompt, max_tokens=1200, default=default
       )
       personal, community = parse_norms(response, fisher.norm, self.group_norm)
       return fisher, personal, community
@@ -452,7 +452,7 @@ class GovSimMonitoringExperiment:
           proposals=proposal_block,
       )
       response = await self._ask(
-          fisher, round_id, "community_vote", prompt, max_tokens=350, default=unique[0]
+          fisher, round_id, "community_vote", prompt, max_tokens=700, default=unique[0]
       )
       normalized = response.strip(" \"“”")
       selected = next((proposal for proposal in unique if normalized == proposal), unique[0])

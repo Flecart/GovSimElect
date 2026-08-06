@@ -8,6 +8,7 @@ from simulation.scenarios.govsim_monitoring.run import (
     GovSimMonitoringExperiment,
     choose_winner,
     parse_harvest_choice,
+    parse_norms,
     parse_unit,
     parse_yes_no,
     update_efficiency,
@@ -81,6 +82,14 @@ def test_action_parsers_are_bounded_and_have_safe_defaults():
   assert parse_unit("1.0") == 1
   assert parse_yes_no("yes") is True
   assert parse_yes_no("no") is False
+
+
+def test_long_personal_norm_preserves_following_community_norm():
+  personal = " ".join(["I will harvest carefully and contribute to maintenance."] * 80)
+  response = f"Personal: {personal}\nCommunity: Everyone contributes at least 0.2."
+  parsed_personal, parsed_community = parse_norms(response, "old personal", "old community")
+  assert parsed_personal == personal
+  assert parsed_community == "Everyone contributes at least 0.2."
 
 
 def test_seeded_tie_breaking_is_reproducible():

@@ -30,7 +30,7 @@ environment:
   max_rounds: 12
   carrying_capacity: 100
   initial_stock: 100
-  initial_wealth: 1
+  initial_wealth: 5
   collapse_threshold: 5
   consumption: 5
   initial_alpha: 0.1
