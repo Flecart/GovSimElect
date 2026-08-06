@@ -32,12 +32,12 @@ environment:
   initial_stock: 100
   initial_wealth: 1
   collapse_threshold: 5
-  consumption: 1
+  consumption: 5
   initial_alpha: 0.1
   maintenance_requirement: 1
   contribution_min: 0
   contribution_max: 1
-  punishment_penalty: 1
+  punishment_penalty: 6
   punishment_cost: 0
   regeneration:
     mode: doubling

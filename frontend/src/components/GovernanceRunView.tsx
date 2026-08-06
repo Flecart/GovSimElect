@@ -139,6 +139,7 @@ export const GovernanceRunView: React.FC<GovernanceRunViewProps> = ({
   const [phaseFilter, setPhaseFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [ledgerRound, setLedgerRound] = useState<number | null>(null);
+  const [normAgent, setNormAgent] = useState("");
 
   const agents = useMemo(() => {
     const values = new Set<string>();
@@ -167,6 +168,12 @@ export const GovernanceRunView: React.FC<GovernanceRunViewProps> = ({
       setAgentFilter("all");
     }
   }, [agentFilter, agents]);
+
+  useEffect(() => {
+    if ((!normAgent || !agents.includes(normAgent)) && agents.length > 0) {
+      setNormAgent(agents[0]);
+    }
+  }, [agents, normAgent]);
 
   const selectedRound = useMemo(
     () => rounds.find((round) => round.round === ledgerRound) ?? rounds[rounds.length - 1] ?? null,
@@ -202,6 +209,17 @@ export const GovernanceRunView: React.FC<GovernanceRunViewProps> = ({
     })),
     [rounds]
   );
+
+  const alphaSeries = useMemo(() => {
+    if (rounds.length === 0) return [];
+    return [
+      { month: 0, alpha: numeric(rounds[0].alpha_before, 0.1) },
+      ...rounds.map((round) => ({
+        month: round.round,
+        alpha: numeric(round.alpha_after)
+      }))
+    ];
+  }, [rounds]);
 
   const wealthSeries = useMemo(
     () => rounds.map((round) => {
@@ -286,6 +304,23 @@ export const GovernanceRunView: React.FC<GovernanceRunViewProps> = ({
             ) : <p className="cpr-empty">Wealth paths begin after the first round.</p>}
           </Card.Body>
         </Card>
+
+        <Card className="cpr-panel governance-alpha-panel">
+          <Card.Header><h2>Efficiency α by month</h2><p>Month 0 is the initial efficiency; each later point is the value after that month’s maintenance contributions.</p></Card.Header>
+          <Card.Body>
+            {alphaSeries.length > 0 ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={alphaSeries} margin={{ top: 12, right: 18, bottom: 4, left: 0 }}>
+                  <XAxis dataKey="month" allowDecimals={false} tickLine={false} axisLine={false} label={{ value: "Month", position: "insideBottomRight", offset: -2 }} />
+                  <YAxis domain={["dataMin - 0.01", "dataMax + 0.01"]} tickLine={false} axisLine={false} tickFormatter={(value) => Number(value).toFixed(3)} />
+                  <Tooltip labelFormatter={(month) => `Month ${month}`} formatter={(value) => [Number(value).toFixed(5), "Efficiency α"]} />
+                  <ReferenceLine y={numeric(rounds[0]?.alpha_before, 0.1)} stroke="#65756e" strokeDasharray="4 4" />
+                  <Line type="monotone" dataKey="alpha" name="Efficiency α" stroke="#8d5a97" strokeWidth={3} dot={{ r: 4, fill: "#fffdf6", strokeWidth: 2 }} activeDot={{ r: 6 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : <p className="cpr-empty">Alpha history begins after the first round.</p>}
+          </Card.Body>
+        </Card>
       </div>
 
       {selectedRound ? (
@@ -317,6 +352,29 @@ export const GovernanceRunView: React.FC<GovernanceRunViewProps> = ({
                   </button>
                 );
               })}
+            </div>
+          </Card.Body>
+        </Card>
+      ) : null}
+
+      {selectedRound ? (
+        <Card className="cpr-panel governance-norm-inspector">
+          <Card.Header>
+            <div className="governance-ledger-title">
+              <div><h2>Norm inspector</h2><p>Compare the public agreement with one fisher’s private operating norm for the selected month.</p></div>
+              <label>Fisher<select value={normAgent} onChange={(event) => setNormAgent(event.target.value)}>{agents.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
+            </div>
+          </Card.Header>
+          <Card.Body>
+            <div className="governance-norm-grid">
+              <section>
+                <span>Global norm · month {selectedRound.round}</span>
+                <blockquote>{selectedRound.group_norm || "No norm is currently choosen"}</blockquote>
+              </section>
+              <section className="governance-private-norm">
+                <span>{normAgent || "Fisher"} · private norm</span>
+                <blockquote>{selectedRound.personal_norms?.[normAgent] || "No private norm recorded for this month."}</blockquote>
+              </section>
             </div>
           </Card.Body>
         </Card>

@@ -1020,6 +1020,8 @@ details summary {
   background: rgb(36 75 90 / 0.045);
 }
 
+.governance-alpha-panel { grid-column: 1 / -1; }
+
 .governance-ledger-title {
   display: flex;
   align-items: end;
@@ -1078,6 +1080,34 @@ details summary {
 .governance-ledger-row span:nth-last-child(-n + 2) { text-align: left; }
 .governance-ledger-row i { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.45rem; border-radius: 50%; }
 
+.governance-norm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.governance-norm-grid section {
+  min-height: 11rem;
+  padding: 1.1rem;
+  border: 1px solid var(--cpr-rule);
+  background: #fffdf6;
+}
+
+.governance-norm-grid span {
+  color: #65756e;
+  font: 0.68rem ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.governance-norm-grid blockquote {
+  margin: 0.8rem 0 0;
+  color: #263830;
+  font: 1.08rem/1.6 "Iowan Old Style", "Palatino Linotype", serif;
+}
+
+.governance-private-norm { border-top: 4px solid var(--governance-gold) !important; }
+
 .governance-social-grid {
   display: grid;
   grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
@@ -1112,6 +1142,7 @@ details summary {
 @media (max-width: 900px) {
   .cpr-chart-grid { grid-template-columns: 1fr; }
   .governance-social-grid { grid-template-columns: 1fr; }
+  .governance-norm-grid { grid-template-columns: 1fr; }
   .cpr-filters { grid-template-columns: repeat(2, 1fr); }
   .cpr-metric-ribbon { grid-template-columns: repeat(2, 1fr); }
 }
