@@ -17,7 +17,9 @@ from simulation.utils import (
 )
 
 
-load_dotenv()
+# The repository-local file is the requested credential source for experiments;
+# replace stale parent-shell values so chat and Mem0 embeddings use one key.
+load_dotenv(override=True)
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
