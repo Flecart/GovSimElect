@@ -1,0 +1,81 @@
+name: govsim_monitoring_${code_version}/${group_name}
+run_name: ""
+storage_name: ""
+scenario: govsim_monitoring
+seed: ${seed}
+
+defaults:
+  - persona@personas.persona_0: baseline_fisherman
+  - persona@personas.persona_1: baseline_fisherman
+  - persona@personas.persona_2: baseline_fisherman
+  - persona@personas.persona_3: baseline_fisherman
+  - persona@personas.persona_4: baseline_fisherman
+
+personas:
+  num: 5
+  persona_0:
+    name: John
+  persona_1:
+    name: Kate
+  persona_2:
+    name: Jack
+  persona_3:
+    name: Emma
+  persona_4:
+    name: Luke
+
+initial_group_norm: No norm is currently choosen
+
+environment:
+  max_rounds: 12
+  carrying_capacity: 100
+  initial_stock: 100
+  initial_wealth: 1
+  collapse_threshold: 5
+  consumption: 1
+  initial_alpha: 0.1
+  maintenance_requirement: 1
+  contribution_min: 0
+  contribution_max: 1
+  punishment_penalty: 1
+  punishment_cost: 0
+  regeneration:
+    mode: doubling
+
+monitoring:
+  target_selection: uniform_random
+  reveal:
+    - effort
+    - contribution
+    - harvest
+  direct_cost: 0
+
+discussion:
+  max_steps: 10
+
+group_decision:
+  proposal_type: natural_language
+  tie_breaking: random
+
+llm:
+  temperature: ${llm.temperature}
+  top_p: ${llm.top_p}
+  provider_routing:
+    order:
+      - amazon-bedrock
+    allow_fallbacks: false
+
+memory:
+  provider: mem0
+  mode: local
+  infer: false
+  user_id_prefix: govsim-monitoring
+  search_limit_multiplier: 4
+  top_k: 8
+  config:
+    embedder:
+      provider: openai
+      config:
+        model: openai/text-embedding-3-small
+        openai_base_url: https://openrouter.ai/api/v1
+        embedding_dims: 1536

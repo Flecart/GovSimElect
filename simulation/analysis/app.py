@@ -392,6 +392,21 @@ def _load_single_cpr_rounds(path):
     ]
 
 
+def _load_consolidated_scenario(path):
+    for record in _load_json_lines(path):
+        if record.get("type") != "initialization":
+            continue
+        data = record.get("data")
+        if isinstance(data, dict):
+            scenario = data.get("scenario")
+            if scenario:
+                return str(scenario)
+            config = data.get("config")
+            if isinstance(config, dict) and config.get("scenario"):
+                return str(config["scenario"])
+    return None
+
+
 def _load_cpr_summary(path):
     if not os.path.exists(path):
         return None
@@ -761,17 +776,33 @@ def api_result_subset_run(subset_name, run_id):
     run_records = _load_single_run_records(log_path)
     contracting_data = _load_single_contracting_events(contracting_path)
     fishing_summary = _write_fishing_run_summary_json(base_path, run_group, run_name)
-    is_cpr = os.path.exists(cpr_path)
+    consolidated_scenario = (
+        _load_consolidated_scenario(cpr_path) if os.path.exists(cpr_path) else None
+    )
+    is_cpr = consolidated_scenario == "cpr_norms"
+    is_governance = consolidated_scenario == "govsim_monitoring"
+    consolidated_rounds = (
+        _load_single_cpr_rounds(cpr_path) if os.path.exists(cpr_path) else []
+    )
+    consolidated_messages = (
+        _load_json_lines(cpr_messages_path) if os.path.exists(cpr_messages_path) else []
+    )
+    consolidated_summary = (
+        _load_cpr_summary(cpr_summary_path) if os.path.exists(cpr_summary_path) else None
+    )
 
     response = {
         "run": run_row,
-        "scenario": "cpr_norms" if is_cpr else "fishing",
+        "scenario": consolidated_scenario or "fishing",
         "run_data": run_records,
         "contracting_data": contracting_data,
         "fishing_summary": fishing_summary,
-        "cpr_rounds": _load_single_cpr_rounds(cpr_path) if is_cpr else [],
-        "cpr_messages": _load_json_lines(cpr_messages_path) if is_cpr else [],
-        "cpr_summary": _load_cpr_summary(cpr_summary_path) if is_cpr else None,
+        "cpr_rounds": consolidated_rounds if is_cpr else [],
+        "cpr_messages": consolidated_messages if is_cpr else [],
+        "cpr_summary": consolidated_summary if is_cpr else None,
+        "governance_rounds": consolidated_rounds if is_governance else [],
+        "governance_messages": consolidated_messages if is_governance else [],
+        "governance_summary": consolidated_summary if is_governance else None,
     }
     _run_response_cache[cache_key] = {
         "fingerprint": cache_fingerprint,

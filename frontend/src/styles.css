@@ -996,8 +996,122 @@ details summary {
 .cpr-message pre { margin: 0; overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; font: 0.78rem/1.55 ui-monospace, "Cascadia Mono", monospace; }
 .cpr-empty { padding: 2rem; color: #718078; text-align: center; font: italic 1rem "Iowan Old Style", "Palatino Linotype", serif; }
 
+.governance-view {
+  --governance-blue: #244b5a;
+  --governance-gold: #d09b2c;
+}
+
+.governance-hero {
+  background:
+    linear-gradient(105deg, rgb(36 75 90 / 0.94), rgb(20 67 67 / 0.96)),
+    repeating-linear-gradient(90deg, transparent 0 38px, rgb(255 255 255 / 0.04) 39px 40px);
+}
+
+.governance-agent-stamp {
+  padding: 0.18rem 0.45rem;
+  border: 1px solid;
+  color: #263830;
+  background: #fffdf6;
+  font-weight: 700;
+}
+
+.governance-message--system {
+  border-left: 4px solid var(--governance-blue);
+  background: rgb(36 75 90 / 0.045);
+}
+
+.governance-ledger-title {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.governance-ledger-title label {
+  display: grid;
+  gap: 0.25rem;
+  color: #65756e;
+  font: 0.65rem ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.governance-ledger-title select {
+  min-width: 6rem;
+  padding: 0.45rem;
+  border: 1px solid var(--cpr-rule);
+  background: #fffdf6;
+}
+
+.governance-ledger { overflow-x: auto; }
+.governance-ledger-head,
+.governance-ledger-row {
+  display: grid;
+  grid-template-columns: 1fr repeat(5, minmax(64px, 0.65fr)) minmax(240px, 2fr) minmax(120px, 1fr);
+  min-width: 1060px;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.governance-ledger-head {
+  padding: 0 0.7rem 0.45rem;
+  color: #708078;
+  font: 0.62rem ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.governance-ledger-row {
+  width: 100%;
+  padding: 0.62rem 0.7rem;
+  border: 0;
+  border-top: 1px solid var(--cpr-rule);
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: 0.78rem "Avenir Next", "Gill Sans", sans-serif;
+  text-align: right;
+}
+
+.governance-ledger-row:hover { background: rgb(36 75 90 / 0.06); }
+.governance-ledger-row span:first-child { text-align: left; font-weight: 700; }
+.governance-ledger-row span:nth-last-child(-n + 2) { text-align: left; }
+.governance-ledger-row i { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.45rem; border-radius: 50%; }
+
+.governance-social-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 1rem;
+}
+
+.governance-discussion {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.governance-discussion li {
+  padding: 0.75rem;
+  border-left: 3px solid var(--governance-gold);
+  background: rgb(208 155 44 / 0.07);
+}
+.governance-discussion p { margin: 0.25rem 0 0; line-height: 1.5; }
+
+.governance-proposals { display: grid; gap: 0.65rem; }
+.governance-proposals > div {
+  padding: 0.7rem;
+  border: 1px solid var(--cpr-rule);
+  background: #fffdf6;
+}
+.governance-proposals span,
+.governance-proposals small { color: #65756e; }
+.governance-proposals p { margin: 0.35rem 0; font: 1rem/1.45 "Iowan Old Style", "Palatino Linotype", serif; }
+
 @media (max-width: 900px) {
   .cpr-chart-grid { grid-template-columns: 1fr; }
+  .governance-social-grid { grid-template-columns: 1fr; }
   .cpr-filters { grid-template-columns: repeat(2, 1fr); }
   .cpr-metric-ribbon { grid-template-columns: repeat(2, 1fr); }
 }

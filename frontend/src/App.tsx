@@ -9,6 +9,12 @@ import {
   CPRRunView,
   CPRSummary
 } from "./components/CPRRunView";
+import {
+  GovernanceExchange,
+  GovernanceRound,
+  GovernanceRunView,
+  GovernanceSummary
+} from "./components/GovernanceRunView";
 
 interface ApiSubsetsResponse {
   subsets: string[];
@@ -46,6 +52,9 @@ interface ApiRunResponse {
   cpr_rounds?: CPRRound[];
   cpr_messages?: CPRExchange[];
   cpr_summary?: CPRSummary | null;
+  governance_rounds?: GovernanceRound[];
+  governance_messages?: GovernanceExchange[];
+  governance_summary?: GovernanceSummary | null;
 }
 
 interface RunOption {
@@ -147,6 +156,9 @@ export const App: React.FC = () => {
   const [cprRounds, setCprRounds] = useState<CPRRound[]>([]);
   const [cprMessages, setCprMessages] = useState<CPRExchange[]>([]);
   const [cprSummary, setCprSummary] = useState<CPRSummary | null>(null);
+  const [governanceRounds, setGovernanceRounds] = useState<GovernanceRound[]>([]);
+  const [governanceMessages, setGovernanceMessages] = useState<GovernanceExchange[]>([]);
+  const [governanceSummary, setGovernanceSummary] = useState<GovernanceSummary | null>(null);
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
@@ -510,6 +522,9 @@ export const App: React.FC = () => {
       setCprRounds([]);
       setCprMessages([]);
       setCprSummary(null);
+      setGovernanceRounds([]);
+      setGovernanceMessages([]);
+      setGovernanceSummary(null);
       setLoadingRun(false);
       return;
     }
@@ -538,6 +553,9 @@ export const App: React.FC = () => {
         setCprRounds(data.cpr_rounds ?? []);
         setCprMessages(data.cpr_messages ?? []);
         setCprSummary(data.cpr_summary ?? null);
+        setGovernanceRounds(data.governance_rounds ?? []);
+        setGovernanceMessages(data.governance_messages ?? []);
+        setGovernanceSummary(data.governance_summary ?? null);
         setLastUpdatedAt(Date.now());
       } catch (e) {
         if (cancelled) return;
@@ -588,6 +606,9 @@ export const App: React.FC = () => {
         setCprRounds([]);
         setCprMessages([]);
         setCprSummary(null);
+        setGovernanceRounds([]);
+        setGovernanceMessages([]);
+        setGovernanceSummary(null);
       }}
       activePath={activePath}
       canNavigateUp={Boolean(activePath)}
@@ -626,6 +647,9 @@ export const App: React.FC = () => {
         setCprRounds([]);
         setCprMessages([]);
         setCprSummary(null);
+        setGovernanceRounds([]);
+        setGovernanceMessages([]);
+        setGovernanceSummary(null);
         setActiveRun(run);
         setSelectedRuns((prev) =>
           prev.includes(run) ? prev : [...prev, run]
@@ -642,11 +666,13 @@ export const App: React.FC = () => {
   const main = (
     <div className="main">
       <header className="main-header">
-        <h1>{activeScenario === "cpr_norms" ? "Commons Field Observatory" : "GovSim Agent Explorer"}</h1>
+        <h1>{activeScenario === "cpr_norms" ? "Commons Field Observatory" : activeScenario === "govsim_monitoring" ? "GovSim Civic Lake Observatory" : "GovSim Agent Explorer"}</h1>
         <p>
           {activeScenario === "cpr_norms"
             ? "Inspect the lake, evolving norms, sanctions, private learning, and every model exchange."
-            : "Visualise simulation runs, formal contract negotiations, code-law drafts, tool use, and round-by-round fishing execution."}
+            : activeScenario === "govsim_monitoring"
+              ? "Trace maintenance, private monitoring, punishment, public discussion, evolving norms, and every model exchange."
+              : "Visualise simulation runs, formal contract negotiations, code-law drafts, tool use, and round-by-round fishing execution."}
         </p>
         {lastUpdatedAt && (
           <p className="main-subtle">
@@ -696,6 +722,13 @@ export const App: React.FC = () => {
             rounds={cprRounds}
             messages={cprMessages}
             summary={cprSummary}
+          />
+        ) : activeScenario === "govsim_monitoring" && activeRun ? (
+          <GovernanceRunView
+            runName={runLabelByKey[activeRun] ?? activeRun}
+            rounds={governanceRounds}
+            messages={governanceMessages}
+            summary={governanceSummary}
           />
         ) : (
           <RunView

@@ -143,6 +143,17 @@ def main(cfg: DictConfig):
                     wrapper_coding,
                     experiment_storage,
                 )
+            elif cfg.experiment.scenario == "govsim_monitoring":
+                from .scenarios.govsim_monitoring.run import run as run_govsim_monitoring
+
+                await run_govsim_monitoring(
+                    cfg.experiment,
+                    logger,
+                    wrappers,
+                    wrapper_framework,
+                    wrapper_coding,
+                    experiment_storage,
+                )
             else:
                 raise ValueError(f"Unknown experiment.scenario: {cfg.experiment.scenario}")
         finally:
