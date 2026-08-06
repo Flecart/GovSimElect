@@ -46,6 +46,27 @@ def test_personas_use_distinct_private_user_ids(tmp_path):
   assert kwargs["infer"] is False
 
 
+def test_local_personas_use_one_run_scoped_storage_path(tmp_path):
+  configs = []
+
+  def factory(_mode, config):
+    configs.append(config)
+    return FakeMem0Client()
+
+  for persona in ("persona_0", "persona_1"):
+    Mem0Memory(
+        str(tmp_path / persona),
+        {"mode": "local", "config": {}},
+        client_factory=factory,
+    )
+
+  paths = [config["vector_store"]["config"]["path"] for config in configs]
+  histories = [config["history_db_path"] for config in configs]
+  assert len(set(paths)) == 1
+  assert len(set(histories)) == 1
+  assert paths[0].endswith("/mem0/qdrant")
+
+
 def test_platform_search_is_filtered_and_drops_chat_and_expired_memory(tmp_path):
   now = datetime(2026, 1, 10)
   client = FakeMem0Client([

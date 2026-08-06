@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
@@ -30,6 +31,8 @@ class Mem0Memory:
   This is the privacy boundary: every Mem0 operation is filtered to that id.
   """
 
+  _local_clients: dict[str, Any] = {}
+
   def __init__(
       self,
       base_path: str,
@@ -47,8 +50,27 @@ class Mem0Memory:
     self.user_id = f"{prefix}:{Path(base_path).name}:{path_digest}"
     self._always_include: list[MemoryRecord] = []
 
+    client_config = deepcopy(_plain_config(config.get("config")))
+    if self.mode == "local":
+      shared_storage = Path(base_path).resolve().parent / "mem0"
+      vector_store = client_config.setdefault("vector_store", {})
+      vector_store.setdefault("provider", "qdrant")
+      vector_config = vector_store.setdefault("config", {})
+      vector_config.setdefault(
+          "path", str(shared_storage / "qdrant")
+      )
+      client_config.setdefault(
+          "history_db_path", str(shared_storage / "history.db")
+      )
+
     factory = client_factory or self._create_client
-    self.client = factory(self.mode, _plain_config(config.get("config")))
+    if self.mode == "local" and client_factory is None:
+      client_key = str(Path(base_path).resolve().parent)
+      if client_key not in self._local_clients:
+        self._local_clients[client_key] = factory(self.mode, client_config)
+      self.client = self._local_clients[client_key]
+    else:
+      self.client = factory(self.mode, client_config)
 
   @staticmethod
   def _create_client(mode: str, config: dict[str, Any]):

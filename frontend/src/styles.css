@@ -789,3 +789,228 @@ details summary {
     grid-template-columns: 1fr;
   }
 }
+
+/* CPR field observatory */
+.cpr-view {
+  --cpr-ink: #17342d;
+  --cpr-water: #177e89;
+  --cpr-rust: #e96d38;
+  --cpr-rule: rgb(23 52 45 / 0.16);
+  color: var(--cpr-ink);
+  font-family: "Avenir Next", "Gill Sans", sans-serif;
+}
+
+.cpr-view .card {
+  border-radius: 0.25rem;
+  border-color: var(--cpr-rule);
+  box-shadow: 8px 10px 0 rgb(23 52 45 / 0.07);
+  background:
+    linear-gradient(rgb(255 253 246 / 0.94), rgb(255 253 246 / 0.94)),
+    repeating-linear-gradient(0deg, transparent 0 25px, rgb(23 52 45 / 0.05) 25px 26px);
+}
+
+.cpr-hero {
+  position: relative;
+  overflow: hidden;
+  color: #f9f5e8;
+  border: 0 !important;
+  background:
+    radial-gradient(circle at 83% 20%, rgb(233 109 56 / 0.5), transparent 22%),
+    linear-gradient(118deg, #17342d 0 63%, #235a53 63% 100%) !important;
+  box-shadow: 10px 12px 0 rgb(23 52 45 / 0.15) !important;
+}
+
+.cpr-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.17;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(112deg, transparent 0 19px, #fff 20px 21px);
+}
+
+.cpr-hero .card-body { position: relative; z-index: 1; }
+.cpr-hero-grid,
+.cpr-transcript-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+
+.cpr-overline,
+.cpr-message-role,
+.cpr-current-norm > span,
+.cpr-metric-ribbon span {
+  display: block;
+  font-family: ui-monospace, "Cascadia Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.cpr-hero h1 {
+  margin: 0.35rem 0 0;
+  max-width: 720px;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: clamp(2rem, 4vw, 4.25rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.045em;
+}
+
+.cpr-lede { margin: 0.8rem 0 0; color: #d7e5da; font-size: 0.9rem; }
+.cpr-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgb(255 255 255 / 0.28);
+  font: 0.72rem ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.cpr-status-light {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: #a8d5a2;
+  box-shadow: 0 0 0 4px rgb(168 213 162 / 0.18);
+  animation: cpr-pulse 2s ease-in-out infinite;
+}
+
+.cpr-status--danger .cpr-status-light { background: #ff806d; box-shadow: 0 0 0 4px rgb(255 128 109 / 0.18); }
+@keyframes cpr-pulse { 50% { opacity: 0.45; } }
+
+.cpr-metric-ribbon {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(100px, 1fr));
+  gap: 1px;
+  margin-top: 1.6rem;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.22);
+}
+
+.cpr-metric-ribbon > div { padding: 0.85rem; background: rgb(16 42 36 / 0.78); }
+.cpr-metric-ribbon span { color: #abc9bd; }
+.cpr-metric-ribbon strong {
+  display: block;
+  margin-top: 0.2rem;
+  font: 500 1.85rem "Iowan Old Style", "Palatino Linotype", serif;
+}
+.cpr-metric-ribbon small { margin-left: 0.2rem; color: #abc9bd; font-size: 0.75rem; }
+.cpr-current-norm { margin-top: 1.25rem; padding-left: 1rem; border-left: 4px solid var(--cpr-rust); }
+.cpr-current-norm > span { color: #abc9bd; }
+.cpr-current-norm blockquote { margin: 0.35rem 0 0; font: italic 1.2rem "Iowan Old Style", "Palatino Linotype", serif; }
+
+.cpr-chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.cpr-panel .card-header h2 { margin: 0; font: 600 1.55rem "Iowan Old Style", "Palatino Linotype", serif; }
+.cpr-panel .card-header p { margin: 0.15rem 0 0; color: #65756e; font-size: 0.78rem; }
+.cpr-ledger { display: grid; gap: 0.25rem; }
+.cpr-ledger-head,
+.cpr-ledger-row {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(4, minmax(70px, 1fr));
+  gap: 0.7rem;
+  align-items: center;
+  text-align: right;
+}
+
+.cpr-ledger-head {
+  padding: 0 0.7rem 0.4rem;
+  color: #708078;
+  font: 0.65rem ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cpr-ledger-row {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 0;
+  border-bottom: 1px solid var(--cpr-rule);
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.cpr-ledger-row:hover { background: rgb(23 126 137 / 0.07); }
+.cpr-ledger-head span:first-child,
+.cpr-ledger-row span:first-child { text-align: left; }
+.cpr-ledger-row i { display: inline-block; width: 0.55rem; height: 0.55rem; margin-right: 0.5rem; border-radius: 50%; }
+.cpr-transcript-panel { margin-bottom: 2rem; }
+.cpr-transcript-title > span {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--cpr-rule);
+  font: 0.72rem ui-monospace, "Cascadia Mono", monospace;
+}
+
+.cpr-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(130px, 0.6fr)) minmax(220px, 1.4fr);
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--cpr-rule);
+  background: rgb(23 52 45 / 0.04);
+}
+
+.cpr-filters label {
+  display: grid;
+  gap: 0.3rem;
+  color: #5c6d65;
+  font: 0.66rem ui-monospace, "Cascadia Mono", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.cpr-filters select,
+.cpr-filters input {
+  min-width: 0;
+  padding: 0.55rem 0.6rem;
+  border: 1px solid rgb(23 52 45 / 0.25);
+  border-radius: 0;
+  color: var(--cpr-ink);
+  background: #fffdf6;
+  font: 0.8rem "Avenir Next", "Gill Sans", sans-serif;
+}
+
+.cpr-exchange-list { display: grid; gap: 0.8rem; max-height: 900px; margin-top: 0.9rem; padding-right: 0.35rem; overflow-y: auto; }
+.cpr-exchange { content-visibility: auto; contain-intrinsic-size: 0 420px; border: 1px solid var(--cpr-rule); background: #fffdf6; }
+.cpr-exchange-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--cpr-rule);
+  color: #607169;
+  background: rgb(23 52 45 / 0.05);
+  font: 0.68rem ui-monospace, "Cascadia Mono", monospace;
+  text-transform: uppercase;
+}
+
+.cpr-agent-stamp { padding: 0.2rem 0.4rem; color: #fffdf6; background: var(--cpr-ink); }
+.cpr-sequence { margin-left: auto; }
+.cpr-message { padding: 0.75rem; }
+.cpr-message + .cpr-message { border-top: 1px dashed var(--cpr-rule); }
+.cpr-message--response { border-left: 4px solid var(--cpr-rust); }
+.cpr-message-role { margin-bottom: 0.45rem; color: #74837c; }
+.cpr-message pre { margin: 0; overflow: visible; white-space: pre-wrap; overflow-wrap: anywhere; font: 0.78rem/1.55 ui-monospace, "Cascadia Mono", monospace; }
+.cpr-empty { padding: 2rem; color: #718078; text-align: center; font: italic 1rem "Iowan Old Style", "Palatino Linotype", serif; }
+
+@media (max-width: 900px) {
+  .cpr-chart-grid { grid-template-columns: 1fr; }
+  .cpr-filters { grid-template-columns: repeat(2, 1fr); }
+  .cpr-metric-ribbon { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 620px) {
+  .cpr-hero-grid { display: grid; }
+  .cpr-status { justify-self: start; }
+  .cpr-filters { grid-template-columns: 1fr; }
+  .cpr-ledger { overflow-x: auto; }
+  .cpr-ledger-head,
+  .cpr-ledger-row { min-width: 560px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cpr-status-light { animation: none; }
+}

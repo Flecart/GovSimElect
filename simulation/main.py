@@ -42,6 +42,13 @@ def main(cfg: DictConfig):
             seed=cfg.seed,
             backend_name=llm_cfg.backend,
         )
+        provider_routing = OmegaConf.select(
+            cfg.experiment,
+            "llm.provider_routing",
+            default=OmegaConf.select(llm_cfg, "provider_routing", default={}),
+        )
+        if OmegaConf.is_config(provider_routing):
+            provider_routing = OmegaConf.to_container(provider_routing, resolve=True)
         return ModelWandbWrapper(
             model,
             render=llm_cfg.render,
@@ -51,6 +58,7 @@ def main(cfg: DictConfig):
             seed=cfg.seed,
             is_api=True,
             runtime=OmegaConf.select(llm_cfg, "runtime", default="openai"),
+            provider_routing=provider_routing,
         )
 
     if len(cfg.mix_llm) == 0:

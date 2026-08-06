@@ -37,6 +37,10 @@ environment:
 llm:
   temperature: ${llm.temperature}
   top_p: ${llm.top_p}
+  provider_routing:
+    order:
+      - amazon-bedrock
+    allow_fallbacks: false
 
 memory:
   provider: mem0
@@ -45,4 +49,10 @@ memory:
   user_id_prefix: paper-cpr
   search_limit_multiplier: 4
   top_k: 5
-  config: {}
+  config:
+    embedder:
+      provider: openai
+      config:
+        model: openai/text-embedding-3-small
+        openai_base_url: https://openrouter.ai/api/v1
+        embedding_dims: 1536

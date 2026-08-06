@@ -86,6 +86,23 @@ python -m simulation.main experiment=paper_cpr_harsh_selfish_full \
   experiment.environment.regeneration.mode=doubling
 ```
 
+The paper condition routes `anthropic/claude-sonnet-4` to Amazon Bedrock first
+when the root LLM backend is OpenRouter. If that provider-specific request
+fails, the runner emits a warning once and uses standard OpenRouter routing for
+the rest of the run. Supply credentials through the environment; API keys are
+never stored in the experiment config:
+
+```bash
+OPENROUTER_API_KEY=... OPENAI_API_KEY="$OPENROUTER_API_KEY" \
+python -m simulation.main debug=true \
+  llm.backend=OpenRouter llm.path=anthropic/claude-sonnet-4 \
+  experiment=paper_cpr_harsh_selfish_full
+```
+
+`OPENAI_API_KEY` is reused only by Mem0's OpenAI-compatible embedder, whose
+base URL is configured for OpenRouter. Each run shares one local Mem0 client,
+while every villager remains isolated by a unique Mem0 `user_id`.
+
 ### Full reproducibility model sweeps (OpenAI + OpenRouter)
 
 Use `scripts/standard/examples_models.sh` to run the 3 contract conditions
@@ -175,6 +192,13 @@ Local development (starts Vite on `http://localhost:5173` and the analysis backe
 cd frontend
 pnpm dev
 ```
+
+For CPR norm-formation runs, the explorer automatically switches to the
+Commons Field Observatory. It shows stock and wealth trajectories, the latest
+effort/harvest/punishment ledger, the evolving group norm, and every full
+prompt/response exchange. The transcript can be filtered by villager, round,
+phase, or text. Because prompts contain private Mem0 history, the analysis
+backend binds to `127.0.0.1` by default.
 
 Production build:
 

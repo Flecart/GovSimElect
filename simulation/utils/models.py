@@ -165,6 +165,7 @@ class ModelWandbWrapper:
         seed,
         is_api=False,
         runtime="openai",
+        provider_routing=None,
     ) -> None:
         self.base_lm = base_lm
         self.render = render
@@ -177,6 +178,8 @@ class ModelWandbWrapper:
         self.seed = seed
         self.is_api = is_api
         self.runtime = runtime
+        self.provider_routing = dict(provider_routing or {})
+        self._provider_routing_failed = False
         self.model_name = getattr(base_lm, "model_name", None)
         self.backend_name = getattr(base_lm, "backend_name", "OpenAI")
         self._async_client = None
@@ -228,6 +231,20 @@ class ModelWandbWrapper:
             "reasoning": {"exclude": True}
         }
 
+    def _openrouter_provider_extra_body(self) -> dict[str, Any] | None:
+        if (self.backend_name or "").lower() != "openrouter":
+            return None
+        if not self.provider_routing or self._provider_routing_failed:
+            return None
+        return {
+            "provider": {
+                "order": list(self.provider_routing.get("order", [])),
+                "allow_fallbacks": bool(
+                    self.provider_routing.get("allow_fallbacks", False)
+                ),
+            }
+        }
+
     async def _achat_completion(
         self,
         messages: list[dict[str, str]],
@@ -249,15 +266,37 @@ class ModelWandbWrapper:
             raise ValueError("llm.runtime must be 'openai' or 'openai_agents'")
         async with self._get_openai_semaphore():
             length_kwargs = self._completion_length_param(max_tokens)
-            out = await self._get_async_client().chat.completions.create(
-                model=self.model_name,
-                messages=messages,
-                temperature=temperature,
-                top_p=top_p,
-                seed=self.seed,
-                stop=stop,
+            request_kwargs = {
+                "model": self.model_name,
+                "messages": messages,
+                "temperature": temperature,
+                "top_p": top_p,
+                "seed": self.seed,
+                "stop": stop,
                 **length_kwargs,
-            )
+            }
+            provider_extra_body = self._openrouter_provider_extra_body()
+            try:
+                out = await self._get_async_client().chat.completions.create(
+                    **request_kwargs,
+                    **(
+                        {"extra_body": provider_extra_body}
+                        if provider_extra_body is not None
+                        else {}
+                    ),
+                )
+            except Exception:
+                if provider_extra_body is None:
+                    raise
+                self._provider_routing_failed = True
+                warnings.warn(
+                    "OpenRouter's requested provider route failed; retrying with "
+                    "standard OpenRouter routing for this run.",
+                    RuntimeWarning,
+                )
+                out = await self._get_async_client().chat.completions.create(
+                    **request_kwargs
+                )
         message_content = out.choices[0].message.content
         if isinstance(message_content, str):
             response_text = message_content

@@ -3,6 +3,12 @@ import { Layout } from "./components/Layout";
 import { Sidebar } from "./components/Sidebar";
 import { ContractingEvent, RunView, RunRow } from "./components/RunView";
 import { DashboardView, ResourceRow, SummaryGroupRow } from "./components/DashboardView";
+import {
+  CPRExchange,
+  CPRRound,
+  CPRRunView,
+  CPRSummary
+} from "./components/CPRRunView";
 
 interface ApiSubsetsResponse {
   subsets: string[];
@@ -36,6 +42,10 @@ interface ApiRunResponse {
   run_data: RunRow[];
   fishing_summary?: Record<string, unknown> | null;
   contracting_data?: ContractingEvent[];
+  scenario?: string;
+  cpr_rounds?: CPRRound[];
+  cpr_messages?: CPRExchange[];
+  cpr_summary?: CPRSummary | null;
 }
 
 interface RunOption {
@@ -133,6 +143,10 @@ export const App: React.FC = () => {
   const [runData, setRunData] = useState<RunRow[] | null>(null);
   const [contractingEvents, setContractingEvents] = useState<ContractingEvent[]>([]);
   const [fishingSummary, setFishingSummary] = useState<Record<string, unknown> | null>(null);
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
+  const [cprRounds, setCprRounds] = useState<CPRRound[]>([]);
+  const [cprMessages, setCprMessages] = useState<CPRExchange[]>([]);
+  const [cprSummary, setCprSummary] = useState<CPRSummary | null>(null);
   const [viewMode, setViewMode] = useState<"run" | "dashboard">("run");
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<number | null>(null);
@@ -492,6 +506,10 @@ export const App: React.FC = () => {
       setRunData(null);
       setContractingEvents([]);
       setFishingSummary(null);
+      setActiveScenario(null);
+      setCprRounds([]);
+      setCprMessages([]);
+      setCprSummary(null);
       setLoadingRun(false);
       return;
     }
@@ -516,6 +534,10 @@ export const App: React.FC = () => {
         setRunData(data.run_data ?? []);
         setContractingEvents(data.contracting_data ?? []);
         setFishingSummary(data.fishing_summary ?? null);
+        setActiveScenario(data.scenario ?? "fishing");
+        setCprRounds(data.cpr_rounds ?? []);
+        setCprMessages(data.cpr_messages ?? []);
+        setCprSummary(data.cpr_summary ?? null);
         setLastUpdatedAt(Date.now());
       } catch (e) {
         if (cancelled) return;
@@ -562,6 +584,10 @@ export const App: React.FC = () => {
         setRunData(null);
         setContractingEvents([]);
         setFishingSummary(null);
+        setActiveScenario(null);
+        setCprRounds([]);
+        setCprMessages([]);
+        setCprSummary(null);
       }}
       activePath={activePath}
       canNavigateUp={Boolean(activePath)}
@@ -596,6 +622,10 @@ export const App: React.FC = () => {
       activeRun={activeRun}
       selectedRuns={selectedRuns}
       onRunChange={(run) => {
+        setActiveScenario(null);
+        setCprRounds([]);
+        setCprMessages([]);
+        setCprSummary(null);
         setActiveRun(run);
         setSelectedRuns((prev) =>
           prev.includes(run) ? prev : [...prev, run]
@@ -612,10 +642,11 @@ export const App: React.FC = () => {
   const main = (
     <div className="main">
       <header className="main-header">
-        <h1>GovSim Agent Explorer</h1>
+        <h1>{activeScenario === "cpr_norms" ? "Commons Field Observatory" : "GovSim Agent Explorer"}</h1>
         <p>
-          Visualise simulation runs, formal contract negotiations, code-law drafts,
-          tool use, and round-by-round fishing execution.
+          {activeScenario === "cpr_norms"
+            ? "Inspect the lake, evolving norms, sanctions, private learning, and every model exchange."
+            : "Visualise simulation runs, formal contract negotiations, code-law drafts, tool use, and round-by-round fishing execution."}
         </p>
         {lastUpdatedAt && (
           <p className="main-subtle">
@@ -659,18 +690,27 @@ export const App: React.FC = () => {
       </div>
 
       {viewMode === "run" ? (
-        <RunView
-          runName={activeRun ? runLabelByKey[activeRun] ?? activeRun : null}
-          runData={runData}
-          fishingSummary={fishingSummary}
-          onRegenerateFishingSummary={refreshFishingSummary}
-          contractingEvents={contractingEvents}
-          activeGroup={activeGroup}
-          resourceInPoolByGroup={resourceInPoolByGroup}
-          selectedRuns={selectedRuns
-            .map((runKey) => chartKeyByRun[runKey] ?? "")
-            .filter((value) => value.length > 0)}
-        />
+        activeScenario === "cpr_norms" && activeRun ? (
+          <CPRRunView
+            runName={runLabelByKey[activeRun] ?? activeRun}
+            rounds={cprRounds}
+            messages={cprMessages}
+            summary={cprSummary}
+          />
+        ) : (
+          <RunView
+            runName={activeRun ? runLabelByKey[activeRun] ?? activeRun : null}
+            runData={runData}
+            fishingSummary={fishingSummary}
+            onRegenerateFishingSummary={refreshFishingSummary}
+            contractingEvents={contractingEvents}
+            activeGroup={activeGroup}
+            resourceInPoolByGroup={resourceInPoolByGroup}
+            selectedRuns={selectedRuns
+              .map((runKey) => chartKeyByRun[runKey] ?? "")
+              .filter((value) => value.length > 0)}
+          />
+        )
       ) : (
         <DashboardView
           activeGroup={activeGroup}

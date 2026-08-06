@@ -142,6 +142,9 @@ class PaperCPRExperiment:
         cfg, "initial_group_norm", default=INITIAL_GROUP_NORM
     ))
     self.villagers: list[Villager] = []
+    self.message_log_path = self.experiment_storage / "messages.jsonl"
+    self._message_log_lock = asyncio.Lock()
+    self._message_sequence = 0
 
     population = str(cfg.population).lower()
     if population != "selfish":
@@ -191,6 +194,7 @@ class PaperCPRExperiment:
   async def _ask(
       self,
       villager: Villager,
+      round_id: int,
       phase: str,
       prompt: str,
       *,
@@ -208,6 +212,18 @@ class PaperCPRExperiment:
         default_value=default,
     )
     model.end_prompt(session)
+    async with self._message_log_lock:
+      self._message_sequence += 1
+      with self.message_log_path.open("a", encoding="utf-8") as log_file:
+        log_file.write(json.dumps({
+            "sequence": self._message_sequence,
+            "round": round_id,
+            "agent_id": villager.agent_id,
+            "phase": phase,
+            "request": prompt,
+            "response": response.strip(),
+        }, ensure_ascii=False) + "\n")
+        log_file.flush()
     return response.strip()
 
   def _base_context(self, villager: Villager, *, punishment: bool = False) -> str:
@@ -225,7 +241,7 @@ class PaperCPRExperiment:
           observation=self._observation(villager, round_id),
       )
       response = await self._ask(
-          villager, "effort", prompt, max_tokens=20, default="0.5"
+          villager, round_id, "effort", prompt, max_tokens=20, default="0.5"
       )
       return villager.agent_id, parse_effort(response)
 
@@ -242,7 +258,7 @@ class PaperCPRExperiment:
           punish_cost=float(self.cfg.environment.punishment_cost),
       )
       response = await self._ask(
-          villager, "punishment", prompt, max_tokens=20, default="N/A"
+          villager, round_id, "punishment", prompt, max_tokens=20, default="N/A"
       )
       return villager.agent_id, parse_punishment(
           response, villager.agent_id, valid_ids
@@ -260,7 +276,8 @@ class PaperCPRExperiment:
       )
       default = f"Personal: {villager.norm}\nCommunity: {self.group_norm}"
       response = await self._ask(
-          villager, "norm_proposal", prompt, max_tokens=250, default=default
+          villager, round_id, "norm_proposal", prompt,
+          max_tokens=250, default=default,
       )
       personal, community = parse_norms(response, villager.norm, self.group_norm)
       return villager.agent_id, personal, community
@@ -283,7 +300,7 @@ class PaperCPRExperiment:
           proposals=proposal_text,
       )
       response = await self._ask(
-          villager, "community_vote", prompt, max_tokens=250,
+          villager, round_id, "community_vote", prompt, max_tokens=250,
           default=proposals[0],
       )
       selected = next(

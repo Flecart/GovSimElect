@@ -1,4 +1,5 @@
 import asyncio
+import json
 import random
 from datetime import datetime
 import pytest
@@ -162,6 +163,16 @@ def test_one_round_matches_configured_dynamics_and_keeps_memories_private(tmp_pa
   assert result.collapsed is False
   assert len(memories[0].records) == 1
   assert len(memories[1].records) == 1
+  exchanges = [
+      json.loads(line)
+      for line in (tmp_path / "messages.jsonl").read_text().splitlines()
+  ]
+  assert len(exchanges) == 8
+  assert {exchange["agent_id"] for exchange in exchanges} == {0, 1}
+  assert {exchange["phase"] for exchange in exchanges} == {
+      "effort", "punishment", "norm_proposal", "community_vote"
+  }
+  assert all(exchange["request"] and exchange["response"] for exchange in exchanges)
 
 
 def test_single_experiment_config_selects_requested_condition():

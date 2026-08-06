@@ -139,7 +139,7 @@ def get_summary_runs(subset_name, WANDB=False):
                 continue
 
             for root, _, files in os.walk(group_path):
-                if "log_env.json" not in files:
+                if not {"log_env.json", "consolidated_results.json"}.intersection(files):
                     continue
 
                 rel_run_path = os.path.relpath(root, group_path)

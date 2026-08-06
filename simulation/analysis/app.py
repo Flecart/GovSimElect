@@ -244,7 +244,7 @@ def _fast_subset_index(subset_name):
             continue
 
         for root, _, files in os.walk(group_path):
-            if "log_env.json" not in files:
+            if not {"log_env.json", "consolidated_results.json"}.intersection(files):
                 continue
             rel_run_path = os.path.relpath(root, group_path)
             rel_parent = os.path.dirname(rel_run_path)
@@ -367,6 +367,41 @@ def _load_single_contracting_events(contracting_path):
     return events
 
 
+def _load_json_lines(path):
+    if not os.path.exists(path):
+        return []
+    records = []
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                # A live writer may have an incomplete final line; the next poll retries it.
+                continue
+    return records
+
+
+def _load_single_cpr_rounds(path):
+    return [
+        record.get("data", {})
+        for record in _load_json_lines(path)
+        if record.get("type") == "round" and isinstance(record.get("data"), dict)
+    ]
+
+
+def _load_cpr_summary(path):
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            return json.load(handle)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
 _SUMMARIZE_FISHING_MOD = None
 
 
@@ -458,6 +493,36 @@ def _load_resource_time_series(summary_df):
 
     for _, row in summary_df.iterrows():
         run_path = os.path.join(base_path, row["group"], row["name"], "log_env.json")
+        cpr_path = os.path.join(
+            base_path, row["group"], row["name"], "consolidated_results.json"
+        )
+        if not os.path.exists(run_path) and os.path.exists(cpr_path):
+            chart_key = _build_chart_key(row)
+            points = []
+            for round_data in _load_single_cpr_rounds(cpr_path):
+                round_num = int(round_data.get("round", 0))
+                points.extend([
+                    {
+                        "x": float(round_num) - 1,
+                        "round": round_num,
+                        chart_key: round_data.get("stock_before"),
+                    },
+                    {
+                        "x": float(round_num) - 0.05,
+                        "round": round_num,
+                        chart_key: round_data.get("stock_after_harvest"),
+                    },
+                    {
+                        "x": float(round_num),
+                        "round": round_num,
+                        chart_key: round_data.get("stock_after_regeneration"),
+                    },
+                ])
+            if points:
+                grouped_frames.setdefault(row["group"], []).append(
+                    pd.DataFrame(points).replace([np.nan, np.inf, -np.inf], None)
+                )
+            continue
         if not os.path.exists(run_path):
             continue
 
@@ -648,6 +713,9 @@ def api_result_subset_run(subset_name, run_id):
     log_path = os.path.join(run_dir, "log_env.json")
     contracting_path = os.path.join(run_dir, "contracting_results.jsonl")
     summary_path = os.path.join(run_dir, "fishing_run_summary.json")
+    cpr_path = os.path.join(run_dir, "consolidated_results.json")
+    cpr_messages_path = os.path.join(run_dir, "messages.jsonl")
+    cpr_summary_path = os.path.join(run_dir, "summary.json")
 
     if not os.path.exists(run_dir):
         return {"error": f"Unknown run_id: {run_id}"}, 404
@@ -658,7 +726,25 @@ def api_result_subset_run(subset_name, run_id):
         os.path.getmtime(contracting_path) if os.path.exists(contracting_path) else None
     )
     summary_mtime = os.path.getmtime(summary_path) if os.path.exists(summary_path) else None
-    cache_fingerprint = (log_mtime, contracting_mtime, summary_mtime)
+    cpr_mtime = os.path.getmtime(cpr_path) if os.path.exists(cpr_path) else None
+    messages_mtime = (
+        os.path.getmtime(cpr_messages_path)
+        if os.path.exists(cpr_messages_path)
+        else None
+    )
+    cpr_summary_mtime = (
+        os.path.getmtime(cpr_summary_path)
+        if os.path.exists(cpr_summary_path)
+        else None
+    )
+    cache_fingerprint = (
+        log_mtime,
+        contracting_mtime,
+        summary_mtime,
+        cpr_mtime,
+        messages_mtime,
+        cpr_summary_mtime,
+    )
     cached = _run_response_cache.get(cache_key)
     if cached and cached.get("fingerprint") == cache_fingerprint:
         return _sanitize_json_value(cached["response"])
@@ -675,12 +761,17 @@ def api_result_subset_run(subset_name, run_id):
     run_records = _load_single_run_records(log_path)
     contracting_data = _load_single_contracting_events(contracting_path)
     fishing_summary = _write_fishing_run_summary_json(base_path, run_group, run_name)
+    is_cpr = os.path.exists(cpr_path)
 
     response = {
         "run": run_row,
+        "scenario": "cpr_norms" if is_cpr else "fishing",
         "run_data": run_records,
         "contracting_data": contracting_data,
         "fishing_summary": fishing_summary,
+        "cpr_rounds": _load_single_cpr_rounds(cpr_path) if is_cpr else [],
+        "cpr_messages": _load_json_lines(cpr_messages_path) if is_cpr else [],
+        "cpr_summary": _load_cpr_summary(cpr_summary_path) if is_cpr else None,
     }
     _run_response_cache[cache_key] = {
         "fingerprint": cache_fingerprint,
@@ -749,6 +840,7 @@ def _intercept_fishing_summary_refresh():
 if __name__ == "__main__":
     app.run(
         debug=_env_flag("SIM_ANALYSIS_DEBUG", False),
-        host=os.getenv("SIM_ANALYSIS_HOST", "0.0.0.0"),
+        # The dashboard exposes private agent histories; keep it local by default.
+        host=os.getenv("SIM_ANALYSIS_HOST", "127.0.0.1"),
         port=int(os.getenv("SIM_ANALYSIS_PORT", "8050")),
     )
