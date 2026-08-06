@@ -121,6 +121,17 @@ def main(cfg: DictConfig):
                     wrapper_coding,
                     experiment_storage,
                 )
+            elif cfg.experiment.scenario == "cpr_norms":
+                from .scenarios.cpr_norms.run import run as run_cpr_norms
+
+                await run_cpr_norms(
+                    cfg.experiment,
+                    logger,
+                    wrappers,
+                    wrapper_framework,
+                    wrapper_coding,
+                    experiment_storage,
+                )
             else:
                 raise ValueError(f"Unknown experiment.scenario: {cfg.experiment.scenario}")
         finally:

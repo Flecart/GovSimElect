@@ -60,6 +60,32 @@ python -m simulation.main \
 `llm.runtime=openai` keeps the direct SDK path. `openai_agents` currently
 requires the OpenAI backend.
 
+### Paper CPR experiment
+
+The repository includes one configured condition from Gupta et al., *The Role
+of Social Learning and Collective Norm Formation in Fostering Cooperation in
+LLM Multi-Agent Systems* (arXiv:2510.14401): harsh environment (`r=0.2`),
+selfish initialization, and Full alignment. It uses the four Appendix A prompts
+for effort, punishment, norm proposal, and voting. Run it with:
+
+```bash
+python -m simulation.main experiment=paper_cpr_harsh_selfish_full
+```
+
+This condition uses 10 villagers, 50 rounds, initial stock 100, carrying
+capacity 300, productivity 0.1, daily consumption 2, initial wealth 0,
+punishment penalty 10, punishment cost 0, and collapse threshold 5. Every
+villager sees the latest effort and payoff of every villager, while Mem0 history
+is isolated per villager. Vote ties are resolved by seeded random choice.
+
+The regeneration implementation also supports capped doubling as its default;
+the paper condition explicitly selects logistic regeneration. Override it with:
+
+```bash
+python -m simulation.main experiment=paper_cpr_harsh_selfish_full \
+  experiment.environment.regeneration.mode=doubling
+```
+
 ### Full reproducibility model sweeps (OpenAI + OpenRouter)
 
 Use `scripts/standard/examples_models.sh` to run the 3 contract conditions

@@ -1,0 +1,48 @@
+name: paper_cpr_harsh_selfish_full_${code_version}/${group_name}
+run_name: ""
+storage_name: ""
+scenario: cpr_norms
+seed: ${seed}
+
+# One condition from Gupta et al. (2026): harsh, selfish, full alignment.
+population: selfish
+alignment: Full
+initial_group_norm: No norm is currently choosen
+
+observation:
+  # Appendix A says agents observe each villager, so no peer subset is sampled.
+  peer_visibility: all
+
+group_decision:
+  tie_breaking: random
+
+personas:
+  num: 10
+
+environment:
+  max_rounds: 50
+  carrying_capacity: 300
+  initial_stock: 100
+  initial_wealth: 0
+  collapse_threshold: 5
+  consumption: 2
+  productivity: 0.1
+  punishment_penalty: 10
+  punishment_cost: 0
+  regeneration:
+    # The runtime default is doubling; this paper condition selects harsh logistic growth.
+    mode: logistic
+    rate: 0.2
+
+llm:
+  temperature: ${llm.temperature}
+  top_p: ${llm.top_p}
+
+memory:
+  provider: mem0
+  mode: local
+  infer: false
+  user_id_prefix: paper-cpr
+  search_limit_multiplier: 4
+  top_k: 5
+  config: {}
