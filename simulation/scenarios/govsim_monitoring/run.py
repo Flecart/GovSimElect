@@ -368,6 +368,16 @@ class GovSimMonitoringExperiment:
       if fisher.agent_id in punished:
         fisher.wealth -= penalty
         fisher.suspended_round = round_id + 1
+        self._store(
+            fisher,
+            round_id,
+            (
+                f"Punishment received in round {round_id}: one or more peers "
+                f"imposed the community's binary penalty of {penalty:.6g} on me. "
+                f"My wealth fell to {fisher.wealth:.6g}, and I am suspended from "
+                f"harvesting and contributing in round {round_id + 1}."
+            ),
+        )
     return records, punished
 
   async def _discuss(self, round_id: int) -> list[dict[str, str]]:
