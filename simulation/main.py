@@ -4,6 +4,7 @@ import shutil
 import uuid
 
 import hydra
+from dotenv import load_dotenv
 from omegaconf import DictConfig, OmegaConf
 
 import wandb
@@ -15,6 +16,8 @@ from simulation.utils import (
     set_seed,
 )
 
+
+load_dotenv()
 
 
 @hydra.main(version_base=None, config_path="conf", config_name="config")
