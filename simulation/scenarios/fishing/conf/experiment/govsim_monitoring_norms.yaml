@@ -33,7 +33,7 @@ environment:
   initial_wealth: 5
   collapse_threshold: 5
   consumption: 5
-  initial_alpha: 0.1
+  initial_alpha: 0.25
   maintenance_requirement: 1
   contribution_min: 0
   contribution_max: 1
