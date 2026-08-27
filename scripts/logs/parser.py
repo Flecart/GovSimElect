@@ -21,14 +21,17 @@ def parse_summaries(text: str) -> pd.DataFrame:
         # parent folder e.g. gpt-4o-p0-2026-04-15-18:04
         parent = path.split("/")[-2]
         leaf = path.split("/")[-1]
-        # model = everything before "-p<digit>-2026"
-        m2 = re.match(r"(.+?)-p(\d+)-\d{4}-\d{2}-\d{2}-\d{2}:\d{2}", parent)
+        # Model = everything before ``-p<digit>-<batch>``.  Historical batches
+        # used ``YYYY-MM-DD-HH:MM`` while reproducible launchers may use a
+        # descriptive suffix such as ``YYYY-MM-DD-standard``.
+        m2 = re.match(r"(.+?)-p(\d+)-\d{4}-\d{2}-\d{2}(?:-.+)?$", parent)
         if not m2:
             continue
         model = m2.group(1)
         prosocial = int(m2.group(2))
-        # leaf: <id>-<cond>-p<k>
-        m3 = re.match(r"(\d+)-(.+?)-p\d+$", leaf)
+        # Leaf names may be either ``<id>-<condition>-p<k>`` or include a
+        # launcher prefix.  Match the canonical condition suffix explicitly.
+        m3 = re.search(r"(\d+)-(no-contract|nl|code-law)-p\d+$", leaf)
         if not m3:
             continue
         cond_id = int(m3.group(1))

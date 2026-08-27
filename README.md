@@ -112,6 +112,18 @@ If you already know the exact result folders you want, replace `<your-pattern>` 
 bash scripts/logs/build_aggregated_csv.sh "simulation/results/<your-pattern>" aggregated.csv
 ```
 
+Filter interrupted retries and require one completed run per seed:
+
+```bash
+uv run python scripts/aggregate_fishing_experiments.py --complete-only --dedupe-by-seed --expected-runs 5 simulation/results/<condition-directory>
+```
+
+Generate the coloured per-model bar breakdown used by the paper:
+
+```bash
+uv run python scripts/plot_model_bars.py -i aggregated.csv -o paper/images/model-results-2
+```
+
 ### Frontend
 
 A React frontend for browsing simulation results lives under [`frontend/`](frontend).

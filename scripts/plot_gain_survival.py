@@ -53,13 +53,12 @@ p_levels = [0, 1, 2, 3, 4, 5]
 
 model_display = {
     'gemma-4-31b':    'Gemma-4-31B',
-    'gemma-4-31b-it': 'Gemma-4-31B-IT',
     'gpt-4o':         'GPT-4o',
     'gpt-5.4':        'GPT-5.4',
     'gpt-5.4-mini':   'GPT-5.4-Mini',
-    'grok-4.1-fast':  'Grok-4.1-Fast',
+    'deepseek-v4-flash': 'DeepSeek-V4-Flash',
 }
-model_order = ['gemma-4-31b', 'gemma-4-31b-it', 'gpt-4o', 'gpt-5.4', 'gpt-5.4-mini', 'grok-4.1-fast']
+model_order = ['gemma-4-31b', 'gpt-4o', 'gpt-5.4', 'gpt-5.4-mini', 'deepseek-v4-flash']
 
 cond_order = ['no-contract', 'nl', 'code-law']
 cond_title = {

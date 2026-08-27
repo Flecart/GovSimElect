@@ -27,19 +27,17 @@ STO_CSV = REPO_ROOT / 'aggregated-sto.csv'
 
 MODEL_ORDER = [
     'gemma-4-31b',
-    'gemma-4-31b-it',
     'gpt-4o',
     'gpt-5.4',
     'gpt-5.4-mini',
-    'grok-4.1-fast',
+    'deepseek-v4-flash',
 ]
 MODEL_DISPLAY = {
     'gemma-4-31b':    'Gemma-4-31B',
-    'gemma-4-31b-it': 'Gemma-4-31B-IT',
     'gpt-4o':         'GPT-4o',
     'gpt-5.4':        'GPT-5.4',
     'gpt-5.4-mini':   'GPT-5.4-Mini',
-    'grok-4.1-fast':  'Grok-4.1-Fast',
+    'deepseek-v4-flash': 'DeepSeek-V4-Flash',
 }
 
 PROSOCIAL_LEVELS = [0, 1, 2, 3, 4, 5]

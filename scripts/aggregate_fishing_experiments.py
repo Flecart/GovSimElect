@@ -38,6 +38,7 @@ import importlib.util
 import json
 import math
 import os
+import re
 import statistics
 import sys
 from dataclasses import dataclass
@@ -71,6 +72,90 @@ def discover_run_dirs(root: Path) -> list[Path]:
         if child.is_dir() and (child / LOG_BASENAME).is_file():
             runs.append(child.resolve())
     return runs
+
+
+def configured_seed(run_dir: Path) -> int | None:
+    """Return the Hydra seed recorded for a run, when available."""
+
+    config_path = run_dir / ".hydra" / "config.yaml"
+    if not config_path.is_file():
+        return None
+    match = re.search(
+        r"^seed:\s*(\d+)\s*$",
+        config_path.read_text(encoding="utf-8", errors="replace"),
+        re.MULTILINE,
+    )
+    return int(match.group(1)) if match else None
+
+
+def reached_terminal_state(
+    run_dir: Path,
+    *,
+    max_rounds: int,
+    collapse_threshold: float,
+) -> bool:
+    """Whether a run completed its horizon or reached terminal depletion."""
+
+    log_path = run_dir / LOG_BASENAME
+    try:
+        records = json.loads(log_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    if not isinstance(records, list):
+        return False
+    regen = [
+        record
+        for record in records
+        if isinstance(record, dict) and record.get("action") == "regen"
+    ]
+    if len(regen) >= max_rounds:
+        return True
+    if not regen:
+        return False
+    final_stock = regen[-1].get("stock_before_extraction")
+    return final_stock is not None and float(final_stock) <= collapse_threshold
+
+
+def select_run_dirs(
+    runs: list[Path],
+    *,
+    complete_only: bool,
+    dedupe_by_seed: bool,
+    max_rounds: int,
+    collapse_threshold: float,
+) -> tuple[list[Path], list[Path]]:
+    """Filter incomplete attempts and retain the latest attempt per seed."""
+
+    selected = list(runs)
+    skipped: list[Path] = []
+    if complete_only:
+        complete = []
+        for run_dir in selected:
+            if reached_terminal_state(
+                run_dir,
+                max_rounds=max_rounds,
+                collapse_threshold=collapse_threshold,
+            ):
+                complete.append(run_dir)
+            else:
+                skipped.append(run_dir)
+        selected = complete
+
+    if dedupe_by_seed:
+        by_seed: dict[int, list[Path]] = {}
+        for run_dir in selected:
+            seed = configured_seed(run_dir)
+            if seed is None:
+                raise ValueError(f"Missing configured seed: {run_dir}")
+            by_seed.setdefault(seed, []).append(run_dir)
+        deduped = []
+        for seed_runs in by_seed.values():
+            latest = max(seed_runs, key=lambda path: path.stat().st_mtime_ns)
+            deduped.append(latest)
+            skipped.extend(path for path in seed_runs if path != latest)
+        selected = deduped
+
+    return sorted(selected), sorted(set(skipped))
 
 
 def _safe_mean(values: list[float]) -> float | None:
@@ -467,6 +552,22 @@ def main(argv: list[str] | None = None) -> int:
             "survival_rounds_n < M vs ≥ M (e.g. 8 for collapsed before month 8)"
         ),
     )
+    parser.add_argument(
+        "--complete-only",
+        action="store_true",
+        help="Exclude attempts that neither completed max rounds nor depleted the lake.",
+    )
+    parser.add_argument(
+        "--dedupe-by-seed",
+        action="store_true",
+        help="Retain only the latest selected run for each Hydra seed.",
+    )
+    parser.add_argument(
+        "--expected-runs",
+        type=int,
+        default=None,
+        help="Fail unless filtering leaves exactly this many runs.",
+    )
     args = parser.parse_args(argv)
 
     root = args.parent_dir.resolve()
@@ -478,6 +579,25 @@ def main(argv: list[str] | None = None) -> int:
     if not runs:
         print(
             f"No {LOG_BASENAME} found under {root} (expected file here or in subdirs).",
+            file=sys.stderr,
+        )
+        return 1
+    try:
+        runs, skipped_runs = select_run_dirs(
+            runs,
+            complete_only=args.complete_only,
+            dedupe_by_seed=args.dedupe_by_seed,
+            max_rounds=args.max_rounds,
+            collapse_threshold=args.collapse_threshold,
+        )
+    except ValueError as error:
+        print(str(error), file=sys.stderr)
+        return 1
+    for skipped_run in skipped_runs:
+        print(f"Skip incomplete or duplicate attempt: {skipped_run}", file=sys.stderr)
+    if args.expected_runs is not None and len(runs) != args.expected_runs:
+        print(
+            f"Expected {args.expected_runs} selected runs under {root}, found {len(runs)}.",
             file=sys.stderr,
         )
         return 1
