@@ -99,6 +99,16 @@ def is_complete(log_dir: str) -> bool:
     return any((_header(f) or {}).get("status") == "success" for f in glob.glob(f"{log_dir}/*.eval"))
 
 
+def _runner_alive(lock: Path) -> int | None:
+    """PID of a live runner holding this staging dir, if any."""
+    try:
+        pid = int(lock.read_text().strip())
+        os.kill(pid, 0)
+        return pid if pid != os.getpid() else None
+    except (FileNotFoundError, ValueError, ProcessLookupError, PermissionError):
+        return None
+
+
 def file_staged_logs(staging: Path) -> tuple[int, int]:
     """Move successful staged logs to their condition dir; drop incomplete ones."""
     filed = dropped = 0
@@ -143,18 +153,29 @@ def main(config_path: str, dry_run: bool) -> None:
 
     staging = Path(cfg.get("log_root", "logs")) / "_staging" / cfg["name"]
     staging.mkdir(parents=True, exist_ok=True)
-    filed, dropped = file_staged_logs(staging)
-    if filed or dropped:
-        print(f"staging sweep: filed {filed} finished logs, dropped {dropped} incomplete")
+    lock = staging / ".runner.pid"
+    other = _runner_alive(lock)
 
     conditions = expand(cfg)
     todo = [c for c in conditions if not is_complete(c.log_dir)]
     print(f"{len(conditions)} conditions in config, {len(conditions) - len(todo)} already complete, {len(todo)} to run")
-    if dry_run:
+    if dry_run:  # strictly read-only: never touches staging or log files
+        if other:
+            print(f"(runner pid {other} is active; {len(list(staging.glob('*.eval')))} task logs in staging)")
         for c in todo:
             print(f"  {c.log_dir}")
         return
+    if other:
+        sys.exit(f"another runner (pid {other}) is using {staging}; not starting")
+    lock.write_text(str(os.getpid()))
+
+    # Previous runner is gone: file its finished logs, drop interrupted ones.
+    filed, dropped = file_staged_logs(staging)
+    if filed or dropped:
+        print(f"staging sweep: filed {filed} finished logs, dropped {dropped} incomplete")
+        todo = [c for c in conditions if not is_complete(c.log_dir)]
     if not todo:
+        lock.unlink(missing_ok=True)
         return
 
     def max_conn(model: str) -> int | None:
@@ -215,6 +236,7 @@ def main(config_path: str, dry_run: bool) -> None:
         )
     finally:
         filed, dropped = file_staged_logs(staging)
+        lock.unlink(missing_ok=True)
         print(f"filed {filed} finished logs, dropped {dropped} incomplete", flush=True)
     remaining = [c for c in conditions if not is_complete(c.log_dir)]
     print(f"done: {len(conditions) - len(remaining)}/{len(conditions)} conditions complete")
