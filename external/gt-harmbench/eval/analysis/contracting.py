@@ -49,6 +49,7 @@ def load_contracting_logs(
     experiments: tuple[str, ...] = (
         "4x4-no-comm", "4x4-code-nl", "4x4-code-law",
         "2x2-no-comm", "2x2-code-nl", "2x2-code-law",
+        "4x4obs-no-comm", "4x4obs-code-nl", "4x4obs-code-law",
     ),
     prompt_modes: tuple[str, ...] = ("base",),
     verbose: bool = True,

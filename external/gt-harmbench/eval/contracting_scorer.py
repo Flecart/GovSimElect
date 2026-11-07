@@ -113,12 +113,13 @@ def extract_action_components(action: str) -> dict[str, str]:
 
 def _parse_payoff_pair(payoff_val) -> tuple[float, float]:
     """Parse a (row, col) payoff pair from list, string, or tuple representation."""
-    if isinstance(payoff_val, list):
+    if isinstance(payoff_val, (list, tuple)):
         return payoff_val[0] if len(payoff_val) > 0 else 0, payoff_val[1] if len(payoff_val) > 1 else 0
     if isinstance(payoff_val, str):
         try:
+            # Datasets store pairs either as "[5, 5]" (PD) or "(25, 25)" (SH): accept both
             values = ast.literal_eval(payoff_val.replace("'", '"'))
-            if isinstance(values, list) and len(values) >= 2:
+            if isinstance(values, (list, tuple)) and len(values) >= 2:
                 return values[0], values[1]
         except (ValueError, SyntaxError):
             pass

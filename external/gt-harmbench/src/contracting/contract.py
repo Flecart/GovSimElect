@@ -150,7 +150,10 @@ class GameContractState:
         actions_row: Available actions for row player.
         actions_column: Available actions for column player.
         payoff_matrix: Payoff matrix for the game.
-        is_4x4: Whether this is a 4x4 moral hazard scenario (hidden effort unobservable).
+        is_4x4: Whether this is a 4x4 effort scenario.
+        effort_observable: Only meaningful when is_4x4. False (default) = moral hazard,
+            effort is hidden from contracts. True = complete-contract variant, effort is
+            verifiable and contracts operate on full (base, effort) actions.
     """
     scenario_id: str | None
     formal_game: str
@@ -158,3 +161,9 @@ class GameContractState:
     actions_column: list[str]
     payoff_matrix: dict[str, Any]  # Contains 1_1_payoff, 1_2_payoff, etc. or 4x4 format
     is_4x4: bool = False  # Default False for backward compatibility
+    effort_observable: bool = False  # Default False keeps the hidden-effort moral hazard setting
+
+    @property
+    def effort_contractible(self) -> bool:
+        """True when contracts can see and condition on full 4x4 actions."""
+        return self.is_4x4 and self.effort_observable

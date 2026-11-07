@@ -7,7 +7,7 @@ import signal
 from abc import ABC, abstractmethod
 from typing import Any
 
-from .action_utils import extract_base_action, extract_base_actions
+from .action_utils import extract_base_action, extract_base_actions, map_base_to_full_action
 from .contract import Contract, EnforcementResult, GameContractState
 
 
@@ -143,9 +143,14 @@ class LawExecutionRuntime:
 
     Adapted from mech-design for discrete actions instead of continuous catches.
 
-    NOTE: In 4x4 scenarios, effort levels are HIDDEN from enforcement.
-    The runtime works with base actions only, preserving the player's
+    NOTE: In 4x4 hidden-effort scenarios (default), effort levels are HIDDEN from
+    enforcement. The runtime works with base actions only, preserving the player's
     effort level choice when mapping back to full actions.
+
+    When ``state.effort_observable`` is True (complete-contract 4x4 variant), the
+    runtime instead works with FULL actions such as "Engage (High Effort)": contracts
+    can read, require, and price specific effort levels, and get_payoff() returns the
+    exact cell of the 4x4 matrix.
     """
 
     def __init__(
@@ -161,11 +166,14 @@ class LawExecutionRuntime:
             state: The game state with payoff matrix.
             execution_state: Persistent state across enforcement calls.
         """
+        self.state_data = state
+        self.full_actions = bool(getattr(state, "effort_contractible", False))
         self.actions = {
-            player: extract_base_action(action) if isinstance(action, str) else action
+            player: (
+                action.strip() if self.full_actions else extract_base_action(action)
+            ) if isinstance(action, str) else action
             for player, action in actions.items()
         }
-        self.state_data = state
         self.execution_state = copy.deepcopy(execution_state or {})
         self.execution_log: list[str] = []
         self.violations: list[str] = []
@@ -185,7 +193,11 @@ class LawExecutionRuntime:
         return self.actions.get(name)
 
     def set_action(self, name: str, base_action: str, reason: str = "") -> None:
-        """Set the action for a player using base action name.
+        """Set the action for a player.
+
+        In hidden-effort mode this takes a base action name. In observable-effort
+        mode it takes a full action label (e.g. "Engage (High Effort)"); a bare base
+        action is also accepted and keeps the player's current effort level.
 
         Args:
             name: Player name ("row" or "column").
@@ -197,7 +209,10 @@ class LawExecutionRuntime:
         """
         player = self._ensure_player(name)
 
-        # Validate against available base actions
+        if self.full_actions and isinstance(base_action, str):
+            base_action = self._resolve_full_action(player, base_action)
+
+        # Validate against available actions (base or full depending on mode)
         valid_base_actions = self.available_actions(player)
         if base_action not in valid_base_actions:
             raise ValueError(
@@ -208,6 +223,19 @@ class LawExecutionRuntime:
         self.actions[player] = base_action
         if reason:
             self.execution_log.append(f"set_action({player}, {base_action}): {reason}")
+
+    def _resolve_full_action(self, player: str, action: str) -> str:
+        """Map a bare base action onto a full label, keeping the current effort level."""
+        action = action.strip()
+        valid = self.available_actions(player)
+        if action in valid:
+            return action
+        current = self.actions.get(player)
+        if isinstance(current, str) and extract_base_action(current) != current:
+            candidate = map_base_to_full_action(action, current)
+            if candidate in valid:
+                return candidate
+        return action
 
     def add_violation(self, name: str, violation: str) -> None:
         """Record a contract violation."""
@@ -232,6 +260,24 @@ class LawExecutionRuntime:
             averaged over the unobservable effort variants of the base actions.
         """
         pm = self.state_data.payoff_matrix
+
+        if self.full_actions:
+            row_valid = list(self.state_data.actions_row)
+            col_valid = list(self.state_data.actions_column)
+            row_full = row_action.strip()
+            col_full = col_action.strip()
+            if row_full not in row_valid:
+                raise ValueError(
+                    f"Invalid row action '{row_action}'. Valid actions are: {row_valid}"
+                )
+            if col_full not in col_valid:
+                raise ValueError(
+                    f"Invalid column action '{col_action}'. Valid actions are: {col_valid}"
+                )
+            return self._parse_payoff_pair(
+                pm[row_valid.index(row_full)][col_valid.index(col_full)]
+            )
+
         row_base = extract_base_action(row_action)
         col_base = extract_base_action(col_action)
 
@@ -276,11 +322,22 @@ class LawExecutionRuntime:
     def _parse_payoff_pair(payoff: Any) -> tuple[float, float]:
         """Parse a payoff pair stored as JSON-ish text or a sequence."""
         if isinstance(payoff, str):
-            payoff = json.loads(payoff.replace("'", '"'))
+            # "[5, 5]" (PD datasets) or "(25, 25)" (SH datasets)
+            payoff = ast.literal_eval(payoff.strip())
         return payoff[0], payoff[1]
 
     def available_actions(self, player: str) -> list[str]:
-        """Get available BASE actions for a player (effort levels hidden)."""
+        """Get available actions for a player.
+
+        Hidden-effort mode: BASE actions (effort levels hidden).
+        Observable-effort mode: FULL action labels including effort level.
+        """
+        if self.full_actions:
+            if player == "row":
+                return list(self.state_data.actions_row)
+            if player == "column":
+                return list(self.state_data.actions_column)
+            return []
         if player == "row":
             return extract_base_actions(self.state_data.actions_row)
         elif player == "column":
@@ -307,6 +364,7 @@ class LawExecutionRuntime:
             actions_column=actions_column,
             payoff_matrix=payoff_matrix,
             is_4x4=self.state_data.is_4x4,
+            effort_observable=self.full_actions,
         )
 
     def apply_fine(self, player: str, amount: float, reason: str = "") -> None:

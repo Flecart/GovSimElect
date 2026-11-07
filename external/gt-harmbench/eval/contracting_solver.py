@@ -32,6 +32,7 @@ from inspect_ai.model import (
     ChatMessageSystem,
     ChatMessageUser,
     ChatCompletionChoice,
+    GenerateConfig,
     ModelOutput,
     get_model,
     ContentText,
@@ -51,6 +52,7 @@ from src.contracting.action_utils import (
     map_base_to_full_action,
 )
 from src.contracting.negotiation import TwoPlayerNegotiationManager
+from src.contracting.prompts import OBSERVABLE_EFFORT_NOTE
 from src.contracting.telemetry import record_phase_call, summarize_phase_usage
 from eval.prompts import PromptMode, get_prompt_prefix
 
@@ -62,6 +64,8 @@ def ContractSolver(
     times: int = 1,
     prompt_mode: str = "base",
     decision_model_config: dict[str, Any] | None = None,
+    column_model_name: str | None = None,
+    column_model_config: dict[str, Any] | None = None,
 ) -> Solver:
     """Solver implementing the three-phase contracting protocol: negotiation, action selection,
     and enforcement (CODE_LAW only)."""
@@ -75,16 +79,25 @@ def ContractSolver(
         task: TaskState,
         generate: Generate,
     ) -> TaskState:
+        model = get_model()
+        # Cross-play: the column player (negotiation + decision) uses a different model
+        column_model = (
+            get_model(column_model_name, config=GenerateConfig(**(column_model_config or {})))
+            if column_model_name
+            else model
+        )
+        player_models = {"row": model, "column": column_model}
+
         negotiation = TwoPlayerNegotiationManager(
             max_turns=_max_negotiation_turns,
             alternate_starter=True,
             prompt_mode=_prompt_mode_value,
+            player_models=player_models,
         )
-
-        model = get_model()
         manager = create_contract_manager(contract_mode)
 
         is_4x4 = "actions_row_4x4" in task.metadata and pd.notna(task.metadata.get("actions_row_4x4"))
+        effort_observable = bool(is_4x4 and task.metadata.get("effort_observable", False))
 
         if is_4x4:
             game_state = {
@@ -161,7 +174,10 @@ def ContractSolver(
             action_list_row = _build_4x4_action_prompt(base_actions_row, effort_levels_row, combinations_row)
             action_list_col = _build_4x4_action_prompt(base_actions_col, effort_levels_col, combinations_col)
 
-            effort_clarification = """
+            if effort_observable:
+                effort_clarification = "\n\n" + OBSERVABLE_EFFORT_NOTE + "\n"
+            else:
+                effort_clarification = """
 
 **Information Structure:**
 - Effort levels are PRIVATE to each party - only you know your actual effort level
@@ -245,10 +261,16 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
             )
         ]
 
+        from src.contracting.caching import prompt_cache_config
+
         async def generate_and_catch(message, role: str):
             started_at = time.perf_counter()
+            player_model = player_models[role]
             try:
-                output = await model.generate(message)
+                output = await player_model.generate(
+                    message,
+                    config=prompt_cache_config(player_model, f"gth-dec-{task.metadata.get('id', '')}-{role}"),
+                )
                 ended_at = time.perf_counter()
                 telemetry = record_phase_call(
                     phase="decision",
@@ -256,7 +278,7 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
                     output=output,
                     started_at=started_at,
                     ended_at=ended_at,
-                    model=model,
+                    model=player_model,
                     config=decision_model_config or {},
                 )
                 return output, telemetry
@@ -269,7 +291,7 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
                     role=role,
                     started_at=started_at,
                     ended_at=ended_at,
-                    model=model,
+                    model=player_model,
                     config=decision_model_config or {},
                     error=f"{type(e).__name__}: {e}",
                 )
@@ -318,20 +340,30 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
                 actions_column=game_state["actions_column"],
                 payoff_matrix=game_state["payoff_matrix"],
                 is_4x4=game_state.get("is_4x4", False),
+                effort_observable=effort_observable,
             )
 
-            # Pass base actions to enforcement (effort levels hidden in 4x4)
-            enforcement_result = manager.enforce(
-                actions={"row": row_action_base, "column": column_action_base},
-                state=contract_state,
-            )
+            if effort_observable:
+                # Observable effort: enforcement sees and may override full actions
+                enforcement_result = manager.enforce(
+                    actions={"row": original_row_action, "column": original_column_action},
+                    state=contract_state,
+                )
+                row_action = enforcement_result.modified_actions.get("row", original_row_action)
+                column_action = enforcement_result.modified_actions.get("column", original_column_action)
+            else:
+                # Pass base actions to enforcement (effort levels hidden in 4x4)
+                enforcement_result = manager.enforce(
+                    actions={"row": row_action_base, "column": column_action_base},
+                    state=contract_state,
+                )
 
-            enforced_row_base = enforcement_result.modified_actions.get("row", row_action_base)
-            enforced_col_base = enforcement_result.modified_actions.get("column", column_action_base)
+                enforced_row_base = enforcement_result.modified_actions.get("row", row_action_base)
+                enforced_col_base = enforcement_result.modified_actions.get("column", column_action_base)
 
-            # Map enforced base actions back to full actions, preserving original effort
-            row_action = map_base_to_full_action(enforced_row_base, original_row_action)
-            column_action = map_base_to_full_action(enforced_col_base, original_column_action)
+                # Map enforced base actions back to full actions, preserving original effort
+                row_action = map_base_to_full_action(enforced_row_base, original_row_action)
+                column_action = map_base_to_full_action(enforced_col_base, original_column_action)
 
             task.metadata["enforcement_result"] = enforcement_result.to_dict()
         else:
@@ -346,6 +378,9 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
         task.metadata["row_action"] = row_action
         task.metadata["column_action"] = column_action
         task.metadata["contract_mode"] = contract_mode.value
+        task.metadata["model_row"] = str(getattr(model, "name", model))
+        task.metadata["model_column"] = str(getattr(column_model, "name", column_model))
+        task.metadata["effort_observable"] = effort_observable
 
         trace_calls = _collect_trace_calls(task.metadata.get("negotiation_result"))
         trace_calls.extend(decision_telemetry)
@@ -503,6 +538,7 @@ def record_to_sample_with_contracting(
     record: dict[str, Any],
     contract_mode: ContractMode = ContractMode.NO_COMMUNICATION,
     prompt_mode: str = "base",
+    effort_observable: bool = False,
 ) -> Sample:
     is_4x4 = "actions_row_4x4" in record and record.get("actions_row_4x4")
 
@@ -527,6 +563,7 @@ def record_to_sample_with_contracting(
             "target_rawlsian": record.get("target_rawlsian_4x4", ""),
             "contract_mode": contract_mode.value,
             "is_4x4": True,
+            "effort_observable": bool(effort_observable),
             "prompt_mode": prompt_mode,
             "contract_content": record.get("contract_content", ""),
             "contract_proposer": record.get("contract_proposer", ""),

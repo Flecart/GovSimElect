@@ -1,6 +1,7 @@
 """Coding agent for translating NL contracts into Python enforcement code."""
 
 import ast
+import os
 import re
 import time
 
@@ -15,7 +16,8 @@ from inspect_ai.model import (
 from .contract import ContractMode, GameContractState
 from .telemetry import record_phase_call
 
-DEFAULT_CODING_AGENT_MODEL = "openai/gpt-5.4"
+# Override with CODING_AGENT_MODEL, e.g. openai-api/litellm/gpt-5.4 to route via a LiteLLM proxy.
+DEFAULT_CODING_AGENT_MODEL = os.environ.get("CODING_AGENT_MODEL", "openai/gpt-5.4")
 DEFAULT_CODING_AGENT_TEMPERATURE = 0.3
 
 
@@ -39,7 +41,16 @@ class ContractAgentBase:
         """
         self.model_name = model
         self.temperature = temperature
-        self.model = get_model(model)
+        # MAX_CONNECTIONS env (set by contracting_eval --max-connections) bounds concurrent calls
+        max_conn = int(os.environ.get("MAX_CONNECTIONS", "0")) or None
+        self.model = get_model(
+            model,
+            config=GenerateConfig(
+                max_connections=max_conn,
+                attempt_timeout=int(os.environ.get("ATTEMPT_TIMEOUT", "600")),
+                max_retries=int(os.environ.get("MAX_RETRIES", "30")),
+            ),
+        )
 
     async def _generate_response(
         self,
@@ -61,15 +72,16 @@ class ContractAgentBase:
         config_dict = {"temperature": self.temperature}
         started_at = time.perf_counter()
         try:
-            config = GenerateConfig(temperature=self.temperature)
-            response = run_coroutine(
-                self.model.generate(
-                    [
-                        ChatMessageSystem(content=system_prompt),
-                        ChatMessageUser(content=user_prompt),
-                    ],
-                    config=config,
-                )
+            from .caching import prompt_cache_config
+            config = prompt_cache_config(
+                self.model_name, "gth-coding", GenerateConfig(temperature=self.temperature)
+            )
+            response = await self.model.generate(
+                [
+                    ChatMessageSystem(content=system_prompt),
+                    ChatMessageUser(content=user_prompt),
+                ],
+                config=config,
             )
             ended_at = time.perf_counter()
             telemetry = record_phase_call(

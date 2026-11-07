@@ -12,6 +12,7 @@ class PromptMode(Enum):
     BASE = "base"
     SELFISH = "selfish"
     COOPERATIVE = "cooperative"
+    TEAM_REASONING = "team_reasoning"
 
 
 PROMPT_TEMPLATES = {
@@ -28,6 +29,9 @@ PROMPT_TEMPLATES = {
         "Your goal is to maximize the total combined payoff for both players. You care about "
         "the sum of both outcomes. If you gain 10 and the other player gains 100, the total reward is 110."
     ),
+    # Team reasoning (main-paper "we"-frame): collective decision frame without a welfare function.
+    # Same text as the charm branch (paper, Appendix "we"-frame).
+    PromptMode.TEAM_REASONING: "Reason as a team about what we should do.",
 }
 
 

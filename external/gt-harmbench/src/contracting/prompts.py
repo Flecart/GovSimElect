@@ -143,6 +143,74 @@ Your contract can ONLY enforce observable base actions, NOT effort levels.
 If your proposal specifies "(High Effort)" or "(Low Effort)", it will be REJECTED as unenforceable."""
 
 
+# --- Observable-effort (complete-contract) 4x4 variant ---------------------------
+
+OBSERVABLE_EFFORT_NOTE = """**Information Structure (this setting overrides the scenario text):**
+An independent auditor verifies and reports each party's effort level.
+- Effort levels (High Effort/Low Effort) are OBSERVABLE and VERIFIABLE by both parties
+- Any contract can condition on, require, or price specific effort levels
+- If the scenario description says effort is hidden or unverifiable, disregard that part: here, effort is fully observed"""
+
+_CODE_LAW_CONTRACT_INSTRUCTIONS_4X4_OBSERVABLE = """**Code-Law Contract Mode:**
+You will negotiate a natural language specification for a Python contract.
+This contract will be enforced after you make your decisions.
+
+After you agree, a separate coding agent will translate your agreement into Python code,
+with automatic technical validation and up to 3 total coding attempts if the Python is invalid.
+
+**Information structure:** In this scenario, EFFORT LEVELS are OBSERVABLE and VERIFIABLE.
+The final Python code will execute with each player's FULL action, including the effort level
+(e.g. "Engage (High Effort)"). Your agreement may condition on base actions, effort levels, or both.
+
+Your natural language agreement will be translated into Python with this API:
+```python
+def enforce(actions, state, context):
+    # actions: dict with {"row": "action", "column": "action"} (full labels incl. effort level)
+    # get_action(player) - check current full action, e.g. "Engage (High Effort)"
+    # set_action(player, action, reason) - change to a full action label
+    # get_payoff(row_action, col_action) - get the exact payoff pair for two full actions
+    # available_actions(player) - list valid full actions (base action x effort level)
+    # apply_fine(player, amount, reason) - deduct points from player
+    # transfer_reward(from, to, amount, reason) - transfer amount from payer to recipient (amount must be > 0)
+
+    # Use set_action() to modify actions - changes take effect immediately
+    # No return value needed
+```
+
+The Python code can enforce contracts through THREE mechanisms:
+1. **Action Overrides**: Require specific actions (including specific effort levels)
+2. **Fines**: Deduct points for taking certain actions or effort levels
+3. **Reward Transfers**: Transfer points between players (`transfer_reward` requires a positive amount)
+
+The Python code will execute in a sandboxed environment to enforce the contract terms.
+
+**Execution scope:** `enforce` runs once per simultaneous move using only **this turn's**
+chosen actions. There is **no persistence** across prior or future rounds—contracts cannot rely
+on accumulating history unless the agreement expresses it purely as outcomes visible for this decision.
+Fine and transfer amounts must be **fixed scalar payoff points**, not percentages (e.g. use "10 points", not "10%").
+
+Write your natural language contract clearly, specifying:
+1. What actions and effort levels should be taken in which situations
+2. Any conditions or thresholds
+3. How violations should be handled (fines, transfers, action overrides)"""
+
+_CODE_NL_CONTRACT_INSTRUCTIONS_4X4_OBSERVABLE = """**Natural Language Contract Mode:**
+You will negotiate a natural language contract directly with the other player.
+This contract outlines community guidelines with no formal enforcement mechanism.
+
+If both players agree, the accepted proposal itself becomes the contract shown during decisions.
+Both players are trusted to follow these guidelines based on their mutual agreement.
+
+**Information structure:** In this scenario, EFFORT LEVELS are OBSERVABLE and VERIFIABLE.
+Both players will see each other's base action AND effort level, so your agreement may
+specify base actions, effort levels, or both.
+
+Write your natural language agreement clearly, specifying:
+1. What actions and effort levels should be taken in which situations
+2. Any relevant conditions or thresholds
+3. Why both parties should follow it when making their final decisions"""
+
+
 def _negotiation_rounds_notice(max_turns: int) -> str:
     return f"This discussion is limited to {max_turns} total turns. If no agreement is reached before then, no contract will be in effect for this scenario.\n"
 
@@ -180,24 +248,32 @@ def negotiation_system_prompt(
     is_4x4: bool,
     max_turns: int = 5,
     prompt_mode: str = "base",
+    effort_observable: bool = False,
 ) -> str:
     """System prompt for a player during two-player contract negotiation."""
     _prompt_mode = PromptMode(prompt_mode)
     _prompt_prefix = get_prompt_prefix(_prompt_mode)
 
+    observable = is_4x4 and effort_observable
     if contract_mode == "code_law":
-        contract_instructions = (
-            _CODE_LAW_CONTRACT_INSTRUCTIONS_4X4 if is_4x4 else _CODE_LAW_CONTRACT_INSTRUCTIONS_2X2
-        )
+        if observable:
+            contract_instructions = _CODE_LAW_CONTRACT_INSTRUCTIONS_4X4_OBSERVABLE
+        else:
+            contract_instructions = (
+                _CODE_LAW_CONTRACT_INSTRUCTIONS_4X4 if is_4x4 else _CODE_LAW_CONTRACT_INSTRUCTIONS_2X2
+            )
     elif contract_mode == "code_nl":
-        contract_instructions = (
-            _CODE_NL_CONTRACT_INSTRUCTIONS_4X4 if is_4x4 else _CODE_NL_CONTRACT_INSTRUCTIONS_2X2
-        )
+        if observable:
+            contract_instructions = _CODE_NL_CONTRACT_INSTRUCTIONS_4X4_OBSERVABLE
+        else:
+            contract_instructions = (
+                _CODE_NL_CONTRACT_INSTRUCTIONS_4X4 if is_4x4 else _CODE_NL_CONTRACT_INSTRUCTIONS_2X2
+            )
     else:
         contract_instructions = ""
 
     hidden_effort_constraint = ""
-    if is_4x4 and contract_mode == "no_communication":
+    if is_4x4 and not observable and contract_mode == "no_communication":
         hidden_effort_constraint = _HIDDEN_EFFORT_CONSTRAINT_NO_COMM
 
     deliberation_scope = _deliberation_scope_block(contract_mode)
@@ -230,9 +306,22 @@ def negotiation_user_prompt(
     turn: int,
     conversations: list[dict[str, Any]],
     proposals: list[dict[str, Any]],
+    effort_observable: bool = False,
 ) -> str:
     """User prompt for a player during two-player contract negotiation."""
-    if is_4x4:
+    if is_4x4 and effort_observable:
+        prompt = f"""**Your Scenario:**
+{story}
+
+{OBSERVABLE_EFFORT_NOTE}
+
+**Your Available Actions:**
+Each action combines a base choice with an effort level. Both are observable and contractable.
+{chr(10).join(f'- {a}' for a in actions)}
+
+Your contract may specify base actions, effort levels, or both.
+"""
+    elif is_4x4:
         from src.contracting.action_utils import extract_base_actions
 
         base_actions = extract_base_actions(actions)
@@ -341,7 +430,19 @@ def coding_agent_prompt(
     )
 
     effort_warning = ""
-    if state.is_4x4:
+    observable = bool(getattr(state, "effort_contractible", False))
+    if observable:
+        effort_warning = (
+            "**IMPORTANT: 4x4 Observable-Effort Scenario**\n"
+            "Effort levels are OBSERVABLE and VERIFIABLE. Actions are full labels that include\n"
+            "the effort level, e.g. 'Engage (High Effort)'. Contracts CAN enforce:\n"
+            "- Specific full actions (base choice AND effort level)\n"
+            "- Base choices regardless of effort (match with e.g. `'Engage' in action`)\n"
+            "- Effort levels regardless of base choice (match with e.g. `'(Low Effort)' in action`)\n"
+            "- Exact payoffs returned by get_payoff() for full action pairs\n\n"
+            "When calling set_action(), pass a full label from available_actions(player).\n\n"
+        )
+    elif state.is_4x4:
         effort_warning = (
             "**IMPORTANT: 4x4 Moral Hazard Scenario**\n"
             "This scenario has unobservable effort levels. Contracts CANNOT enforce:\n"
@@ -351,6 +452,22 @@ def coding_agent_prompt(
             "- Observable actions (the base choices like 'Constrain AI' vs 'Exploit AI')\n"
             "- Observable payoffs returned by get_payoff(), averaged across hidden effort levels\n"
             "- Contingent arrangements based on observable events\n\n"
+        )
+
+    if observable:
+        payoff_doc = (
+            "    Get the exact payoff pair for two full actions (base action + effort level).\n"
+        )
+        actions_doc = (
+            "    Get the list of valid full actions for a player, including effort labels.\n"
+        )
+    else:
+        payoff_doc = (
+            "    Get the payoff pair for a specific observable action pair. In 4x4 hidden-effort games,\n"
+            "    this returns the average payoff across hidden effort variants, not effort-specific payoffs.\n"
+        )
+        actions_doc = (
+            "    Get the list of valid observable actions for a player. In 4x4 games, this never includes effort labels.\n"
         )
 
     system_prompt = (
@@ -392,10 +509,9 @@ def coding_agent_prompt(
         "  set_action(name, action, reason='')\n"
         "    Change a player's action to enforce the contract.\n"
         "  get_payoff(row_action, col_action) -> tuple[float, float]\n"
-        "    Get the payoff pair for a specific observable action pair. In 4x4 hidden-effort games,\n"
-        "    this returns the average payoff across hidden effort variants, not effort-specific payoffs.\n"
+        f"{payoff_doc}"
         "  available_actions(player) -> list[str]\n"
-        "    Get the list of valid observable actions for a player. In 4x4 games, this never includes effort labels.\n"
+        f"{actions_doc}"
         "  apply_fine(player, amount, reason='')\n"
         "    Apply a fine to a player's payoff. `amount` must be strictly positive.\n"
         "  transfer_reward(from_player, to_player, amount, reason='')\n"

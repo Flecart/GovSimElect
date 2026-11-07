@@ -1,0 +1,55 @@
+# TableGames contracting experiments, 2026-11 (run with eval/run_config.py: one process, one event loop).
+#
+#   uv run python -m eval.run_config config/experiments/contracting_20261106.yaml [--dry-run]
+#
+# Every (batch, replicate, model/pair, game, size, contract mode, prompt mode) is one inspect task.
+# All tasks run concurrently in a single process; the only throttles are the per-provider connection
+# limits below. Re-running is safe: conditions that already have a successful log are skipped.
+# Logs: <log_root>/eval-<name>-<batch>[-r<rep>]-<model>[-vs-<col model>]-<game>/<prompt>/<size>-<mode>/
+
+name: "20261106"
+log_root: logs
+
+# Provider keys / base URLs (LITELLM_*, AXONHUB_*) live in these gitignored env files.
+env_files: [.env.cross]
+
+replicates: [1, 2, 3]
+samples:
+  limit: 25        # scenarios per run (first N dataset rows)
+  epochs: 2        # repetitions per scenario -> 50 games per run
+max_negotiation_turns: 5
+
+run:
+  max_tasks: 64    # tasks executing concurrently in the process
+  max_samples: 50  # concurrent samples per task (= all of them)
+
+# Concurrency is enforced per provider/model by inspect; keep the rate-limited one low.
+providers:
+  litellm: {max_connections: 120}
+  axonhub: {max_connections: 12}
+attempt_timeout: 600
+max_retries: 30
+
+coding_agent_model: openai-api/litellm/gpt-5.4
+
+batches:
+  - name: 4x4obs                       # 4x4 with observable / contractible effort
+    size: 4x4obs
+    models:
+      - openai-api/litellm/gpt-5.4
+      - openai-api/litellm/gpt-5.4-mini
+      - openai-api/litellm/DeepSeek-V4-Flash-0731
+    games: [pd, sh]
+    contract_modes: [no_communication, code_nl, code_law]
+    prompt_modes: [selfish, base, team_reasoning]   # "I"-frame, Base, "We"-frame (team reasoning)
+
+  - name: cross2x2                     # 2x2 cross-play between different models (both seat orders)
+    size: 2x2
+    pairs:
+      - [openai-api/axonhub/gpt-5.6-terra, openai-api/axonhub/gpt-5.6-luna]
+      - [openai-api/axonhub/gpt-5.6-sol, openai-api/axonhub/gpt-5.6-terra]
+      - [openai-api/axonhub/gpt-5.6-sol, openai-api/axonhub/gpt-5.6-luna]
+    both_orders: true
+    games: [pd, sh]
+    contract_modes: [no_communication, code_nl, code_law]
+    prompt_modes: [base]

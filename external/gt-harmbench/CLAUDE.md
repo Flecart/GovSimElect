@@ -32,6 +32,7 @@ Current AI safety benchmarks rely heavily on keyword matching rather than genuin
   - `scripts/generation/rewrite_4x4_stories_prisoners_dilemma.py`: Rewrite PD stories with moral hazard context
   - `scripts/generation/rewrite_4x4_stories_stag_hunt.py`: Rewrite Stag Hunt stories with moral hazard context
 - **Evaluation**: Use `--prompt-mode` flag (base/selfish/cooperative) to induce different preference modes
+- **Observable-effort (contractible) 4x4 variant**: `--effort-observable` on `eval.contracting_eval` (size `4x4obs` in `run_contracting_eval.sh`). Same datasets and payoffs, but effort is verifiable: negotiation/decision prompts say so (overriding the story's hidden-effort text), and the code-law runtime sees full actions like `"Engage (High Effort)"`, exact 4x4 payoffs, and can override/fine effort. Default (`--effort-hidden`) is the original moral hazard setting. Threaded via `GameContractState.effort_observable` / sample metadata `effort_observable`. Tests: `tests/test_effort_observable.py`.
 
 ### Welfare Metrics
 
@@ -146,6 +147,20 @@ uv run python3 scripts/verification/verify_4x4_theory.py
 # Check logs for API errors
 uv run python3 scripts/verification/check_api_errors.py logs/eval-...
 ```
+
+Contracting experiment grids (preferred): one YAML config, one process, one event loop.
+```bash
+# all (batch x replicate x model/pair x game x size x contract x prompt) conditions run as concurrent
+# inspect tasks; only per-provider max_connections throttle. Resumable (completed conditions skipped).
+uv run python -m eval.run_config config/experiments/contracting_20261106.yaml [--dry-run]
+uv run python scripts/analysis/find_errored_runs.py "logs/eval-20261106-*/*/*/*.eval" [--quarantine]
+uv run python scripts/analysis/replicate_summary.py            # utilitarian acc, mean ± SD over replicates
+uv run python scripts/analysis/make_appendix_tables.py --out-dir ../../paper/tables
+```
+Sizes: `2x2`, `4x4` (hidden effort, moral hazard), `4x4obs` (observable/contractible effort).
+Cross-play: `pairs:` in the config (row model vs column model, `--model-col` in contracting_eval).
+Prompt modes: base, selfish ("I"-frame), cooperative (precise-target ablation), team_reasoning ("we"-frame).
+Provider keys/base URLs live in gitignored `.env.*` files listed under `env_files:`.
 
 Contracting evaluation (single mode, direct Python):
 ```bash

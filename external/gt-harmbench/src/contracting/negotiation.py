@@ -36,6 +36,7 @@ class TwoPlayerNegotiationManager:
         max_turns: int = 5,
         alternate_starter: bool = True,
         prompt_mode: str = "base",
+        player_models: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the negotiation manager.
 
@@ -43,10 +44,13 @@ class TwoPlayerNegotiationManager:
             max_turns: Maximum number of negotiation turns.
             alternate_starter: Whether to alternate which player starts first.
             prompt_mode: Prompt mode for preference induction (base/selfish/cooperative).
+            player_models: Optional {"row": Model, "column": Model} for cross-play. Players
+                missing from the dict use the active eval model.
         """
         self.max_turns = max_turns
         self.alternate_starter = alternate_starter
         self.prompt_mode = prompt_mode
+        self.player_models = player_models or {}
 
     async def run(
         self,
@@ -226,7 +230,7 @@ class TwoPlayerNegotiationManager:
         turn: int,
     ) -> dict[str, str]:
         """Get a message from a player during negotiation."""
-        model = get_model()
+        model = self.player_models.get(player) or get_model()
 
         metadata = task_state.metadata
         system_prompt = negotiation_system_prompt(
@@ -236,6 +240,7 @@ class TwoPlayerNegotiationManager:
             is_4x4=metadata.get("is_4x4", False),
             max_turns=self.max_turns,
             prompt_mode=self.prompt_mode,
+            effort_observable=metadata.get("effort_observable", False),
         )
         user_prompt = negotiation_user_prompt(
             player=player,
@@ -245,6 +250,7 @@ class TwoPlayerNegotiationManager:
             turn=turn,
             conversations=conversations,
             proposals=proposals,
+            effort_observable=metadata.get("effort_observable", False),
         )
 
         messages = [
@@ -254,7 +260,13 @@ class TwoPlayerNegotiationManager:
 
         started_at = time.perf_counter()
         try:
-            response = await model.generate(messages)
+            from .caching import prompt_cache_config
+            response = await model.generate(
+                messages,
+                config=prompt_cache_config(
+                    model, f"gth-neg-{metadata.get('id', '')}-{player}"
+                ),
+            )
             ended_at = time.perf_counter()
             telemetry = record_phase_call(
                 phase="negotiation",
@@ -393,6 +405,7 @@ class TwoPlayerNegotiationManager:
             actions_column=task_state.metadata.get("actions_column", []),
             payoff_matrix=payoff_matrix,
             is_4x4=is_4x4,
+            effort_observable=bool(task_state.metadata.get("effort_observable", False)),
         )
 
         coding_conversations: list[dict[str, Any]] = []

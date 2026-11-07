@@ -18,3 +18,5 @@ data/legacy/
 .claude
 
 reasoning_traces/*.json
+.env.litellm
+.env.cross

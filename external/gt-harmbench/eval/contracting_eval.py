@@ -34,6 +34,17 @@ from src.contracting.coding_agent import (
 TELEMETRY_SCHEMA_VERSION = 1
 DECISION_MODEL_CONFIG = {"reasoning_effort": "medium"}
 
+# Non-reasoning models reject reasoning_effort when called through an OpenAI-compatible
+# proxy (inspect's native openai provider drops it silently, a LiteLLM proxy returns 400).
+_NON_REASONING_MODEL_MARKERS = ("gpt-4o", "gpt-4.1")
+
+
+def decision_model_config_for(model_name: str) -> dict[str, Any]:
+    """Decision/negotiation generate config for a model (drops reasoning_effort where unsupported)."""
+    if any(marker in model_name.lower() for marker in _NON_REASONING_MODEL_MARKERS):
+        return {k: v for k, v in DECISION_MODEL_CONFIG.items() if k != "reasoning_effort"}
+    return dict(DECISION_MODEL_CONFIG)
+
 
 def get_git_commit_hash() -> str | None:
     try:
@@ -68,10 +79,25 @@ def create_contracting_task(
     experiment_name: str = "contracting-eval",
     times: int = 1,
     game_type: str = "pd",
+    effort_observable: bool = False,
+    model_col: str | None = None,
+    column_max_connections: int | None = None,
+    model: Any = None,
+    epochs: Epochs | None = None,
+    extra_metadata: dict[str, Any] | None = None,
 ) -> Task:
-    """Build an inspect_ai Task for a given contracting mode and game type."""
+    """Build an inspect_ai Task for a given contracting mode and game type.
+
+    For multi-task runs in one process (eval/run_config.py) pass `model` (a Model bound to this
+    task), `epochs`, `column_max_connections` (cross-play column provider limit) and
+    `extra_metadata` (stored in the log header, used to file logs per condition).
+    """
+    if column_max_connections is None:
+        column_max_connections = int(os.environ.get("MAX_CONNECTIONS", "0")) or None
     def sample_transform(record: dict[str, Any]):
-        return record_to_sample_with_contracting(record, contract_mode, prompt_mode)
+        return record_to_sample_with_contracting(
+            record, contract_mode, prompt_mode, effort_observable=effort_observable
+        )
 
     dataset = csv_dataset(
         dataset_path,
@@ -93,23 +119,37 @@ def create_contracting_task(
     else:
         scorer = contracting_scorer_pd()
 
-    return Task(
+    task = Task(
         dataset=dataset,
+        model=model,
+        epochs=epochs,
         solver=ContractSolver(
             contract_mode=contract_mode,
             max_negotiation_turns=max_negotiation_turns,
             times=1,  # Will be multiplied by epochs in eval()
             prompt_mode=prompt_mode,
-            decision_model_config=DECISION_MODEL_CONFIG,
+            decision_model_config=decision_model_config_for(model_name),
+            column_model_name=model_col,
+            column_model_config=(
+                {**decision_model_config_for(model_col),
+                 "max_connections": column_max_connections,
+                 "attempt_timeout": int(os.environ.get("ATTEMPT_TIMEOUT", "600")),
+                 "max_retries": int(os.environ.get("MAX_RETRIES", "30"))}
+                if model_col else None
+            ),
         ),
         scorer=scorer,
         metadata={
             "model_name": model_name,
+            "model_row": model_name,
+            "model_col": model_col or model_name,
+            "cross_play": bool(model_col and model_col != model_name),
             "contract_mode": contract_mode.value,
             "prompt_mode": prompt_mode,
             "num_stories": num_stories,
             "num_times": times,
             "game_type": game_type,
+            "effort_observable": effort_observable,
             "experiment_id": experiment_id,
             "dataset_path": dataset_path,
             "dataset_name": dataset_name,
@@ -118,7 +158,7 @@ def create_contracting_task(
             "experiment_name": experiment_name,
             "max_negotiation_turns": max_negotiation_turns,
             "telemetry_schema_version": TELEMETRY_SCHEMA_VERSION,
-            "decision_model_config": DECISION_MODEL_CONFIG,
+            "decision_model_config": decision_model_config_for(model_name),
             "coding_agent_config": {
                 "model": DEFAULT_CODING_AGENT_MODEL,
                 "temperature": DEFAULT_CODING_AGENT_TEMPERATURE,
@@ -126,6 +166,9 @@ def create_contracting_task(
             "git_commit_hash": git_commit,
         },
     )
+    if extra_metadata:
+        task.metadata.update(extra_metadata)
+    return task
 
 
 @click.command()
@@ -135,10 +178,14 @@ def create_contracting_task(
 @click.option("--max-turns", default=5, help="Maximum negotiation turns")
 @click.option("--times", default=1, help="Number of times to repeat")
 @click.option("--limit", default=None, type=int, help="Limit number of samples")
-@click.option("--prompt-mode", type=click.Choice(["base", "selfish", "cooperative"]), default="base", help="Prompt mode for preference induction")
+@click.option("--prompt-mode", type=click.Choice(["base", "selfish", "cooperative", "team_reasoning"]), default="base", help="Prompt mode for preference induction")
 @click.option("--experiment-name", default="contracting-eval", help="Experiment name for logging")
 @click.option("--log-dir", default="logs", help="Directory for logs")
 @click.option("--game-type", type=click.Choice(["pd", "sh", "co"], case_sensitive=False), default="pd", help="Game type: pd (Prisoner's Dilemma), sh (Stag Hunt), co (Coordination)")
+@click.option("--attempt-timeout", default=lambda: int(os.environ.get("ATTEMPT_TIMEOUT", "600")), type=int, help="Seconds before a single model request is abandoned and retried (prevents hangs on network loss). Default 600 or $ATTEMPT_TIMEOUT.")
+@click.option("--max-connections", default=lambda: int(os.environ.get("MAX_CONNECTIONS", "100")), type=int, help="Max concurrent requests per model (also max concurrent samples). Default 100 or $MAX_CONNECTIONS.")
+@click.option("--model-col", default=None, help="Cross-play: model for the COLUMN player (row player uses --model-name). Default: same as --model-name.")
+@click.option("--effort-observable/--effort-hidden", default=False, help="4x4 only: make effort levels observable and contractible (complete-contract variant). Default: hidden (moral hazard).")
 def main(
     model_name: str,
     dataset: str,
@@ -150,8 +197,14 @@ def main(
     experiment_name: str,
     log_dir: str,
     game_type: str,
+    effort_observable: bool,
+    model_col: str | None,
+    max_connections: int,
+    attempt_timeout: int,
 ):
     """Run contracting evaluation on GT-HarmBench."""
+    os.environ["MAX_CONNECTIONS"] = str(max_connections)  # read by coding agent / column model
+    os.environ["ATTEMPT_TIMEOUT"] = str(attempt_timeout)
     mode = ContractMode(contract_mode)
 
     task = create_contracting_task(
@@ -164,13 +217,20 @@ def main(
         experiment_name=experiment_name,
         times=times,
         game_type=game_type,
+        effort_observable=effort_observable,
+        model_col=model_col,
     )
 
     # Suppress verbose inspect_ai output; re-print only time and token summary
     import io
     import contextlib
 
-    generation_config = GenerateConfig(**DECISION_MODEL_CONFIG)
+    generation_config = GenerateConfig(
+        **decision_model_config_for(model_name),
+        max_connections=max_connections,
+        attempt_timeout=attempt_timeout,
+        max_retries=int(os.environ.get("MAX_RETRIES", "30")),
+    )
     model = get_model(model_name, config=generation_config)
 
     f = io.StringIO()
@@ -179,6 +239,8 @@ def main(
             task,
             model=model,
             log_dir=log_dir,
+            max_connections=max_connections,
+            max_samples=max_connections,
             epochs=Epochs(
                 times,
                 reducer=mean_score(value_to_float=contracting_score_to_float()),
