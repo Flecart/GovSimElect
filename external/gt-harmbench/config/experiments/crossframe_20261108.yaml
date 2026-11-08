@@ -5,7 +5,7 @@
 # Cooperation gap = utilitarian accuracy under the "we"-frame (team_reasoning) minus the "I"-frame
 # (selfish), measured for cross-play pairs and, in the same harness, for the self-play of each member.
 #   * players: GPT-5.6 Terra / Luna / Sol on AxonHub only (different capability, same family)
-#   * code-law translator: GPT-5.1 via LiteLLM (as in the main-paper runs; prompt-cached static prefix)
+#   * code-law translator: GPT-5.4 via LiteLLM (as in the other 2026-11 appendix runs; prompt-cached static prefix)
 # Each pair is played in both seat orders. 2x2 and 4x4 with hidden effort (the main-paper setting).
 # Base-frame cross-play 2x2 for the AxonHub pairs already exists (contracting_20261106.yaml).
 
@@ -29,7 +29,7 @@ providers:
 attempt_timeout: 600
 max_retries: 30
 
-coding_agent_model: openai-api/litellm/gpt-5.1
+coding_agent_model: openai-api/litellm/gpt-5.4
 
 frames: &frames [selfish, team_reasoning]
 contracts: &contracts [no_communication, code_nl, code_law]
