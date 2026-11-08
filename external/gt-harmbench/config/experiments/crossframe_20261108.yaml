@@ -20,7 +20,7 @@ samples:
 max_negotiation_turns: 5
 
 run:
-  max_tasks: 96
+  max_tasks: 12
   max_samples: 50
 
 providers:
