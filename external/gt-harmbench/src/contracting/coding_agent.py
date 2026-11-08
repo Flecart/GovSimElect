@@ -2,6 +2,7 @@
 
 import ast
 import os
+import zlib
 import re
 import time
 
@@ -74,7 +75,7 @@ class ContractAgentBase:
         try:
             from .caching import prompt_cache_config
             config = prompt_cache_config(
-                self.model_name, "gth-coding", GenerateConfig(temperature=self.temperature)
+                self.model_name, f"gth-coding-{zlib.crc32((system_prompt + user_prompt.split('# GAME')[0]).encode()):08x}", GenerateConfig(temperature=self.temperature)
             )
             response = await self.model.generate(
                 [

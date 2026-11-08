@@ -536,8 +536,9 @@ def coding_agent_prompt(
         "Be complete, but do not invent obligations or constraints that the agreement does not state."
     )
 
+    # Static instructions first and game-specific content last, so the long shared prefix is
+    # served from the provider's prompt cache (content unchanged, only the section order).
     user_prompt = (
-        f"{state_lines}\n\n"
         "# YOUR TASK\n"
         "Translate the natural-language contract below into a Python enforcement function.\n"
         "The function will be called with the players' chosen actions and must return\n"
@@ -623,6 +624,8 @@ def coding_agent_prompt(
         "Write a single ```python fenced block. Nothing else.\n"
         "- The code must define `enforce(actions, state, context)`.\n"
         "- No imports, no print(), no tests, no example usage.\n\n"
+        "# GAME\n"
+        f"{state_lines}\n"
         "# CURRENT ACTIVE CONTRACT\n"
         f"{'Active NL Law: ' + active_nl_law if active_nl_law else 'No active NL law.'}\n"
         f"{'Active Python Law:\\n' + active_code_law if active_code_law else 'No active Python law.'}\n\n"
