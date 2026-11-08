@@ -211,6 +211,65 @@ Write your natural language agreement clearly, specifying:
 3. Why both parties should follow it when making their final decisions"""
 
 
+# --- Cheap talk (communication-matched baseline, no contract) -------------------------
+
+def cheap_talk_system_prompt(
+    player: str,
+    formal_game: str,
+    max_turns: int = 5,
+    prompt_mode: str = "base",
+) -> str:
+    """System prompt for free, non-binding pre-play communication (no contracting)."""
+    prefix = get_prompt_prefix(PromptMode(prompt_mode))
+    prefix_section = f"{prefix}\n\n" if prefix else ""
+    return f"""You are {player}, a player in a {formal_game} game.
+
+{prefix_section}Before making your decision, you can talk with the other player.
+
+**Pre-play Communication:**
+- The conversation has exactly {max_turns} messages in total, alternating between the two players.
+- Messages are free-form. You may share intentions, make suggestions, or ask questions.
+- Nothing said is binding: there is no contract, no agreement mechanism, and no enforcement.
+- After the conversation, each player privately chooses their own action.
+
+**Format:** write your message as `<MESSAGE> your message </MESSAGE>`. Do not use any other tags."""
+
+
+def cheap_talk_user_prompt(
+    player: str,
+    story: str,
+    actions: list,
+    is_4x4: bool,
+    conversations: list[dict[str, Any]],
+    turn: int,
+    max_turns: int,
+    effort_observable: bool = False,
+) -> str:
+    """User prompt for one cheap-talk message."""
+    prompt = f"""**Your Scenario:**
+{story}
+"""
+    if is_4x4 and effort_observable:
+        prompt += f"\n{OBSERVABLE_EFFORT_NOTE}\n"
+    prompt += "\n**Your Available Actions:**\n" + "\n".join(f"- {a}" for a in actions) + "\n"
+    if is_4x4 and not effort_observable:
+        prompt += (
+            "\nEach action combines a base choice with an effort level. Effort levels are private: "
+            "the other player cannot observe or verify your effort.\n"
+        )
+    if conversations:
+        prompt += "\n**Conversation so far:**\n"
+        for conv in conversations:
+            speaker = "You" if conv["player"] == player else "Other player"
+            prompt += f"{speaker}: {conv.get('message_text', '')}\n"
+    remaining = max_turns - turn - 1
+    prompt += (
+        f"\n**Your Task:**\nWrite your next message ({remaining} message(s) will follow yours). "
+        "Use the format `<MESSAGE> your message </MESSAGE>`.\n"
+    )
+    return prompt
+
+
 def _negotiation_rounds_notice(max_turns: int) -> str:
     return f"This discussion is limited to {max_turns} total turns. If no agreement is reached before then, no contract will be in effect for this scenario.\n"
 

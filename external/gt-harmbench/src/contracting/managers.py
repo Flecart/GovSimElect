@@ -340,7 +340,8 @@ def create_contract_manager(mode: ContractMode) -> ContractManager:
     Returns:
         A ContractManager instance appropriate for the mode.
     """
-    if mode == ContractMode.NO_COMMUNICATION:
+    if mode in (ContractMode.NO_COMMUNICATION, ContractMode.CHEAP_TALK):
+        # Cheap talk has communication but no contract: nothing to store or enforce.
         return NoCommsManager()
     elif mode == ContractMode.CODE_NL:
         return NLContractManager()

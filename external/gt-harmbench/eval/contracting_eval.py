@@ -174,7 +174,7 @@ def create_contracting_task(
 @click.command()
 @click.option("--model-name", default="openai/gpt-4o", help="Model to use for evaluation")
 @click.option("--dataset", required=True, help="Dataset path (required)")
-@click.option("--contract-mode", type=click.Choice(["no_communication", "code_nl", "code_law", "welfare_optimal_enforced", "welfare_optimal_unenforced"], case_sensitive=False), default="no_communication", help="Contracting mode")
+@click.option("--contract-mode", type=click.Choice(["no_communication", "cheap_talk", "code_nl", "code_law", "welfare_optimal_enforced", "welfare_optimal_unenforced"], case_sensitive=False), default="no_communication", help="Contracting mode")
 @click.option("--max-turns", default=5, help="Maximum negotiation turns")
 @click.option("--times", default=1, help="Number of times to repeat")
 @click.option("--limit", default=None, type=int, help="Limit number of samples")

@@ -37,7 +37,7 @@ DATASETS = {
     ("pd", "4x4"): "data/gt-harmbench-pd30-4x4-rewritten.csv",
     ("sh", "4x4"): "data/gt-harmbench-sh30-4x4-rewritten.csv",
 }
-MODE_SLUG = {"no_communication": "no-comm", "code_nl": "code-nl", "code_law": "code-law"}
+MODE_SLUG = {"no_communication": "no-comm", "cheap_talk": "cheap-talk", "code_nl": "code-nl", "code_law": "code-law"}
 
 
 @dataclass(frozen=True)
@@ -128,7 +128,10 @@ def file_staged_logs(staging: Path) -> tuple[int, int]:
 @click.command()
 @click.argument("config_path", type=click.Path(exists=True))
 @click.option("--dry-run", is_flag=True, help="Only list the conditions that would run.")
-def main(config_path: str, dry_run: bool) -> None:
+@click.option("--providers", "only_providers", default=None,
+              help="Comma-separated providers that are reachable (e.g. 'axonhub'). Only conditions whose "
+                   "player models and, for code_law, coding agent all use these providers are run.")
+def main(config_path: str, dry_run: bool, only_providers: str | None) -> None:
     os.chdir(PROJECT_ROOT)
     cfg = yaml.safe_load(Path(config_path).read_text())
 
@@ -157,6 +160,18 @@ def main(config_path: str, dry_run: bool) -> None:
     other = _runner_alive(lock)
 
     conditions = expand(cfg)
+    if only_providers:
+        allowed = {x.strip() for x in only_providers.split(",") if x.strip()}
+
+        def runnable(c: Condition) -> bool:
+            needed = {provider_of(c.model)} | ({provider_of(c.model_col)} if c.model_col else set())
+            if c.contract_mode == "code_law" and cfg.get("coding_agent_model"):
+                needed.add(provider_of(cfg["coding_agent_model"]))
+            return needed <= allowed
+
+        skipped = sum(1 for c in conditions if not runnable(c))
+        conditions = [c for c in conditions if runnable(c)]
+        print(f"--providers {sorted(allowed)}: skipping {skipped} conditions that need other providers")
     todo = [c for c in conditions if not is_complete(c.log_dir)]
     print(f"{len(conditions)} conditions in config, {len(conditions) - len(todo)} already complete, {len(todo)} to run")
     if dry_run:  # strictly read-only: never touches staging or log files

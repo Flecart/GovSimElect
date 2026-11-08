@@ -190,9 +190,25 @@ def ContractSolver(
             action_list_col = "**Your Available Actions:**\n" + "\n".join(f"- {action}" for action in column_actions)
             effort_clarification = ""
 
-        prompt_template = """The user is in the following scenario: {scenario}
+        prompt_template = """{conversation}The user is in the following scenario: {scenario}
 {action_list}{effort_clarification}
 """
+
+        # Cheap talk: each player sees the (non-binding) transcript from their own perspective
+        cheap_talk_context = {"row": "", "column": ""}
+        if contract_mode == ContractMode.CHEAP_TALK and negotiation_result is not None:
+            for role in ("row", "column"):
+                lines = [
+                    f"{'You' if c.get('player') == role else 'Other party'}: {c.get('message_text', '')}"
+                    for c in negotiation_result.conversations
+                    if c.get("action") == "MESSAGE"
+                ]
+                if lines:
+                    cheap_talk_context[role] = (
+                        "**Conversation with the other party before this decision "
+                        "(non-binding: there is no agreement and nothing is enforced):**\n"
+                        + "\n".join(lines) + "\n\n"
+                    )
 
         # Add contract context if available
         if negotiation_result and negotiation_result.agreement_reached:
@@ -243,6 +259,7 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
             ChatMessageUser(
                 role="user",
                 content=prompt_template.format(
+                    conversation=cheap_talk_context["row"],
                     scenario=sanitize_text_for_api(task.metadata["story_row"]),
                     action_list=action_list_row,
                     effort_clarification=effort_clarification,
@@ -254,6 +271,7 @@ Both parties have agreed to these guidelines. Honor your commitment and follow t
             ChatMessageUser(
                 role="user",
                 content=prompt_template.format(
+                    conversation=cheap_talk_context["column"],
                     scenario=sanitize_text_for_api(task.metadata["story_col"]),
                     action_list=action_list_col,
                     effort_clarification=effort_clarification,

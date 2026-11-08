@@ -10,6 +10,7 @@ class ContractMode(str, Enum):
     NO_COMMUNICATION = "no_communication"  # No contracting, baseline
     CODE_NL = "code_nl"  # Natural language contracting
     CODE_LAW = "code_law"  # Python code-law contracting
+    CHEAP_TALK = "cheap_talk"  # Communication-matched baseline: free messages, no contract, no enforcement
     WELFARE_OPTIMAL_ENFORCED = "welfare_optimal_enforced"  # Monitoring effect
     WELFARE_OPTIMAL_UNENFORCED = "welfare_optimal_unenforced"  # Monitoring effect=
 

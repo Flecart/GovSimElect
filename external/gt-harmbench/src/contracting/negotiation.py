@@ -79,6 +79,9 @@ class TwoPlayerNegotiationManager:
         elif starter is None:
             starter = "row"
 
+        if task_state.metadata.get("contract_mode") == "cheap_talk":
+            return await self._run_cheap_talk(task_state, manager, starter)
+
         conversations: list[dict[str, Any]] = []
         proposals: list[dict[str, str]] = []  # Track all proposals with reasoning
 
@@ -219,6 +222,84 @@ class TwoPlayerNegotiationManager:
             conversations=conversations,
             agreement_reached=False,
             turns_taken=len(conversations),
+        )
+
+    async def _run_cheap_talk(
+        self,
+        task_state: Any,
+        manager: ContractManager,
+        starter: str,
+    ) -> NegotiationResult:
+        """Communication-matched baseline: exactly max_turns alternating free messages.
+
+        Same players, prompts about the game, and turn budget as contract negotiation (which can
+        stop early on ACCEPT), but no proposals, no agreement and no enforcement.
+        """
+        from .prompts import cheap_talk_system_prompt, cheap_talk_user_prompt
+
+        metadata = task_state.metadata
+        conversations: list[dict[str, Any]] = []
+        current_player = starter
+        for turn in range(self.max_turns):
+            model = self.player_models.get(current_player) or get_model()
+            messages = [
+                ChatMessageSystem(content=cheap_talk_system_prompt(
+                    player=current_player,
+                    formal_game=metadata.get("formal_game", "Unknown game"),
+                    max_turns=self.max_turns,
+                    prompt_mode=self.prompt_mode,
+                )),
+                ChatMessageUser(content=cheap_talk_user_prompt(
+                    player=current_player,
+                    story=metadata.get(f"story_{current_player}", ""),
+                    actions=metadata.get(f"actions_{current_player}", []),
+                    is_4x4=metadata.get("is_4x4", False),
+                    conversations=conversations,
+                    turn=turn,
+                    max_turns=self.max_turns,
+                    effort_observable=metadata.get("effort_observable", False),
+                )),
+            ]
+            started_at = time.perf_counter()
+            try:
+                from .caching import prompt_cache_config
+                response = await model.generate(
+                    messages,
+                    config=prompt_cache_config(model, f"gth-talk-{metadata.get('id', '')}-{current_player}"),
+                )
+                raw = response.completion
+                telemetry = record_phase_call(
+                    phase="negotiation", role=current_player, output=response,
+                    started_at=started_at, ended_at=time.perf_counter(), model=model,
+                )
+            except Exception as e:
+                raw = ""
+                telemetry = record_phase_call(
+                    phase="negotiation", role=current_player, started_at=started_at,
+                    ended_at=time.perf_counter(), model=model, error=f"{type(e).__name__}: {e}",
+                )
+            match = re.search(r"<MESSAGE>\s*(.*?)\s*(?:</MESSAGE>|$)", raw, re.DOTALL | re.IGNORECASE)
+            text = (match.group(1) if match else raw).strip()
+            conversations.append({
+                "turn": turn,
+                "player": current_player,
+                "raw_message": raw,
+                "action": "MESSAGE",
+                "message_text": text,
+                "contract_text": None,
+                "reasoning": None,
+                "html": "",
+                "telemetry": telemetry,
+            })
+            manager.add_conversation_turn(current_player, raw, turn)
+            current_player = "column" if current_player == "row" else "row"
+
+        return NegotiationResult(
+            contract=None,
+            conversations=conversations,
+            agreement_reached=False,
+            turns_taken=len(conversations),
+            metadata={"cheap_talk": True},
         )
 
     async def _get_player_message(

@@ -1,0 +1,58 @@
+# Communication-matched baseline (reviewer request): cheap talk vs contracts, Base frame.
+#
+#   uv run python -m eval.run_config config/experiments/cheap_talk_20261107.yaml [--dry-run]
+#
+# cheap_talk = exactly max_negotiation_turns free, non-binding messages (no proposals, no agreement,
+# no enforcement), transcript shown at decision time. Contract negotiation uses the same turn budget
+# but may stop early on ACCEPT, so cheap talk gets at least as much communication.
+# No / NL / Code contract are re-run here in the same harness and sample design so every comparison is
+# matched. For 4x4 with observable effort, No/NL/Code (Base) come from contracting_20261106.yaml.
+
+name: "20261107"
+log_root: logs
+env_files: [.env.cross]
+
+replicates: [1, 2, 3]
+samples:
+  limit: 25
+  epochs: 2
+max_negotiation_turns: 5
+
+run:
+  max_tasks: 64
+  max_samples: 50
+
+providers:
+  litellm: {max_connections: 120}
+  axonhub: {max_connections: 12}
+attempt_timeout: 600
+max_retries: 30
+
+coding_agent_model: openai-api/litellm/gpt-5.4
+
+models: &models
+  - openai-api/litellm/gpt-5.4
+  - openai-api/litellm/gpt-5.4-mini
+  - openai-api/litellm/DeepSeek-V4-Flash-0731
+
+batches:
+  - name: talk2x2
+    size: 2x2
+    models: *models
+    games: [pd, sh]
+    contract_modes: [no_communication, cheap_talk, code_nl, code_law]
+    prompt_modes: [base]
+
+  - name: talk4x4                      # hidden (non-contractible) effort, as in the main paper
+    size: 4x4
+    models: *models
+    games: [pd, sh]
+    contract_modes: [no_communication, cheap_talk, code_nl, code_law]
+    prompt_modes: [base]
+
+  - name: 4x4obs                       # observable effort: only cheap talk is new
+    size: 4x4obs
+    models: *models
+    games: [pd, sh]
+    contract_modes: [cheap_talk]
+    prompt_modes: [base]
