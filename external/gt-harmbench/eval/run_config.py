@@ -135,6 +135,12 @@ def main(config_path: str, dry_run: bool, only_providers: str | None) -> None:
     os.chdir(PROJECT_ROOT)
     cfg = yaml.safe_load(Path(config_path).read_text())
 
+    # inspect opens per-task log/buffer files up front; >1000 tasks exceed the usual 1024 soft limit.
+    import resource
+    soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    if soft < hard:
+        resource.setrlimit(resource.RLIMIT_NOFILE, (hard, hard))
+
     # Environment must be set before importing the contracting modules (coding agent reads it).
     for env_file in cfg.get("env_files", []):
         load_dotenv(env_file, override=True)

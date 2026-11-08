@@ -1,0 +1,61 @@
+# Reviewer z8we: do "we"-frame benefits hold for heterogeneous pairs (different capability / family)?
+#
+#   uv run python -m eval.run_config config/experiments/crossframe_20261108.yaml [--dry-run]
+#
+# Cooperation gap = utilitarian accuracy under the "we"-frame (team_reasoning) minus the "I"-frame
+# (selfish), measured for cross-play pairs and, in the same harness, for the self-play of each member.
+#   * capability, same family: GPT-5.6 Terra / Luna / Sol (AxonHub), GPT-5.4 vs GPT-5.4-mini (LiteLLM)
+#   * different family:        GPT-5.4 vs DeepSeek-V4-Flash (LiteLLM)
+# Each pair is played in both seat orders. 2x2 and 4x4 with hidden effort (the main-paper setting).
+# Base-frame cross-play 2x2 for the AxonHub pairs already exists (contracting_20261106.yaml).
+
+name: "20261108"
+log_root: logs
+env_files: [.env.cross]
+
+replicates: [1, 2, 3]
+samples:
+  limit: 25
+  epochs: 2
+max_negotiation_turns: 5
+
+run:
+  max_tasks: 128
+  max_samples: 50
+
+providers:
+  litellm: {max_connections: 120}
+  axonhub: {max_connections: 40}
+attempt_timeout: 600
+max_retries: 30
+
+coding_agent_model: openai-api/litellm/gpt-5.4
+
+frames: &frames [selfish, team_reasoning]
+contracts: &contracts [no_communication, code_nl, code_law]
+
+axon_pairs: &axon_pairs
+  - [openai-api/axonhub/gpt-5.6-terra, openai-api/axonhub/gpt-5.6-luna]
+  - [openai-api/axonhub/gpt-5.6-sol, openai-api/axonhub/gpt-5.6-terra]
+  - [openai-api/axonhub/gpt-5.6-sol, openai-api/axonhub/gpt-5.6-luna]
+axon_models: &axon_models
+  - openai-api/axonhub/gpt-5.6-terra
+  - openai-api/axonhub/gpt-5.6-luna
+  - openai-api/axonhub/gpt-5.6-sol
+llm_pairs: &llm_pairs
+  - [openai-api/litellm/gpt-5.4, openai-api/litellm/DeepSeek-V4-Flash-0731]
+  - [openai-api/litellm/gpt-5.4, openai-api/litellm/gpt-5.4-mini]
+llm_models: &llm_models
+  - openai-api/litellm/gpt-5.4
+  - openai-api/litellm/gpt-5.4-mini
+  - openai-api/litellm/DeepSeek-V4-Flash-0731
+
+batches:
+  - {name: xfr2x2, size: 2x2, pairs: *axon_pairs, both_orders: true, models: *axon_models,
+     games: [pd, sh], prompt_modes: *frames, contract_modes: *contracts}
+  - {name: xfr4x4, size: 4x4, pairs: *axon_pairs, both_orders: true, models: *axon_models,
+     games: [pd, sh], prompt_modes: *frames, contract_modes: *contracts}
+  - {name: xfr2x2, size: 2x2, pairs: *llm_pairs, both_orders: true, models: *llm_models,
+     games: [pd, sh], prompt_modes: *frames, contract_modes: *contracts}
+  - {name: xfr4x4, size: 4x4, pairs: *llm_pairs, both_orders: true, models: *llm_models,
+     games: [pd, sh], prompt_modes: *frames, contract_modes: *contracts}
