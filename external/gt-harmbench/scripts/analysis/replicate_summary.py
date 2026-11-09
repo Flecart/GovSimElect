@@ -19,7 +19,7 @@ from collections import defaultdict
 
 import click
 
-BATCHES = ("4x4obs", "cross2x2", "talk2x2", "talk4x4")
+BATCHES = ("4x4obs", "cross2x2", "talk2x2", "talk4x4", "xfr2x2", "xfr4x4")
 
 # Every run is reported on the same 50-sample design: the first N_SCENARIOS rows of the dataset
 # (what --limit 25 selects) x epochs 1..N_EPOCHS. Runs made earlier at 30 scenarios x 5 epochs
@@ -35,6 +35,10 @@ DATASETS = {
     ("talk2x2", "sh"): "data/gt-harmbench-sh30-2x2-with-targets.csv",
     ("talk4x4", "pd"): "data/gt-harmbench-pd30-4x4-rewritten.csv",
     ("talk4x4", "sh"): "data/gt-harmbench-sh30-4x4-rewritten.csv",
+    ("xfr2x2", "pd"): "data/gt-harmbench-pd30-2x2-with-targets.csv",
+    ("xfr2x2", "sh"): "data/gt-harmbench-sh30-2x2-with-targets.csv",
+    ("xfr4x4", "pd"): "data/gt-harmbench-pd30-4x4-rewritten.csv",
+    ("xfr4x4", "sh"): "data/gt-harmbench-sh30-4x4-rewritten.csv",
 }
 _ID_CACHE: dict[tuple[str, str], set[str]] = {}
 
@@ -50,7 +54,7 @@ def _scenario_ids(batch: str, game: str) -> set[str]:
 
 
 _SAMPLE_RE = re.compile(r"^samples/(?P<id>.+)_epoch_(?P<epoch>\d+)\.json$")
-_RUN_RE = re.compile(r"eval-2026110[67]-(?P<batch>4x4obs|cross2x2|talk2x2|talk4x4)(?:-r(?P<rep>\d+))?-(?P<rest>.+)-(?P<game>pd|sh)$")
+_RUN_RE = re.compile(r"eval-2026110[678]-(?P<batch>4x4obs|cross2x2|talk2x2|talk4x4|xfr2x2|xfr4x4)(?:-r(?P<rep>\d+))?-(?P<rest>.+)-(?P<game>pd|sh)$")
 
 
 def _clean_model(rest: str) -> str:
@@ -74,7 +78,7 @@ def _run_accuracy(path: str, keep_ids: set[str] | None = None) -> tuple[float, i
 
 def collect() -> dict[tuple, dict[int, tuple[float, int]]]:
     results: dict[tuple, dict[int, tuple[float, int]]] = defaultdict(dict)
-    for f in glob.glob("logs/eval-2026110[67]-*/*/*/*.eval"):
+    for f in glob.glob("logs/eval-2026110[678]-*/*/*/*.eval"):
         run_dir, prompt, cond = f.split("/")[1:4]
         m = _RUN_RE.match(run_dir)
         if not m:
