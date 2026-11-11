@@ -153,6 +153,8 @@ Contracting experiment grids (preferred): one YAML config, one process, one even
 # all (batch x replicate x model/pair x game x size x contract x prompt) conditions run as concurrent
 # inspect tasks; only per-provider max_connections throttle. Resumable (completed conditions skipped).
 uv run python -m eval.run_config config/experiments/contracting_20261106.yaml [--dry-run]
+# long grids: keep the runner alive (relaunch on early exit, restart above 4 GB RSS); log in logs/_runner/
+scripts/experiments/supervise_run.sh config/experiments/contracting_20261106.yaml
 uv run python scripts/analysis/find_errored_runs.py "logs/eval-20261106-*/*/*/*.eval" [--quarantine]
 uv run python scripts/analysis/replicate_summary.py            # utilitarian acc, mean ± SD over replicates
 uv run python scripts/analysis/make_appendix_tables.py --out-dir ../../paper/tables
